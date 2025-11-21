@@ -1,9 +1,7 @@
 import axios from 'axios'
 import type { AxiosInstance } from 'axios'
 
-const DEFAULT_API_BASE_URL = '/api'
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: apiBaseUrl,

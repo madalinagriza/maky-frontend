@@ -9,7 +9,7 @@ Vue 3 + TypeScript single-page app powered by Vite. The UI already exposes a sim
 
 ## Getting started
 
-Clone the repo, copy the example environment file, install dependencies, and start Vite:
+Clone the repo, optionally copy the example environment file (only needed if you want to override the default proxy), install dependencies, and start Vite:
 
 ```powershell
 cd c:\Users\mgriz\maky-frontend
@@ -18,7 +18,7 @@ npm install
 npm run dev
 ```
 
-The dev server runs on http://localhost:5173 and proxies `/api` to `http://localhost:8000` (see `vite.config.ts`). Adjust `VITE_API_BASE_URL` inside `.env.local` if the backend lives elsewhere.
+The dev server runs on http://localhost:8080 and proxies `/api` to `http://localhost:8000` (see `vite.config.ts`). Adjust `VITE_API_BASE_URL` inside `.env.local` if the backend lives elsewhere, though the default `/api` fallback is usually enough.
 
 ## API integration structure
 
@@ -33,6 +33,12 @@ Because there are no API routes yet, the button in the UI simply illustrates the
 
 - `npm run build` – Type-check (`vue-tsc`) and create a production build.
 - `npm run preview` – Serve the latest build locally.
+
+## Deploying to Render
+
+1. Commit and push your changes so Render can pull the latest `main` branch.
+2. In the Render dashboard for this frontend, navigate to **Manage → Environment** and add a new variable: `VITE_API_BASE_URL=https://your-backend.onrender.com/api` (replace with your backend URL).
+3. Redeploy the frontend. When Render builds the site, Vite injects this variable so `apiClient` now points at the deployed backend. Locally, the value is typically undefined, so the code falls back to `/api`, letting Vite's dev proxy continue to target `http://localhost:8000`.
 
 ## Next steps
 
