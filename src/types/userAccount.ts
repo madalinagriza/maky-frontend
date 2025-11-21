@@ -10,33 +10,34 @@ export interface RegisterResponse {
 }
 
 export interface LoginPayload {
-  username: string
+  usernameOrEmail: string
   password: string
 }
 
 export interface LoginResponse {
   user: string
+  sessionId: string
 }
 
 export interface ChangePasswordPayload {
-  user: string
+  sessionId: string
   oldPassword: string
   newPassword: string
 }
 
 export interface UpdateCredentialsPayload {
-  user: string
+  sessionId: string
   newUsername: string
   newEmail: string
 }
 
 export interface SetKidAccountStatusPayload {
-  user: string
+  sessionId: string
   status: boolean
 }
 
 export interface DeleteAccountPayload {
-  user: string
+  sessionId: string
   password: string
 }
 

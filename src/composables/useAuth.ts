@@ -1,0 +1,30 @@
+import { ref, computed } from 'vue'
+import { getSessionId, setSessionId, clearSessionId } from '@/utils/sessionStorage'
+
+const sessionId = ref<string | null>(getSessionId())
+const isAuthenticated = computed(() => sessionId.value !== null)
+
+export function useAuth() {
+  function login(newSessionId: string) {
+    sessionId.value = newSessionId
+    setSessionId(newSessionId)
+  }
+
+  function logout() {
+    sessionId.value = null
+    clearSessionId()
+  }
+
+  function getCurrentSessionId(): string | null {
+    return sessionId.value
+  }
+
+  return {
+    sessionId: computed(() => sessionId.value),
+    isAuthenticated,
+    login,
+    logout,
+    getCurrentSessionId,
+  }
+}
+
