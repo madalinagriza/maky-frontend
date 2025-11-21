@@ -1,6 +1,6 @@
 # maky-frontend
 
-Vue 3 + TypeScript single-page app powered by Vite. The UI already exposes a simple "Backend status" card that is wired to an Axios-based service layer so future API endpoints can plug in immediately. During local development, Vite proxies `/api` requests to `http://localhost:8000` so the frontend can call the backend without CORS headaches.
+Vue 3 + TypeScript single-page app powered by Vite. The landing screen now contains an authentication playground that speaks to the `UserAccount` endpoints described in `API_SPEC.md`, allowing you to register and log in against a local or deployed backend. During local development, Vite proxies `/api` requests to `http://localhost:8000` so the frontend can call the backend without CORS headaches.
 
 ## Requirements
 
@@ -22,12 +22,19 @@ The dev server runs on http://localhost:8080 and proxies `/api` to `http://local
 
 ## API integration structure
 
-- `src/services/apiClient.ts`: shared Axios instance with base URL, JSON headers, and error normalization.
-- `src/services/healthService.ts`: sample service calling `/api/health`; replace or extend as real endpoints go live.
-- `src/composables/useServerStatus.ts`: Vue composable that handles loading/error state, ready to be reused inside components.
-- `src/App.vue`: renders the status card and demonstrates how to trigger service calls from the UI.
+- `src/services/apiClient.ts`: shared Axios instance with base URL, JSON headers, and consistent error handling.
+- `src/services/userAccountService.ts`: thin wrappers around each `/api/UserAccount/*` endpoint (register, login, changePassword, etc.).
+- `src/types/userAccount.ts`: request/response payload contracts mirrored from `API_SPEC.md`.
+- `src/App.vue`: the authentication UI that switches between Register and Login, talks to the service layer, and surfaces success/error feedback.
 
-Because there are no API routes yet, the button in the UI simply illustrates the flow; once the backend exposes `/api/health` (or any other endpoint) the same structure will surface real data. Add additional files inside `src/services` and `src/composables` to keep API interactions consistent.
+Use `VITE_API_BASE_URL` when deploying (Render instructions below); locally, the Axios client defaults to `/api`, which the dev server proxies to `http://localhost:8000`.
+
+## Using the auth playground
+
+1. Run the backend that implements the `UserAccount` endpoints (see `API_SPEC.md`).
+2. Start the frontend (`npm run dev`) and open http://localhost:8080.
+3. Choose **Register** or **Log in**, fill out the form, and submit. The page shows a success toast with the returned user identifier or an error message bubbled up from the API.
+4. Extend the UI by importing other helpers from `userAccountService.ts` (change password, update credentials, etc.).
 
 ## Additional scripts
 
@@ -42,6 +49,6 @@ Because there are no API routes yet, the button in the UI simply illustrates the
 
 ## Next steps
 
-1. Flesh out the backend routes under `http://localhost:8000/api`.
-2. Map those routes to dedicated service modules in `src/services`.
-3. Add unit/e2e tests (Vitest/Cypress) once the API surface stabilizes.
+1. Flesh out the remaining backend routes under `http://localhost:8000/api`.
+2. Add more frontend flows (change password, update credentials, delete account) by importing helpers from `src/services/userAccountService.ts`.
+3. Add unit/e2e tests (Vitest/Cypress) as the API surface stabilizes.

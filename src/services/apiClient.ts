@@ -17,7 +17,7 @@ apiClient.interceptors.response.use(
   (error) => {
     const fallbackMessage = 'Unknown API error occurred'
     const normalizedError =
-      error.response?.data?.message ?? error.message ?? fallbackMessage
+      error.response?.data?.error ?? error.response?.data?.message ?? error.message ?? fallbackMessage
 
     return Promise.reject(new Error(normalizedError))
   }
