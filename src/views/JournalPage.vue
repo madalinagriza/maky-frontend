@@ -156,8 +156,10 @@ onMounted(() => {
 }
 
 h1 {
-  font-size: 2.5rem;
+  font-size: 1.75rem;
   margin-bottom: 2rem;
+  color: var(--contrast-mid);
+
 }
 
 .journal-layout {
@@ -175,7 +177,7 @@ h1 {
 h2 {
   font-size: 1.5rem;
   margin: 0 0 1rem;
-  color: #e5e7eb;
+  color: var(--contrast-mid);
 }
 
 .posts-list {
@@ -185,7 +187,7 @@ h2 {
 }
 
 .post-card {
-  background: rgba(17, 24, 39, 0.95);
+  background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
   padding: 1.5rem;
@@ -228,7 +230,7 @@ h2 {
 
 .reaction-badge {
   padding: 0.25rem 0.75rem;
-  background: rgba(99, 102, 241, 0.2);
+  background: var(--main);
   border: 1px solid rgba(99, 102, 241, 0.3);
   border-radius: 999px;
   font-size: 0.875rem;
@@ -247,7 +249,7 @@ h2 {
 }
 
 .sidebar-section {
-  background: rgba(17, 24, 39, 0.95);
+  background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
   padding: 1.5rem;
@@ -264,7 +266,7 @@ h2 {
 
 .item-card {
   padding: 1rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   display: flex;
@@ -274,7 +276,7 @@ h2 {
 
 .item-name {
   font-weight: 500;
-  color: #e5e7eb;
+  color: var(--contrast-mid);
 }
 
 .item-mastery {

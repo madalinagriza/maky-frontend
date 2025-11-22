@@ -202,6 +202,7 @@ onMounted(() => {
 h1 {
   font-size: 2.5rem;
   margin-bottom: 2rem;
+  color: var(--contrast-mid);
 }
 
 .search-section {
@@ -211,7 +212,7 @@ h1 {
 .search-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.65rem;
   color: #f9fafb;
@@ -230,7 +231,7 @@ h1 {
 }
 
 .learn-section {
-  background: rgba(17, 24, 39, 0.95);
+  background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
   padding: 1.5rem;
@@ -239,7 +240,7 @@ h1 {
 h2 {
   font-size: 1.5rem;
   margin: 0 0 1rem;
-  color: #e5e7eb;
+  color: var(--contrast-mid);
 }
 
 .loading,
@@ -260,7 +261,7 @@ h2 {
 
 .song-item {
   padding: 1rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   display: flex;
@@ -274,7 +275,7 @@ h2 {
 }
 
 .chord-card {
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--card);
   border: 2px solid rgba(99, 102, 241, 0.3);
   border-radius: 1rem;
   padding: 2rem;
@@ -285,12 +286,12 @@ h2 {
 .chord-card h3 {
   font-size: 2rem;
   margin: 0 0 1rem;
-  color: #a5b4fc;
+  color: var(--contrast-top);
 }
 
 .learn-btn {
   padding: 0.5rem 1rem;
-  background: linear-gradient(120deg, #6366f1, #8b5cf6);
+  background: var(--button);
   color: #fff;
   border: none;
   border-radius: 0.5rem;

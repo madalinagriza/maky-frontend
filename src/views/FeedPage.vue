@@ -302,7 +302,7 @@ onMounted(() => {
 
 .friends-panel,
 .notifications-panel {
-  background: rgba(17, 24, 39, 0.95);
+  background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
   padding: 1.5rem;
@@ -311,20 +311,20 @@ onMounted(() => {
 h2 {
   font-size: 1.25rem;
   margin: 0 0 1rem;
-  color: #e5e7eb;
+  color: var(--contrast-mid);
 }
 
 h3 {
   font-size: 1rem;
   margin: 1rem 0 0.5rem;
-  color: #d1d5db;
+  color: var(--contrast-mid);
 }
 
 .search-input,
 .friend-input {
   width: 100%;
   padding: 0.5rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   color: #f9fafb;
@@ -338,7 +338,7 @@ h3 {
 }
 
 .create-post-section {
-  background: rgba(17, 24, 39, 0.95);
+  background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
   padding: 1.5rem;
@@ -347,7 +347,7 @@ h3 {
 .post-textarea {
   width: 100%;
   padding: 0.75rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   color: #f9fafb;
@@ -364,7 +364,7 @@ h3 {
 
 .post-type-select {
   padding: 0.5rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   color: #f9fafb;
@@ -372,7 +372,7 @@ h3 {
 
 .post-btn {
   padding: 0.5rem 1.5rem;
-  background: linear-gradient(120deg, #6366f1, #8b5cf6);
+  background: var(--button);
   color: #fff;
   border: none;
   border-radius: 0.5rem;
@@ -387,7 +387,7 @@ h3 {
 }
 
 .post-card {
-  background: rgba(17, 24, 39, 0.95);
+  background: var(--main);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
   padding: 1.5rem;
@@ -453,7 +453,7 @@ h3 {
 .request-item,
 .notification-item {
   padding: 0.75rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--main);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
 }
@@ -490,7 +490,7 @@ h3 {
 }
 
 .add-btn {
-  background: linear-gradient(120deg, #6366f1, #8b5cf6);
+  background: var(--button);
   color: #fff;
   width: 100%;
   margin-top: 0.5rem;
