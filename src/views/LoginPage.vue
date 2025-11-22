@@ -11,9 +11,13 @@
         <label>
           <span>Username</span>
           <input
+            type="text"
             v-model.trim="loginForm.username"
             name="username"
             autocomplete="username"
+            minlength="3"
+            pattern="[A-Za-z0-9_-]+"
+            title="Only letters, numbers, underscores and hyphens are allowed"
             required
           />
         </label>
@@ -83,7 +87,7 @@ const loading = ref(false)
 const feedback = ref<{ kind: 'success' | 'error'; message: string } | null>(null)
 
 const canSubmitLogin = computed(() => {
-  return loginForm.username.trim() !== '' && loginForm.password.trim() !== ''
+  return loginForm.username.trim().length >= 3 && loginForm.password.trim() !== ''
 })
 
 async function handleLogin() {
@@ -187,9 +191,8 @@ async function loginAsTestUser() {
     var(--contrast-mid) 35%,
     var(--contrast-bottom) 100%
   );
-  /* background: var(--bg); */
   padding: 1.5rem;
-  color: #f9fafb;
+  color: var(--contrast-mid);
 }
 
 .auth-card {
@@ -215,6 +218,9 @@ async function loginAsTestUser() {
 h1 {
   margin: 0.35rem 0 0;
   font-size: 1.85rem;
+  color: var(--contrast-mid);
+  font-family: var(--logo-font);
+  font-weight: var(--logo-font-weight);
 }
 
 .lead {
@@ -242,7 +248,7 @@ input[type='password'] {
   border-radius: 0.65rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.75rem 0.9rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--main-top);
   color: #f9fafb;
   font-size: 1rem;
 }
@@ -361,7 +367,7 @@ button[disabled] {
 }
 
 .link {
-  color: #818cf8;
+  color: var(--accent);
   text-decoration: none;
 }
 

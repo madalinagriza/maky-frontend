@@ -367,13 +367,13 @@ h3 {
   background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
-  color: #f9fafb;
+  color: var(--contrast-mid);
 }
 
 .post-btn {
   padding: 0.5rem 1.5rem;
   background: var(--button);
-  color: #fff;
+  color: var(--btn-text);
   border: none;
   border-radius: 0.5rem;
   font-weight: 600;
@@ -426,7 +426,7 @@ h3 {
 .comment-btn {
   background: transparent;
   border: none;
-  color: #9ca3af;
+  color: var(--btn-text);
   cursor: pointer;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
@@ -477,6 +477,7 @@ h3 {
   border-radius: 0.25rem;
   font-size: 0.875rem;
   cursor: pointer;
+  color: var(--btn-text);
 }
 
 .accept-btn {
@@ -491,7 +492,7 @@ h3 {
 
 .add-btn {
   background: var(--button);
-  color: #fff;
+  color: var(--btn-text);
   width: 100%;
   margin-top: 0.5rem;
 }

@@ -14,8 +14,9 @@
 :root {
   --button: #d94634ff;
   --accent: #db6a5b;
+  --btn-text: #fdd1cc;
   --main: rgb(46, 1, 0);
-  --card: rgb(77, 7, 6);
+  --card: rgb(46, 1, 0);
 
   --contrast-top: rgb(247, 233, 205);
   --contrast-mid: rgb(251, 225, 172);

@@ -88,7 +88,7 @@ function handleLogout() {
   font-weight: 700;
   color: #f9fafb;
   text-decoration: none;
-  background: linear-gradient(120deg, var(--contrast-bottom), var(--contrast-mid));
+  background: linear-gradient(120deg, var(--contrast-bottom), var(--contrast-top));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -110,7 +110,7 @@ function handleLogout() {
 }
 
 .nav-link {
-  color: #e5e7eb;
+  color: var(--contrast-mid);
   text-decoration: none;
   font-weight: 500;
   padding: 0.5rem 1rem;
@@ -125,7 +125,7 @@ function handleLogout() {
 
 .nav-link.router-link-active {
   background: var(--button);
-  color: #e5e7eb;
+  color: var(--btn-text);
 }
 
 .user-menu {
@@ -176,13 +176,13 @@ function handleLogout() {
 }
 
 .user-name {
-  color: #e5e7eb;
+  color: var(--contrast-mid);
   font-weight: 500;
   font-size: 0.95rem;
 }
 
 .dropdown-arrow {
-  color: #9ca3af;
+  color: var(--contrast-bottom);
   font-size: 0.75rem;
   transition: transform 0.2s ease;
   display: inline-block;
@@ -225,7 +225,7 @@ function handleLogout() {
   display: block;
   width: 100%;
   padding: 0.75rem 1rem;
-  color: #e5e7eb;
+  color: var(--contrast-mid);
   text-decoration: none;
   font-weight: 500;
   text-align: left;

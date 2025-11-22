@@ -271,6 +271,7 @@ onMounted(() => {
 h1 {
   font-size: 2.5rem;
   margin-bottom: 2rem;
+  color: var(--contrast-mid);
 }
 
 .profile-layout {
@@ -290,13 +291,13 @@ h1 {
 h2 {
   font-size: 1.5rem;
   margin: 0 0 1.5rem;
-  color: #e5e7eb;
+  color: var(--contrast-mid);
 }
 
 h3 {
   font-size: 1.25rem;
   margin: 1.5rem 0 1rem;
-  color: #d1d5db;
+  color: var(--contrast-mid);
 }
 
 .profile-form {
@@ -312,7 +313,7 @@ h3 {
 }
 
 label {
-  color: #e5e7eb;
+  color: var(--contrast-mid);
   font-weight: 500;
 }
 
@@ -323,7 +324,7 @@ label {
   background: var(--main);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
-  color: #f9fafb;
+  color: var(--contrast-mid);
   font-family: inherit;
 }
 

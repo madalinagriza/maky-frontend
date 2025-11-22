@@ -10,7 +10,7 @@
       <form class="form" @submit.prevent="handleRegister">
         <label>
           <span>Username</span>
-          <input v-model.trim="registerForm.username" name="username" autocomplete="username" required />
+          <input v-model.trim="registerForm.username" type="text" name="username" autocomplete="username" required />
         </label>
 
         <label>
@@ -115,15 +115,20 @@ async function handleRegister() {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at top, #1f2937 0%, #111827 55%, #030712 100%);
+  background: radial-gradient(
+    circle at top,
+    var(--contrast-top) 0%,
+    var(--contrast-mid) 35%,
+    var(--contrast-bottom) 100%
+  );
   padding: 1.5rem;
-  color: #f9fafb;
+  color: var(--contrast-mid);
 }
 
 .auth-card {
   width: min(560px, 100%);
   border-radius: 1.25rem;
-  background: rgba(17, 24, 39, 0.95);
+  background: var(--main);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.45);
   padding: 2rem;
@@ -143,6 +148,8 @@ async function handleRegister() {
 h1 {
   margin: 0.35rem 0 0;
   font-size: 1.85rem;
+  font-family: var(--logo-font);
+  font-weight: var(--logo-font-weight);
 }
 
 .lead {
@@ -171,7 +178,7 @@ input[type='password'] {
   border-radius: 0.65rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.75rem 0.9rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--main-top);
   color: #f9fafb;
   font-size: 1rem;
 }
@@ -192,8 +199,8 @@ button[type='submit'] {
   border: none;
   border-radius: 0.9rem;
   padding: 0.85rem 1.25rem;
-  background: linear-gradient(120deg, #6366f1, #8b5cf6);
-  color: #fff;
+  background: var(--button);
+  color: var(--btn-text);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -233,7 +240,7 @@ button[disabled] {
 }
 
 .link {
-  color: #818cf8;
+  color: var(--accent);
   text-decoration: none;
 }
 
