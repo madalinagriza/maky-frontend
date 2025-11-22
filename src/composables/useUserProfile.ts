@@ -1,5 +1,4 @@
 import { ref, computed } from 'vue'
-import { getSessionId } from '@/utils/sessionStorage'
 
 interface UserProfile {
   displayName: string
