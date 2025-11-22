@@ -57,7 +57,7 @@ const router = createRouter({
 })
 
 // Navigation guard to check authentication and questionnaire completion
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const sessionId = getSessionId()
   const requiresAuth = to.meta.requiresAuth
 

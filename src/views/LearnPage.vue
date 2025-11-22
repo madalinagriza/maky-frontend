@@ -93,7 +93,7 @@ async function loadPlayableSongs() {
     const response = await getPlayableSongs({ sessionId })
     // Response is an array of objects with songs property
     if (Array.isArray(response) && response.length > 0) {
-      playableSongs.value = response[0].songs || []
+      playableSongs.value = response[0]?.songs ?? []
     } else {
       playableSongs.value = []
     }
@@ -112,7 +112,7 @@ async function loadSongRecommendations() {
     if (!sessionId) return
 
     const response = await requestPersonalizedSongRecommendation({ sessionId })
-    recommendedSongs.value = response.recommendedSongs || []
+    recommendedSongs.value = response?.recommendedSongs ?? []
   } catch (error) {
     console.error('Failed to load song recommendations:', error)
     recommendedSongs.value = []
@@ -137,7 +137,7 @@ async function loadChordRecommendation() {
           sessionId,
           potentialChord: recommendedChord.value,
         })
-        unlockedSongs.value = unlockResponse.unlockedSongs || []
+        unlockedSongs.value = unlockResponse?.unlockedSongs ?? []
       } catch (error) {
         console.error('Failed to load unlocked songs:', error)
       }
