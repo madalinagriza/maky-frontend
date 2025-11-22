@@ -273,7 +273,7 @@ h1 {
 
 .profile-card,
 .chords-card {
-  background: rgba(17, 24, 39, 0.95);
+  background: var(--main);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
   padding: 2rem;
@@ -312,7 +312,7 @@ label {
 .form-textarea,
 .form-select {
   padding: 0.75rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--main);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   color: #f9fafb;
@@ -334,7 +334,7 @@ label {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--main);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   cursor: pointer;
@@ -342,7 +342,7 @@ label {
 
 .save-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(120deg, #6366f1, #8b5cf6);
+  background: var(--button);
   color: #fff;
   border: none;
   border-radius: 0.5rem;
@@ -368,7 +368,7 @@ label {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--main);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
 }
@@ -387,7 +387,7 @@ label {
 
 .mastery-select {
   padding: 0.5rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--main);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.25rem;
   color: #f9fafb;
@@ -418,7 +418,7 @@ label {
 .chord-input {
   flex: 1;
   padding: 0.75rem;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--main);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   color: #f9fafb;
@@ -426,7 +426,7 @@ label {
 
 .add-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(120deg, #6366f1, #8b5cf6);
+  background: var(--button);
   color: #fff;
   border: none;
   border-radius: 0.5rem;

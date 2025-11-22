@@ -8,8 +8,39 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #f9fafb;
-  background-color: #030712;
+  background-color: #630503ff;
 }
+
+:root {
+  --button: #d94634ff;
+  --accent: #db6a5b;
+  --main: rgb(46, 1, 0);
+
+  --contrast-top: rgb(247, 233, 205);
+  --contrast-mid: rgb(251, 225, 172);
+  --contrast-bottom: rgb(250, 211, 134);
+
+  --main-top: rgb(77, 7, 6);
+  --main-mid: var(--main);
+  --main-bottom: rgb(31, 1, 0);
+
+  
+  /* Logo / brand font */
+  /* --logo-font: 'Poppins', Inter, 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif; */
+  --logo-font: 'Cooper Black';
+  --logo-font-weight: 700;
+
+  --app-bg: radial-gradient(
+    circle at top,
+    var(--main-top) 0%,
+    var(--main-mid) 35%,
+    var(--main-bottom) 100%
+  );
+}
+
+/* Load a web font for the logo (example: Poppins). Replace or remove if you prefer local fonts. */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+
 
 *,
 *::before,

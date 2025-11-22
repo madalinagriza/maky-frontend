@@ -10,7 +10,7 @@ export interface RegisterResponse {
 }
 
 export interface LoginPayload {
-  usernameOrEmail: string
+  username: string
   password: string
 }
 

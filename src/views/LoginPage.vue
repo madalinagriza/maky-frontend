@@ -9,10 +9,10 @@
 
       <form class="form" @submit.prevent="handleLogin">
         <label>
-          <span>Username or Email</span>
+          <span>Username</span>
           <input
-            v-model.trim="loginForm.usernameOrEmail"
-            name="usernameOrEmail"
+            v-model.trim="loginForm.username"
+            name="username"
             autocomplete="username"
             required
           />
@@ -75,7 +75,7 @@ const router = useRouter()
 const { login } = useAuth()
 
 const loginForm = reactive({
-  usernameOrEmail: '',
+  username: '',
   password: '',
 })
 
@@ -83,7 +83,7 @@ const loading = ref(false)
 const feedback = ref<{ kind: 'success' | 'error'; message: string } | null>(null)
 
 const canSubmitLogin = computed(() => {
-  return loginForm.usernameOrEmail.trim() !== '' && loginForm.password.trim() !== ''
+  return loginForm.username.trim() !== '' && loginForm.password.trim() !== ''
 })
 
 async function handleLogin() {
@@ -93,7 +93,7 @@ async function handleLogin() {
 
   try {
     const payload = {
-      usernameOrEmail: loginForm.usernameOrEmail.trim(),
+      username: loginForm.username.trim(),
       password: loginForm.password,
     }
 
@@ -125,7 +125,7 @@ async function loginAsTestUser() {
   try {
     // First try to login with test credentials
     const payload = {
-      usernameOrEmail: 'testuser',
+      username: 'testuser',
       password: 'testpass123',
     }
 
@@ -152,7 +152,7 @@ async function loginAsTestUser() {
 
       // Then login
       const payload = {
-        usernameOrEmail: 'testuser',
+        username: 'testuser',
         password: 'testpass123',
       }
       const response = await loginUser(payload)
@@ -181,7 +181,13 @@ async function loginAsTestUser() {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at top, #1f2937 0%, #111827 55%, #030712 100%);
+  background: radial-gradient(
+    circle at top,
+    var(--contrast-top) 0%,
+    var(--contrast-mid) 35%,
+    var(--contrast-bottom) 100%
+  );
+  /* background: var(--bg); */
   padding: 1.5rem;
   color: #f9fafb;
 }
@@ -189,7 +195,7 @@ async function loginAsTestUser() {
 .auth-card {
   width: min(560px, 100%);
   border-radius: 1.25rem;
-  background: rgba(17, 24, 39, 0.95);
+  background: var(--main);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.45);
   padding: 2rem;
@@ -250,7 +256,7 @@ button[type='submit'] {
   border: none;
   border-radius: 0.9rem;
   padding: 0.85rem 1.25rem;
-  background: linear-gradient(120deg, #6366f1, #8b5cf6);
+  background: var(--button);
   color: #fff;
   font-size: 1rem;
   font-weight: 600;

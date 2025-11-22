@@ -28,7 +28,7 @@ function handleLogout() {
 
 <style scoped>
 .navbar {
-  background: rgba(17, 24, 39, 0.95);
+  background: var(--main);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 1rem 2rem;
   position: sticky;
@@ -45,14 +45,17 @@ function handleLogout() {
 }
 
 .logo {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: #f9fafb;
   text-decoration: none;
-  background: linear-gradient(120deg, #6366f1, #8b5cf6);
+  background: linear-gradient(120deg, var(--contrast-bottom), var(--contrast-mid));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  font-family: var(--logo-font);
+  font-weight: var(--logo-font-weight);
+  letter-spacing: 0.02em;
 }
 
 .nav-links {
@@ -70,13 +73,14 @@ function handleLogout() {
   transition: all 0.2s ease;
 }
 
-.nav-link:hover {
-  background: rgba(255, 255, 255, 0.1);
+.nav-link:hover{
+  background: transparent;
+  color: var(--accent);
 }
 
 .nav-link.router-link-active {
-  background: rgba(99, 102, 241, 0.2);
-  color: #a5b4fc;
+  background: var(--button);
+  color: #e5e7eb;
 }
 
 .logout-btn {

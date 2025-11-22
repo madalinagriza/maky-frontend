@@ -36,6 +36,7 @@ export async function registerUser(payload: RegisterPayload) {
 }
 
 export async function loginUser(payload: LoginPayload) {
+  // Payload now contains `username` which matches backend expectations.
   const { data } = await apiClient.post<LoginResponse | ErrorResponse>(
     `${USER_ACCOUNT_BASE}/login`,
     payload
