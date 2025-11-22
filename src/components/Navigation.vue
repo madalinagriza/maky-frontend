@@ -2,13 +2,14 @@
   <nav class="navbar">
     <div class="nav-container">
       <router-link to="/learn" class="logo">ChordConnect</router-link>
-      <div class="nav-links">
-        <router-link to="/learn" class="nav-link">Learn</router-link>
-        <router-link to="/feed" class="nav-link">Feed</router-link>
-        <router-link to="/journal" class="nav-link">Journal</router-link>
-      </div>
-      
-      <div 
+      <div class="nav-right">
+        <div class="nav-links">
+          <router-link to="/learn" class="nav-link">Learn</router-link>
+          <router-link to="/feed" class="nav-link">Feed</router-link>
+          <router-link to="/journal" class="nav-link">Journal</router-link>
+        </div>
+        
+        <div 
         class="user-menu" 
         @mouseenter="isHovered = true"
         @mouseleave="isHovered = false"
@@ -39,6 +40,7 @@
             </button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   </nav>
@@ -78,6 +80,7 @@ function handleLogout() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 2rem;
 }
 
 .logo {
@@ -92,6 +95,12 @@ function handleLogout() {
   font-family: var(--logo-font);
   font-weight: var(--logo-font-weight);
   letter-spacing: 0.02em;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
 .nav-links {

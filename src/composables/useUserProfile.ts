@@ -77,9 +77,14 @@ export function useUserProfile() {
     if (!name) return '?'
     const parts = name.trim().split(/\s+/)
     if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      const first = parts[0]?.[0]
+      const last = parts[parts.length - 1]?.[0]
+      if (first && last) {
+        return (first + last).toUpperCase()
+      }
     }
-    return name[0].toUpperCase()
+    const firstChar = name[0]
+    return firstChar ? firstChar.toUpperCase() : '?'
   }
 
   // Load profile from storage on initialization
