@@ -2,8 +2,8 @@
   <div class="layout">
     <Navigation />
     <main class="main-content">
-      <router-view />
-    </main>
+        <slot />
+      </main>
   </div>
 </template>
 
