@@ -87,6 +87,7 @@ import { createProfile } from '@/services/userProfileService'
 import { addUser as addChordLibraryUser, addChordToInventory } from '@/services/chordLibraryService'
 import { addUser as addSongLibraryUser } from '@/services/songLibraryService'
 import { getSessionId } from '@/utils/sessionStorage'
+import { useUserProfile } from '@/composables/useUserProfile'
 
 const router = useRouter()
 
@@ -131,6 +132,13 @@ async function handleSubmit() {
       displayName: displayName.value.trim(),
       genrePreferences: selectedGenres.value,
       skillLevel: skillLevel.value,
+    })
+
+    // Sync profile data to composable
+    const { setProfile } = useUserProfile()
+    setProfile({
+      displayName: displayName.value.trim(),
+      avatarUrl: null,
     })
 
     // Add user to chord library

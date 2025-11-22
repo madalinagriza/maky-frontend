@@ -129,6 +129,7 @@ import {
   removeChordFromInventory,
 } from '@/services/chordLibraryService'
 import { getSessionId } from '@/utils/sessionStorage'
+import { useUserProfile } from '@/composables/useUserProfile'
 
 const availableGenres = [
   'Rock', 'Pop', 'Country', 'Jazz', 'Blues', 'Folk', 'Classical', 'Metal', 'R&B', 'Reggae'
@@ -183,6 +184,13 @@ async function saveProfile() {
     }
     await setGenrePreferences({ sessionId, newGenrePreferences: profile.genrePreferences })
     await changeSkillLevel({ sessionId, newSkillLevel: profile.skillLevel })
+
+    // Sync profile data to composable
+    const { setProfile } = useUserProfile()
+    setProfile({
+      displayName: profile.displayName,
+      avatarUrl: profile.avatarUrl || null,
+    })
 
     feedback.value = {
       kind: 'success',
