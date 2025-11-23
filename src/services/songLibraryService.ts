@@ -3,9 +3,7 @@ import type {
   StartLearningSongPayload,
   UpdateSongMasteryPayload,
   StopLearningSongPayload,
-  GetPlayableSongsPayload,
   GetSongsInProgressResponse,
-  FilterSongsByGenrePayload,
   ErrorResponse,
 } from '@/types/songLibrary'
 
@@ -64,26 +62,10 @@ export async function removeUser(sessionId: string) {
   ensureSuccess(data)
 }
 
-export async function getPlayableSongs(payload: GetPlayableSongsPayload) {
-  const { data } = await apiClient.post<{ songs: string[] }[] | ErrorResponse>(
-    `${SONG_LIBRARY_BASE}/_getPlayableSongs`,
-    payload
-  )
-  return ensureSuccess(data)
-}
-
 export async function getSongsInProgress(sessionId: string) {
   const { data } = await apiClient.post<GetSongsInProgressResponse | ErrorResponse>(
     `${SONG_LIBRARY_BASE}/_getSongsInProgress`,
     { sessionId }
-  )
-  return ensureSuccess(data)
-}
-
-export async function filterSongsByGenre(payload: FilterSongsByGenrePayload) {
-  const { data } = await apiClient.post<{ songs: string[] }[] | ErrorResponse>(
-    `${SONG_LIBRARY_BASE}/_filterSongsByGenre`,
-    payload
   )
   return ensureSuccess(data)
 }

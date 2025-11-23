@@ -1,5 +1,18 @@
-export interface RequestChordRecommendationPayload {
+import type { Song } from './song'
+
+export interface CalculateRecommendationPayload {
   sessionId: string
+  knownChords: string[]
+  allSongs: Song[]
+}
+
+export interface CalculateRecommendationResponse {
+  recommendationId: string
+}
+
+export interface RequestChordRecommendationPayload {
+  knownChords: string[]
+  allSongs: Song[]
 }
 
 export interface RequestChordRecommendationResponse {
@@ -7,30 +20,29 @@ export interface RequestChordRecommendationResponse {
 }
 
 export interface RequestSongUnlockRecommendationPayload {
-  sessionId: string
+  knownChords: string[]
   potentialChord: string
+  allSongs: Song[]
 }
 
 export interface RequestSongUnlockRecommendationResponse {
   unlockedSongs: string[]
 }
 
-export interface RequestPersonalizedSongRecommendationPayload {
-  sessionId: string
+export interface GetRecommendationPayload {
+  recommendationId: string
 }
 
-export interface RequestPersonalizedSongRecommendationResponse {
-  recommendedSongs: string[]
+export interface Recommendation {
+  _id: string
+  user: string
+  recommendedChord: string
+  unlockedSongs: string[]
+  score: number
+  generatedAt: string
 }
 
-export interface RecommendNextChordsForTargetSongPayload {
-  sessionId: string
-  targetSong: string
-}
-
-export interface RecommendNextChordsForTargetSongResponse {
-  recommendedPath: string[]
-}
+export interface GetRecommendationResponse extends Array<Recommendation> {}
 
 export interface ErrorResponse {
   error: string

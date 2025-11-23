@@ -35,9 +35,9 @@
             <div v-if="loadingSongs" class="loading">Loading...</div>
             <div v-else-if="songs.length === 0" class="empty-state">No songs yet</div>
             <ul v-else class="items-list">
-              <li v-for="song in songs" :key="song.song" class="item-card">
-                <div class="item-name">{{ song.song }}</div>
-                <div class="item-mastery">{{ song.mastery }}</div>
+              <li v-for="progress in songs" :key="progress.song._id" class="item-card">
+                <div class="item-name">{{ progress.song.title }}</div>
+                <div class="item-mastery">{{ progress.mastery }}</div>
               </li>
             </ul>
           </section>
@@ -65,6 +65,7 @@ import Layout from '@/components/Layout.vue'
 import { getSongsInProgress } from '@/services/songLibraryService'
 import { getKnownChords } from '@/services/chordLibraryService'
 import { getSessionId } from '@/utils/sessionStorage'
+import type { SongProgress } from '@/types/songLibrary'
 
 const posts = ref<Array<{
   id: string
@@ -73,7 +74,7 @@ const posts = ref<Array<{
   createdAt: string
   reactions: Array<{ id: string; type: string }>
 }>>([])
-const songs = ref<Array<{ song: string; mastery: string }>>([])
+const songs = ref<SongProgress[]>([])
 const chords = ref<Array<{ chord: string; mastery: string }>>([])
 const loadingPosts = ref(false)
 const loadingSongs = ref(false)

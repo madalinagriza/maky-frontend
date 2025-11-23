@@ -1,3 +1,5 @@
+import type { Song } from './song'
+
 export interface StartLearningSongPayload {
   sessionId: string
   song: string
@@ -15,21 +17,12 @@ export interface StopLearningSongPayload {
   song: string
 }
 
-export interface GetPlayableSongsPayload {
-  sessionId: string
-  genres?: string[]
-}
-
 export interface SongProgress {
-  song: string
+  song: Song
   mastery: string
 }
 
 export interface GetSongsInProgressResponse extends Array<SongProgress> {}
-
-export interface FilterSongsByGenrePayload {
-  genre: string
-}
 
 export interface ErrorResponse {
   error: string

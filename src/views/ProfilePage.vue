@@ -55,6 +55,33 @@
               </select>
             </div>
 
+            <div class="form-group">
+              <label>Target Song</label>
+              <div v-if="profile.targetSong" class="target-song-display">
+                <span>{{ targetSongDisplay }}</span>
+                <button type="button" @click="removeTarget" class="remove-btn">Remove</button>
+              </div>
+              <div v-else class="song-search">
+                <input 
+                  v-model="songSearchQuery" 
+                  @input="searchSongs"
+                  type="text" 
+                  placeholder="Search for a target song..." 
+                  class="form-input"
+                />
+                <ul v-if="searchResults.length > 0" class="search-results">
+                  <li 
+                    v-for="song in searchResults" 
+                    :key="song._id" 
+                    @click="selectTargetSong(song)"
+                    class="search-result-item"
+                  >
+                    {{ song.title }} by {{ song.artist }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+
             <button type="submit" :disabled="saving" class="save-btn">
               {{ saving ? 'Saving...' : 'Save Profile' }}
             </button>
@@ -113,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import Layout from '@/components/Layout.vue'
 import {
   updateDisplayName,
@@ -121,6 +148,8 @@ import {
   updateAvatar,
   setGenrePreferences,
   changeSkillLevel,
+  setTargetSong,
+  removeTargetSong,
   getProfile,
 } from '@/services/userProfileService'
 import {
@@ -129,8 +158,10 @@ import {
   updateChordMastery as updateChordMasteryAPI,
   removeChordFromInventory,
 } from '@/services/chordLibraryService'
+import { searchByTitleOrArtist } from '@/services/songService'
 import { getSessionId, getUserId } from '@/utils/sessionStorage'
 import { useUserProfile } from '@/composables/useUserProfile'
+import type { Song } from '@/types/song'
 
 const availableGenres = [
   'Rock', 'Pop', 'Country', 'Jazz', 'Blues', 'Folk', 'Classical', 'Metal', 'R&B', 'Reggae'
@@ -142,6 +173,7 @@ const profile = reactive({
   avatarUrl: '',
   genrePreferences: [] as string[],
   skillLevel: 'BEGINNER' as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED',
+  targetSong: '' as string,
 })
 
 const chords = ref<Array<{ chord: string; mastery: string }>>([])
@@ -151,6 +183,50 @@ const loadingChords = ref(false)
 const saving = ref(false)
 const addingChord = ref(false)
 const feedback = ref<{ kind: 'success' | 'error'; message: string } | null>(null)
+
+const songSearchQuery = ref('')
+const searchResults = ref<Song[]>([])
+const targetSongDetails = ref<Song | null>(null)
+
+const targetSongDisplay = computed(() => {
+  if (targetSongDetails.value) {
+    return `${targetSongDetails.value.title} by ${targetSongDetails.value.artist}`
+  }
+  return profile.targetSong || 'Unknown Song'
+})
+
+async function searchSongs() {
+  if (songSearchQuery.value.length < 2) {
+    searchResults.value = []
+    return
+  }
+  try {
+    const response = await searchByTitleOrArtist({ query: songSearchQuery.value })
+    searchResults.value = response.map(r => r.song)
+  } catch (error) {
+    console.error('Failed to search songs:', error)
+  }
+}
+
+async function selectTargetSong(song: Song) {
+  profile.targetSong = song._id
+  targetSongDetails.value = song
+  songSearchQuery.value = ''
+  searchResults.value = []
+}
+
+async function removeTarget() {
+  profile.targetSong = ''
+  targetSongDetails.value = null
+  try {
+    const sessionId = getSessionId()
+    if (sessionId) {
+      await removeTargetSong(sessionId)
+    }
+  } catch (error) {
+    console.error('Failed to remove target song:', error)
+  }
+}
 
 async function loadChords() {
   loadingChords.value = true
@@ -185,6 +261,10 @@ async function saveProfile() {
     }
     await setGenrePreferences({ sessionId, newGenrePreferences: profile.genrePreferences })
     await changeSkillLevel({ sessionId, newSkillLevel: profile.skillLevel })
+    
+    if (profile.targetSong) {
+      await setTargetSong({ sessionId, song: profile.targetSong })
+    }
 
     // Sync profile data to composable
     const { setProfile } = useUserProfile()
@@ -279,6 +359,16 @@ async function loadProfile() {
       ? existing.genrePreferences
       : profile.genrePreferences
     profile.skillLevel = (existing.skillLevel as typeof profile.skillLevel) ?? profile.skillLevel
+    profile.targetSong = existing.targetSong ?? profile.targetSong
+
+    // If we have a target song ID, try to fetch details to display title
+    if (profile.targetSong) {
+      // We don't have getSongById, so we might not be able to show the title immediately
+      // unless we search for it or have a cache. 
+      // For now, we'll just leave it as ID or try to search if it looks like a title.
+      // If it's an ID, searchByTitleOrArtist won't find it unless we support ID search.
+      // Let's assume for now we can't easily get the title if we only have ID on load.
+    }
   } catch (error) {
     console.error('Failed to load profile:', error)
   }
@@ -496,6 +586,46 @@ label {
   color: #9ca3af;
   padding: 2rem;
   text-align: center;
+}
+
+.target-song-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--main);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+}
+
+.song-search {
+  position: relative;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+
+.search-result-item {
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-result-item:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 </style>
 

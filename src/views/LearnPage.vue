@@ -20,22 +20,12 @@
             No playable songs yet. Learn some chords to unlock songs!
           </div>
           <ul v-else class="song-list">
-            <li v-for="song in filteredPlayableSongs" :key="song" class="song-item">
-              {{ song }}
-            </li>
-          </ul>
-        </section>
-
-        <section class="learn-section">
-          <h2>Learn a New Song</h2>
-          <div v-if="loadingRecommendations" class="loading">Loading recommendations...</div>
-          <div v-else-if="recommendedSongs.length === 0" class="empty-state">
-            No song recommendations available.
-          </div>
-          <ul v-else class="song-list">
-            <li v-for="song in recommendedSongs" :key="song" class="song-item">
-              {{ song }}
-              <button @click="startLearningSong(song)" class="learn-btn">Start Learning</button>
+            <li v-for="song in filteredPlayableSongs" :key="song._id" class="song-item">
+              <div class="song-info">
+                <span class="song-title">{{ song.title }}</span>
+                <span class="song-artist">{{ song.artist }}</span>
+              </div>
+              <button @click="startLearningSong(song._id)" class="learn-btn">Start Learning</button>
             </li>
           </ul>
         </section>
@@ -64,105 +54,89 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import Layout from '@/components/Layout.vue'
-import { getPlayableSongs, startLearningSong as startLearningSongAPI } from '@/services/songLibraryService'
-import { requestPersonalizedSongRecommendation, requestChordRecommendation, requestSongUnlockRecommendation } from '@/services/recommendationService'
-import { addChordToInventory } from '@/services/chordLibraryService'
+import { getPlayableSongs, searchByTitleOrArtist } from '@/services/songService'
+import { startLearningSong as startLearningSongAPI } from '@/services/songLibraryService'
+import { requestChordRecommendation, requestSongUnlockRecommendation } from '@/services/recommendationService'
+import { addChordToInventory, getKnownChords } from '@/services/chordLibraryService'
 import { getSessionId } from '@/utils/sessionStorage'
+import type { Song } from '@/types/song'
 
 const searchQuery = ref('')
-const playableSongs = ref<string[]>([])
-const recommendedSongs = ref<string[]>([])
+const playableSongs = ref<Song[]>([])
 const recommendedChord = ref<string | null>(null)
 const unlockedSongs = ref<string[]>([])
 const loadingSongs = ref(false)
-const loadingRecommendations = ref(false)
 const loadingChordRec = ref(false)
 
 const filteredPlayableSongs = computed(() => {
   if (!searchQuery.value.trim()) return playableSongs.value
   const query = searchQuery.value.toLowerCase()
-  return playableSongs.value.filter(song => song.toLowerCase().includes(query))
+  return playableSongs.value.filter(song => 
+    song.title.toLowerCase().includes(query) || 
+    song.artist.toLowerCase().includes(query)
+  )
 })
 
-async function loadPlayableSongs() {
+async function loadData() {
   loadingSongs.value = true
-  try {
-    const sessionId = getSessionId()
-    if (!sessionId) return
-
-    const response = await getPlayableSongs({ sessionId })
-    // Response is an array of objects with songs property
-    if (Array.isArray(response) && response.length > 0) {
-      playableSongs.value = response[0]?.songs ?? []
-    } else {
-      playableSongs.value = []
-    }
-  } catch (error) {
-    console.error('Failed to load playable songs:', error)
-    playableSongs.value = []
-  } finally {
-    loadingSongs.value = false
-  }
-}
-
-async function loadSongRecommendations() {
-  loadingRecommendations.value = true
-  try {
-    const sessionId = getSessionId()
-    if (!sessionId) return
-
-    const response = await requestPersonalizedSongRecommendation({ sessionId })
-    recommendedSongs.value = response?.recommendedSongs ?? []
-  } catch (error) {
-    console.error('Failed to load song recommendations:', error)
-    recommendedSongs.value = []
-  } finally {
-    loadingRecommendations.value = false
-  }
-}
-
-async function loadChordRecommendation() {
   loadingChordRec.value = true
+  
   try {
     const sessionId = getSessionId()
     if (!sessionId) return
 
-    const response = await requestChordRecommendation({ sessionId })
-    recommendedChord.value = response.recommendedChord
+    // 1. Get Known Chords
+    const knownChordsResponse = await getKnownChords(sessionId)
+    const knownChords = knownChordsResponse.map(kc => kc.chord)
 
-    // Get unlocked songs for this chord
-    if (recommendedChord.value) {
-      try {
+    // 2. Get Playable Songs
+    const playableResponse = await getPlayableSongs({ knownChords })
+    playableSongs.value = playableResponse.map(r => r.song)
+
+    // 3. Get All Songs (needed for recommendation)
+    // Assuming empty query returns a list of songs
+    const allSongsResponse = await searchByTitleOrArtist({ query: '' })
+    const allSongs = allSongsResponse.map(r => r.song)
+
+    // 4. Get Chord Recommendation
+    if (allSongs.length > 0) {
+      const recResponse = await requestChordRecommendation({
+        knownChords,
+        allSongs
+      })
+      recommendedChord.value = recResponse.recommendedChord
+
+      // 5. Get Unlocked Songs for recommended chord
+      if (recommendedChord.value) {
         const unlockResponse = await requestSongUnlockRecommendation({
-          sessionId,
+          knownChords,
           potentialChord: recommendedChord.value,
+          allSongs
         })
-        unlockedSongs.value = unlockResponse?.unlockedSongs ?? []
-      } catch (error) {
-        console.error('Failed to load unlocked songs:', error)
+        unlockedSongs.value = unlockResponse.unlockedSongs
       }
     }
+
   } catch (error) {
-    console.error('Failed to load chord recommendation:', error)
-    recommendedChord.value = null
+    console.error('Failed to load data:', error)
   } finally {
+    loadingSongs.value = false
     loadingChordRec.value = false
   }
 }
 
-async function startLearningSong(song: string) {
+async function startLearningSong(songId: string) {
   try {
     const sessionId = getSessionId()
     if (!sessionId) return
 
     await startLearningSongAPI({
       sessionId,
-      song,
+      song: songId,
       mastery: 'in progress',
     })
     // Reload data
-    await loadPlayableSongs()
-    await loadSongRecommendations()
+    await loadData()
   } catch (error) {
     console.error('Failed to start learning song:', error)
   }
@@ -178,18 +152,15 @@ async function startLearningChord(chord: string) {
       chord,
       mastery: 'in progress',
     })
-    // Reload recommendations
-    await loadChordRecommendation()
-    await loadPlayableSongs()
+    // Reload data
+    await loadData()
   } catch (error) {
     console.error('Failed to add chord:', error)
   }
 }
 
 onMounted(() => {
-  loadPlayableSongs()
-  loadSongRecommendations()
-  loadChordRecommendation()
+  loadData()
 })
 </script>
 
@@ -267,6 +238,21 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.song-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.song-title {
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.song-artist {
+  font-size: 0.875rem;
+  color: #9ca3af;
 }
 
 .chord-recommendation {

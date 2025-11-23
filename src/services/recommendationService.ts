@@ -1,13 +1,13 @@
 import { apiClient } from './apiClient'
 import type {
+  CalculateRecommendationPayload,
+  CalculateRecommendationResponse,
   RequestChordRecommendationPayload,
   RequestChordRecommendationResponse,
   RequestSongUnlockRecommendationPayload,
   RequestSongUnlockRecommendationResponse,
-  RequestPersonalizedSongRecommendationPayload,
-  RequestPersonalizedSongRecommendationResponse,
-  RecommendNextChordsForTargetSongPayload,
-  RecommendNextChordsForTargetSongResponse,
+  GetRecommendationPayload,
+  GetRecommendationResponse,
   ErrorResponse,
 } from '@/types/recommendation'
 
@@ -24,6 +24,14 @@ function ensureSuccess<T>(payload: T | ErrorResponse): T {
     throw new Error(payload.error)
   }
   return payload as T
+}
+
+export async function calculateRecommendation(payload: CalculateRecommendationPayload) {
+  const { data } = await apiClient.post<CalculateRecommendationResponse | ErrorResponse>(
+    `${RECOMMENDATION_BASE}/calculateRecommendation`,
+    payload
+  )
+  return ensureSuccess(data)
 }
 
 export async function requestChordRecommendation(payload: RequestChordRecommendationPayload) {
@@ -44,20 +52,9 @@ export async function requestSongUnlockRecommendation(
   return ensureSuccess(data)
 }
 
-export async function requestPersonalizedSongRecommendation(
-  payload: RequestPersonalizedSongRecommendationPayload
-) {
-  const { data } = await apiClient.post<
-    RequestPersonalizedSongRecommendationResponse | ErrorResponse
-  >(`${RECOMMENDATION_BASE}/requestPersonalizedSongRecommendation`, payload)
-  return ensureSuccess(data)
-}
-
-export async function recommendNextChordsForTargetSong(
-  payload: RecommendNextChordsForTargetSongPayload
-) {
-  const { data } = await apiClient.post<RecommendNextChordsForTargetSongResponse | ErrorResponse>(
-    `${RECOMMENDATION_BASE}/recommendNextChordsForTargetSong`,
+export async function getRecommendation(payload: GetRecommendationPayload) {
+  const { data } = await apiClient.post<GetRecommendationResponse | ErrorResponse>(
+    `${RECOMMENDATION_BASE}/_getRecommendation`,
     payload
   )
   return ensureSuccess(data)
