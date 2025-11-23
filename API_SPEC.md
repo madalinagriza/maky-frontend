@@ -91,7 +91,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
 **Description:** Authenticates a user and returns both their user object and a session ID.
 
 **Requirements:**
-- A User exists with the given `usernameOrEmail` and the provided `password` matches their `passwordHash`.
+- A User exists with the given `username` and the provided `password` matches their `passwordHash`.
 
 **Effects:**
 - Returns the matching user and creates a new session, returning the `sessionId`. The `sessionId` should be stored by the frontend and included in all subsequent authenticated requests.
@@ -99,7 +99,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
 **Request Body:**
 ```json
 {
-  "usernameOrEmail": "string",
+  "username": "string",
   "password": "string"
 }
 ```
@@ -259,6 +259,40 @@ After a user logs in, all authenticated API requests should include a `sessionId
 }
 ```
 ---
+### POST /api/UserAccount/_isUserById
+
+**Description:** Checks if a user exists for a given user ID.
+
+**Requirements:**
+- This query can always be executed.
+
+**Effects:**
+- Returns `true` as `result` if a user with the given ID exists, `false` otherwise.
+
+**Request Body:**
+```json
+{
+  "user": "ID"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "result": true
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
 # API Specification: UserProfile Concept
 
 **Purpose:** To allow users to personalize their in-app identity and preferences.
@@ -556,7 +590,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
   "error": "string"
 }
 ```
----
+
 ### POST /api/UserProfile/_searchByDisplayName
 
 **Description:** Searches for user profiles by a partial match on their display name.
@@ -742,6 +776,88 @@ After a user logs in, all authenticated API requests should include a `sessionId
 }
 ```
 ---
+### POST /api/Post/_getPostsForUser
+
+**Description:** Retrieves all posts authored by a specific user.
+
+**Requirements:**
+- The `user` must exist.
+
+**Effects:**
+- Returns an array of all posts authored by the specified `user`, ordered by creation date (newest first). If the user has no posts, an empty array is returned.
+
+**Request Body:**
+```json
+{
+  "user": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "post": {
+      "_id": "string",
+      "author": "string",
+      "content": "string",
+      "item": "string",
+      "postType": "string",
+      "createdAt": "string",
+      "editedAt": "string"
+    }
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+### POST /api/Post/_getPostsForUsers
+
+**Description:** Retrieves all posts authored by any of the specified users. Useful for building feeds that show posts from multiple users.
+
+**Requirements:**
+- All `users` in the array must exist.
+
+**Effects:**
+- Returns an array of all posts authored by any of the specified `users`, ordered by creation date (newest first). If none of the users have posts, an empty array is returned.
+
+**Request Body:**
+```json
+{
+  "users": ["string"]
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "post": {
+      "_id": "string",
+      "author": "string",
+      "content": "string",
+      "item": "string",
+      "postType": "string",
+      "createdAt": "string",
+      "editedAt": "string"
+    }
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
 # API Specification: Comment Concept
 
 **Purpose:** To allow users to interact with posts.
@@ -850,6 +966,77 @@ After a user logs in, all authenticated API requests should include a `sessionId
 }
 ```
 ---
+### POST /api/Comment/removeAllCommentsFromPost
+
+**Description:** Removes all comments from a post. This is typically used for cascade deletion when a post is deleted.
+
+**Authentication:** This endpoint is typically called internally by synchronizations and may not require user authentication. However, if exposed directly, it should require appropriate authorization (e.g., post author or administrator).
+
+**Requirements:**
+- The `post` exists.
+
+**Effects:**
+- Removes all `Comment`s associated with the specified `post` from the state and from the `comments` set of `post`.
+
+**Request Body:**
+```json
+{
+  "post": "string"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
+### POST /api/Comment/_getCommentsForPostId
+
+**Description:** Retrieves a simplified list of comments for a specific post. The response is a single-element array whose first object exposes the `comments` array.
+
+**Requirements:**
+- The `post` must exist.
+
+**Effects:**
+- Returns a single-element array; the element contains a `comments` property holding the simplified comment objects (`{ content, author }`).
+
+**Request Body:**
+```json
+{
+  "post": "Post"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "comments": [
+      {
+        "content": "string",
+        "author": "User"
+      }
+    ]
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
 # API Specification: Reaction Concept
 
 **Purpose:** To allow users to express positive sentiment on posts.
@@ -958,6 +1145,84 @@ After a user logs in, all authenticated API requests should include a `sessionId
 }
 ```
 ---
+### POST /api/Reaction/removeAllReactionsFromPost
+
+**Description:** Removes all reactions from a post. This is typically used for cascade deletion when a post is deleted.
+
+**Authentication:** This endpoint is typically called internally by synchronizations and may not require user authentication. However, if exposed directly, it should require appropriate authorization (e.g., post author or administrator).
+
+**Requirements:**
+- The `post` exists.
+
+**Effects:**
+- Removes all `Reaction`s associated with the specified `post` from the state and from the `reactions` set of `post`.
+
+**Request Body:**
+```json
+{
+  "post": "string"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+**Description:** Retrieves a summary of reaction counts, grouped by type, for a specific post.
+
+**Requirements:**
+
+-   The `post` exists.
+
+**Effects:**
+
+-   Returns an array of objects, each containing a reaction type and its total count for the given `post`. Includes types with a count of 0.
+
+**Request Body:**
+
+```json
+{
+  "post": "ID"
+}
+```
+
+**Success Response Body (Query):**
+
+```json
+[
+  {
+    "type": "LIKE",
+    "count": 5
+  },
+  {
+    "type": "LOVE",
+    "count": 2
+  },
+  {
+    "type": "CELEBRATE",
+    "count": 0
+  }
+]
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
 # API Specification: Friendship Concept
 
 **Purpose:** To allow users to establish and manage mutual connections.
@@ -1096,7 +1361,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
 }
 ```
 ---
-### POST /api/Friendship/_areFriends
+### POST /api/Friendship/areFriends
 
 **Description:** Checks if two users have an accepted friendship.
 
@@ -1132,6 +1397,79 @@ After a user logs in, all authenticated API requests should include a `sessionId
 }
 ```
 ---
+### POST /api/Friendship/_getFriends
+
+**Description:** Retrieves a list of all users who are friends with the specified user.
+
+**Requirements:**
+- The user `user` exists.
+
+**Effects:**
+- Returns a set of all users `f` for whom a `Friendship` exists with `status` `ACCEPTED` between `user` and `f`.
+
+**Request Body:**
+```json
+{
+  "user": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "friend": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+---
+### POST /api/Friendship/\_getPendingFriendships
+
+**Description:** Retrieves a list of all incoming friend requests that are pending for a specific user.
+
+**Requirements:**
+- The user `user` exists.
+
+**Effects:**
+- Returns a one-element array containing an object. This object has a single key `pendingFriendships` whose value is a set of all pending `Friendship` requests where the specified `user` is the `recipient`. Each entry in the set contains the `requester`.
+
+**Request Body:**
+```json
+{
+  "user": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "pendingFriendships": [
+      {
+        "requester": "string"
+      }
+    ]
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+
+---
+
 # API Specification: JamGroup Concept
 
 **Purpose:** To allow users to create and manage private groups for collaborative jamming.
@@ -1555,439 +1893,91 @@ After a user logs in, all authenticated API requests should include a `sessionId
 }
 ```
 ---
-# API Specification: Chord Concept
-
-**Purpose:** Define fundamental musical chords.
-
-**Note:** This concept is typically used by administrators to manage the chord library. Frontend applications may need read-only access via queries.
-
----
-
-## API Endpoints
-
-### POST /api/Chord/createChord
-
-**Description:** Creates a new chord in the system.
-
-**Authentication:** Requires a valid `sessionId`. Typically restricted to administrators.
-
-**Requirements:**
-- No Chord with the given `name` already exists.
-
-**Effects:**
-- Creates a new Chord `c`; sets the name of `c` to `name` and its `notes` to the provided sequence; returns the new Chord `c` as `chord`.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string",
-  "name": "string",
-  "notes": "string[]"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{
-  "chord": "string"
-}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
----
-### POST /api/Chord/deleteChord
-
-**Description:** Deletes a chord from the system.
-
-**Authentication:** Requires a valid `sessionId`. Typically restricted to administrators.
-
-**Requirements:**
-- The Chord `chord` exists.
-
-**Effects:**
-- Removes the Chord `chord` and all its associated data from the state.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string",
-  "chord": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
----
-# API Specification: ChordLibrary Concept
-
-**Purpose:** Maintain an inventory of chords known by each user, along with their self-reported mastery level for each chord.
-
----
-
-## API Endpoints
-
-### POST /api/ChordLibrary/addUser
-
-**Description:** Adds a user to the chord library system.
-
-**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
-
-**Requirements:**
-- The user associated with `sessionId` does not already exist in the set of Users.
-
-**Effects:**
-- Adds the authenticated user to the set of Users, creating an empty inventory for them.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
----
-### POST /api/ChordLibrary/addChordToInventory
-
-**Description:** Adds a chord to a user's inventory with a mastery level.
-
-**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
-
-**Requirements:**
-- The user associated with `sessionId` exists. The authenticated user does not already have the specified `chord` in their inventory.
-
-**Effects:**
-- Creates a new `KnownChord` entry associating the authenticated user, `chord`, and `mastery` level.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string",
-  "chord": "string",
-  "mastery": "string" // "na" | "in progress" | "mastered"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
----
-### POST /api/ChordLibrary/updateChordMastery
-
-**Description:** Updates the mastery level of a chord in a user's inventory.
-
-**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
-
-**Requirements:**
-- A `KnownChord` entry exists for the authenticated user and the specified `chord`.
-
-**Effects:**
-- Updates the `mastery` of the existing `KnownChord` entry for the authenticated user and `chord` to `newMastery`.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string",
-  "chord": "string",
-  "newMastery": "string" // "na" | "in progress" | "mastered"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
----
-### POST /api/ChordLibrary/removeChordFromInventory
-
-**Description:** Removes a chord from a user's inventory.
-
-**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
-
-**Requirements:**
-- A `KnownChord` entry exists for the authenticated user and the specified `chord`.
-
-**Effects:**
-- Deletes the `KnownChord` entry for the authenticated user and `chord`.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string",
-  "chord": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
----
-### POST /api/ChordLibrary/removeUser
-
-**Description:** Removes a user from the chord library system.
-
-**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
-
-**Requirements:**
-- The user associated with `sessionId` exists in the set of Users.
-
-**Effects:**
-- Removes the authenticated user from the set of Users and deletes all `KnownChord` entries associated with that user.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
----
-### POST /api/ChordLibrary/_getKnownChords
-
-**Description:** Retrieves all known chords for a user with their mastery levels.
-
-**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
-
-**Requirements:**
-- The user associated with `sessionId` exists.
-
-**Effects:**
-- Returns the set of all `KnownChord` entries for the authenticated user, each containing a chord and its mastery level.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string"
-}
-```
-
-**Success Response Body (Query):**
-```json
-[
-  {
-    "chord": "string",
-    "mastery": "string"
-  }
-]
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
----
-# API Specification: RecommendationEngine Concept
-
-**Purpose:** Guide a user's learning journey, helping them choose the next best chords to learn and discover relevant songs.
-
-**Note:** In the concept specification, these methods are labeled as "queries", but according to the API extraction guidelines, only methods starting with `_` should be treated as queries returning arrays. Since these methods don't start with `_`, they should be implemented as actions returning single objects. This spec reflects the guideline-compliant format.
-
----
-
-## API Endpoints
-
-### POST /api/RecommendationEngine/requestChordRecommendation
-
-**Description:** Requests a recommendation for the next best chord to learn.
-
-**Authentication:** Requires a valid `sessionId`. The user's known chords are automatically retrieved from the session.
-
-**Requirements:**
-- The user associated with `sessionId` exists. The set of `knownChords` is a proper subset of `allChords` (meaning there is at least one chord the user has not yet learned).
-
-**Effects:**
-- Analyzes the relationships between all chords (e.g., frequency in common progressions, popularity in songs). Returns a single `Chord` as `recommendedChord` that is not present in the user's `knownChords`. This recommendation is optimized to be the most impactful next step for the user's learning.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{
-  "recommendedChord": "string"
-}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
----
-### POST /api/RecommendationEngine/requestSongUnlockRecommendation
-
-**Description:** Shows which songs would become playable if the user learns a specific chord.
-
-**Authentication:** Requires a valid `sessionId`. The user's known chords are automatically retrieved from the session.
-
-**Requirements:**
-- The `potentialChord` is not in the set of the user's `knownChords`. The set of `allSongs` (each with its required chords) is available.
-
-**Effects:**
-- Identifies all songs from `allSongs` that can be played using the combined set of the user's `knownChords` and the `potentialChord`. From this set, it filters out any songs that could already be played with `knownChords` alone. Returns the resulting list of newly playable songs as `unlockedSongs`.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string",
-  "potentialChord": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{
-  "unlockedSongs": "string[]"
-}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
----
-### POST /api/RecommendationEngine/requestPersonalizedSongRecommendation
-
-**Description:** Gets personalized song recommendations based on the user's known chords and genre preferences.
-
-**Authentication:** Requires a valid `sessionId`. The user's known chords and genre preferences are automatically retrieved from the session.
-
-**Requirements:**
-- The set of `knownChords` for the user associated with `sessionId` is not empty.
-
-**Effects:**
-- Filters the set of `allSongs` to find all songs that are playable with the user's current `knownChords`. Further filters and ranks this result based on the user's `genrePreferences`. Returns a ranked list of playable songs tailored to the user's tastes as `recommendedSongs`.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{
-  "recommendedSongs": "string[]"
-}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
----
-### POST /api/RecommendationEngine/recommendNextChordsForTargetSong
-
-**Description:** Provides a learning path of chords to learn in order to play a target song.
-
-**Authentication:** Requires a valid `sessionId`. The user's known chords are automatically retrieved from the session.
-
-**Requirements:**
-- The `targetSong` exists. The set of chords required by `targetSong` is not a subset of the user's `knownChords`.
-
-**Effects:**
-- Identifies the set of `missingChords` required to play the `targetSong` that are not present in the user's `knownChords` set. It then orders these `missingChords` into a sequence based on pedagogical principles (e.g., prioritizing foundational chords, chords with simpler fingerings, or chords that unlock the most other songs). Returns this ordered learning path as `recommendedPath`.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string",
-  "targetSong": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{
-  "recommendedPath": "string[]"
-}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
----
 # API Specification: SongLibrary Concept
 
-**Purpose:** Manage a global catalog of songs and track each user's progress in learning them.
+**Purpose:** Manage a user's personal progress in learning songs.
 
 ---
 
 ## API Endpoints
 
+### POST /api/SongLibrary/addUser
+
+**Description:** Initializes a user's song tracking journal.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+
+*   The user associated with `sessionId` does not already exist in the SongLibrary.
+
+**Effects:**
+
+*   Adds the authenticated user to the SongLibrary with an empty progress list.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string"
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{
+  "success": "boolean"
+}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/SongLibrary/removeUser
+
+**Description:** Removes a user's song tracking journal.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+
+*   The user associated with `sessionId` exists in the SongLibrary.
+
+**Effects:**
+
+*   Removes the user and all their associated `SongProgress` entries from the state.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string"
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
 ### POST /api/SongLibrary/addSong
 
 **Description:** Adds a new song to the global song library.
@@ -2057,6 +2047,8 @@ After a user logs in, all authenticated API requests should include a `sessionId
 }
 ```
 ---
+
+
 ### POST /api/SongLibrary/startLearningSong
 
 **Description:** Adds a song to a user's learning journal.
@@ -2064,65 +2056,79 @@ After a user logs in, all authenticated API requests should include a `sessionId
 **Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
 
 **Requirements:**
-- The user associated with `sessionId` and `song` exist. The authenticated user does not already have a `SongProgress` entry for this `song`.
+
+*   The `song` exists. The user associated with `sessionId` exists and is not already tracking this `song`.
 
 **Effects:**
-- Creates a new `SongProgress` entry for the authenticated user, associating them with the specified `song` and initial `mastery` level.
+
+*   Creates a new `SongProgress` entry for the authenticated user, associating them with the specified `song` and `mastery` level.
 
 **Request Body:**
+
 ```json
 {
   "sessionId": "string",
   "song": "string",
-  "mastery": "string" // "na" | "in progress" | "mastered"
+  "mastery": "string" // "in-progress" | "mastered" | "na"
 }
 ```
 
 **Success Response Body (Action):**
+
 ```json
 {}
 ```
 
 **Error Response Body:**
+
 ```json
 {
   "error": "string"
 }
 ```
+
 ---
+
 ### POST /api/SongLibrary/updateSongMastery
 
-**Description:** Updates the mastery level of a song in a user's learning journal.
+**Description:** Updates the mastery level of a song in a user's journal.
 
 **Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
 
 **Requirements:**
-- A `SongProgress` entry exists for the authenticated user and the specified `song`.
+
+*   The user associated with `sessionId` is already tracking the specified `song`.
 
 **Effects:**
-- Updates the `mastery` of the existing `SongProgress` entry for the authenticated user and `song` to `newMastery`.
+
+*   Updates the `mastery` level for the specific song entry.
 
 **Request Body:**
+
 ```json
 {
   "sessionId": "string",
   "song": "string",
-  "newMastery": "string" // "na" | "in progress" | "mastered"
+  "newMastery": "string" // "in-progress" | "mastered" | "na"
 }
 ```
 
 **Success Response Body (Action):**
+
 ```json
 {}
 ```
 
 **Error Response Body:**
+
 ```json
 {
   "error": "string"
 }
 ```
+
 ---
+
 ### POST /api/SongLibrary/stopLearningSong
 
 **Description:** Removes a song from a user's learning journal.
@@ -2130,12 +2136,15 @@ After a user logs in, all authenticated API requests should include a `sessionId
 **Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
 
 **Requirements:**
-- A `SongProgress` entry exists for the authenticated user and the specified `song`.
+
+*   The user associated with `sessionId` is currently tracking the specified `song`.
 
 **Effects:**
-- Deletes the `SongProgress` entry that associates the authenticated user with the `song`.
+
+*   Deletes the `SongProgress` entry for the authenticated user and `song`.
 
 **Request Body:**
+
 ```json
 {
   "sessionId": "string",
@@ -2144,78 +2153,68 @@ After a user logs in, all authenticated API requests should include a `sessionId
 ```
 
 **Success Response Body (Action):**
+
 ```json
 {}
 ```
 
 **Error Response Body:**
+
 ```json
 {
   "error": "string"
 }
 ```
----
-### POST /api/SongLibrary/addUser
 
-**Description:** Adds a user to the song library system.
+---
+
+### POST /api/SongLibrary/\_getSongsInProgress
+
+**Description:** Retrieves all songs a user is currently learning with their mastery levels.
 
 **Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
 
 **Requirements:**
-- The user associated with `sessionId` does not already exist in the set of Users.
+
+*   The user associated with `sessionId` exists.
 
 **Effects:**
-- Adds the authenticated user to the set of Users with an empty set of `SongProgresses`.
+
+*   Returns an array of objects containing the full song details and the user's current mastery level.
 
 **Request Body:**
+
 ```json
 {
   "sessionId": "string"
 }
 ```
 
-**Success Response Body (Action):**
+**Success Response Body (Query):**
+
 ```json
-{}
+[
+  {
+    "song": {
+      "_id": "string",
+      "title": "string",
+      "artist": "string",
+      "chords": ["string"]
+    },
+    "mastery": "string"
+  }
+]
 ```
 
 **Error Response Body:**
+
 ```json
 {
   "error": "string"
 }
 ```
+
 ---
-### POST /api/SongLibrary/removeUser
-
-**Description:** Removes a user from the song library system.
-
-**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
-
-**Requirements:**
-- The user associated with `sessionId` exists.
-
-**Effects:**
-- Removes the authenticated user and all their associated `SongProgress` entries from the state.
-
-**Request Body:**
-```json
-{
-  "sessionId": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
 ---
 ### POST /api/SongLibrary/_getPlayableSongs
 
@@ -2322,6 +2321,1005 @@ After a user logs in, all authenticated API requests should include a `sessionId
 }
 ```
 ---
+
+
+# API Specification: ChordLibrary Concept
+
+**Purpose:** Maintain an inventory of chords known by each user and their proficiency.
+
+---
+
+## API Endpoints
+
+### POST /api/ChordLibrary/addUser
+
+**Description:** Adds a user to the chord library system.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+
+*   The user associated with `sessionId` does not already exist in the ChordLibrary.
+
+**Effects:**
+
+*   Adds the authenticated user to the concept, creating an empty inventory.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string"
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{
+  "success": "boolean"
+}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/ChordLibrary/addChordToInventory
+
+**Description:** Adds a chord to a user's inventory with a mastery level.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+
+*   The user associated with `sessionId` exists. The chord symbol is valid. The user does not already have this chord in their inventory.
+
+**Effects:**
+
+*   Normalizes the chord symbol and creates a new `KnownChord` entry.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string",
+  "chord": "string",
+  "mastery": "string" // "not started" | "in progress" | "proficient" | "mastered"
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/ChordLibrary/updateChordMastery
+
+**Description:** Updates the mastery level of a known chord.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+
+*   The user associated with `sessionId` has the specified `chord` in their inventory.
+
+**Effects:**
+
+*   Updates the `mastery` of the existing entry to `newMastery`.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string",
+  "chord": "string",
+  "newMastery": "string"
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/ChordLibrary/removeChordFromInventory
+
+**Description:** Removes a chord from a user's inventory.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+
+*   The user associated with `sessionId` has the specified `chord` in their inventory.
+
+**Effects:**
+
+*   Deletes the `KnownChord` entry.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string",
+  "chord": "string"
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/ChordLibrary/removeUser
+
+**Description:** Removes a user from the chord library system.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+
+*   The user associated with `sessionId` exists.
+
+**Effects:**
+
+*   Removes the user and all their known chords from the state.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string"
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/ChordLibrary/\_getKnownChords
+
+**Description:** Retrieves all known chords for a user.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+
+*   The user associated with `sessionId` exists.
+
+**Effects:**
+
+*   Returns the set of all chords known by the user and their mastery levels.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string"
+}
+```
+
+**Success Response Body (Query):**
+
+```json
+[
+  {
+    "chord": "string",
+    "mastery": "string"
+  }
+]
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/ChordLibrary/\_getChordMastery
+
+**Description:** Retrieves the mastery level for a specific chord for a user.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+
+*   The user associated with `sessionId` exists and knows the chord.
+
+**Effects:**
+
+*   Returns the mastery level for the requested chord.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string",
+  "chord": "string"
+}
+```
+
+**Success Response Body (Query):**
+
+```json
+[
+  {
+    "mastery": "string"
+  }
+]
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+---
+### POST /api/ChordLibrary/_getKnownChords
+
+**Description:** Retrieves all known chords for a user with their mastery levels.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+- The user associated with `sessionId` exists.
+
+**Effects:**
+- Returns the set of all `KnownChord` entries for the authenticated user, each containing a chord and its mastery level.
+
+**Request Body:**
+```json
+{
+  "sessionId": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "chord": "string",
+    "mastery": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
+
+# API Specification: Chord Concept
+
+**Purpose:** Define fundamental musical chords (Admin management).
+
+---
+
+## API Endpoints
+
+### POST /api/Chord/createChord
+
+**Description:** Creates a new chord definition in the system.
+
+**Authentication:** Requires a valid `sessionId` (typically Admin).
+
+**Requirements:**
+
+*   No Chord with the given `name` already exists.
+
+**Effects:**
+
+*   Creates a new Chord entity with the specified notes.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string",
+  "name": "string",
+  "notes": ["string"]
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{
+  "chord": {
+    "_id": "string",
+    "name": "string",
+    "notes": ["string"]
+  }
+}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Chord/deleteChord
+
+**Description:** Deletes a chord definition.
+
+**Authentication:** Requires a valid `sessionId` (typically Admin).
+
+**Requirements:**
+
+*   The Chord `chord` exists.
+
+**Effects:**
+
+*   Removes the Chord from the state.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string",
+  "chord": "string" // ID
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Chord/\_getChordByName
+
+**Description:** Look up a chord by its name (e.g., "C", "Am7").
+
+**Requirements:**
+
+*   None.
+
+**Effects:**
+
+*   Returns the chord object if found.
+
+**Request Body:**
+
+```json
+{
+  "name": "string"
+}
+```
+
+**Success Response Body (Query):**
+
+```json
+[
+  {
+    "chord": {
+      "_id": "string",
+      "name": "string",
+      "notes": ["string"]
+    }
+  }
+]
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Chord/\_getAllChords
+
+**Description:** Retrieves all defined chords.
+
+**Requirements:**
+
+*   None.
+
+**Effects:**
+
+*   Returns a list of all chords sorted by name.
+
+**Request Body:**
+
+```json
+{}
+```
+
+**Success Response Body (Query):**
+
+```json
+[
+  {
+    "chords": [
+      {
+        "_id": "string",
+        "name": "string",
+        "notes": ["string"]
+      }
+    ]
+  }
+]
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+# API Specification: Song Concept
+
+**Purpose:** Manage the global catalog of songs.
+
+---
+
+## API Endpoints
+
+### POST /api/Song/createSong
+
+**Description:** Creates a new song in the catalog.
+
+**Authentication:** Requires a valid `sessionId` (typically Admin).
+
+**Requirements:**
+
+*   No Song with the exact same `title` and `artist` exists.
+
+**Effects:**
+
+*   Creates a new Song with the provided metadata.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string",
+  "title": "string",
+  "artist": "string",
+  "chords": ["string"],
+  "genre": "string", // optional
+  "key": "string", // optional
+  "tempo": "number", // optional
+  "difficulty": "number", // optional
+  "tags": ["string"], // optional
+  "source": "string" // optional
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{
+  "song": {
+    "_id": "string",
+    "title": "string",
+    "artist": "string"
+  }
+}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Song/deleteSong
+
+**Description:** Deletes a song from the catalog.
+
+**Authentication:** Requires a valid `sessionId` (typically Admin).
+
+**Requirements:**
+
+*   The Song `song` exists.
+
+**Effects:**
+
+*   Removes the song from the state.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string",
+  "song": "string" // ID
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Song/\_getPlayableSongs
+
+**Description:** Finds songs that can be played given a specific set of known chords.
+
+**Requirements:**
+
+*   None.
+
+**Effects:**
+
+*   Returns songs where every chord in the song is present in the `knownChords` list. Optionally filters by genre.
+
+**Request Body:**
+
+```json
+{
+  "knownChords": ["string"],
+  "genres": ["string"] // optional
+}
+```
+
+**Success Response Body (Query):**
+
+```json
+[
+  {
+    "song": {
+      "_id": "string",
+      "title": "string",
+      "artist": "string",
+      "chords": ["string"]
+    }
+  }
+]
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Song/\_filterSongsByGenre
+
+**Description:** Retrieves all songs matching a specific genre.
+
+**Requirements:**
+
+*   None.
+
+**Effects:**
+
+*   Returns songs where the `genre` field or `tags` array contains the specified string.
+
+**Request Body:**
+
+```json
+{
+  "genre": "string"
+}
+```
+
+**Success Response Body (Query):**
+
+```json
+[
+  {
+    "song": "Object"
+  }
+]
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Song/\_searchByTitleOrArtist
+
+**Description:** Searches for songs by title or artist name (partial match).
+
+**Requirements:**
+
+*   None.
+
+**Effects:**
+
+*   Returns up to 20 songs matching the query string.
+
+**Request Body:**
+
+```json
+{
+  "query": "string"
+}
+```
+
+**Success Response Body (Query):**
+
+```json
+[
+  {
+    "song": "Object"
+  }
+]
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+# API Specification: RecommendationEngine Concept
+
+**Purpose:** Calculate optimal learning paths and chord suggestions.
+
+---
+
+## API Endpoints
+
+### POST /api/RecommendationEngine/calculateRecommendation
+
+**Description:** Performs a heavy calculation to determine the best next chord to learn and saves the result as a `Recommendation` record.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+
+*   User must exist. `knownChords` and `allSongs` must be provided.
+
+**Effects:**
+
+*   Analyzes the provided song list against known chords. Creates a persisted `Recommendation` containing the best chord and the list of songs it unlocks.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "string",
+  "knownChords": ["string"],
+  "allSongs": [
+    {
+      "_id": "string",
+      "chords": ["string"],
+      "difficulty": "number"
+    }
+  ]
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{
+  "recommendationId": "string"
+}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/RecommendationEngine/requestChordRecommendation
+
+**Description:** A stateless version of the recommendation logic. Suggests the next chord to learn.
+
+**Requirements:**
+
+*   `knownChords` is a proper subset of chords in `allSongs`.
+
+**Effects:**
+
+*   Returns a single chord string that maximizes song unlock potential.
+
+**Request Body:**
+
+```json
+{
+  "knownChords": ["string"],
+  "allSongs": [
+    {
+      "_id": "string",
+      "chords": ["string"]
+    }
+  ]
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{
+  "recommendedChord": "string"
+}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+---
+### POST /api/RecommendationEngine/requestPersonalizedSongRecommendation
+
+**Description:** Gets personalized song recommendations based on the user's known chords and genre preferences.
+
+**Authentication:** Requires a valid `sessionId`. The user's known chords and genre preferences are automatically retrieved from the session.
+
+**Requirements:**
+- The set of `knownChords` for the user associated with `sessionId` is not empty.
+
+**Effects:**
+- Filters the set of `allSongs` to find all songs that are playable with the user's current `knownChords`. Further filters and ranks this result based on the user's `genrePreferences`. Returns a ranked list of playable songs tailored to the user's tastes as `recommendedSongs`.
+
+**Request Body:**
+```json
+{
+  "sessionId": "string"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{
+  "recommendedSongs": "string[]"
+}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
+---
+### POST /api/RecommendationEngine/recommendNextChordsForTargetSong
+
+**Description:** Provides a learning path of chords to learn in order to play a target song.
+
+**Authentication:** Requires a valid `sessionId`. The user's known chords are automatically retrieved from the session.
+
+**Requirements:**
+- The `targetSong` exists. The set of chords required by `targetSong` is not a subset of the user's `knownChords`.
+
+**Effects:**
+- Identifies the set of `missingChords` required to play the `targetSong` that are not present in the user's `knownChords` set. It then orders these `missingChords` into a sequence based on pedagogical principles (e.g., prioritizing foundational chords, chords with simpler fingerings, or chords that unlock the most other songs). Returns this ordered learning path as `recommendedPath`.
+
+**Request Body:**
+```json
+{
+  "sessionId": "string",
+  "targetSong": "string"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{
+  "recommendedPath": "string[]"
+}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
+
+### POST /api/RecommendationEngine/requestSongUnlockRecommendation
+
+**Description:** Identifies specifically which songs would become playable if a specific chord were learned.
+
+**Requirements:**
+
+*   `potentialChord` is not in `knownChords`.
+
+**Effects:**
+
+*   Returns a list of song IDs that require `potentialChord` (plus any subset of `knownChords`) but were not previously playable.
+
+**Request Body:**
+
+```json
+{
+  "knownChords": ["string"],
+  "potentialChord": "string",
+  "allSongs": [
+    {
+      "_id": "string",
+      "chords": ["string"]
+    }
+  ]
+}
+```
+
+**Success Response Body (Action):**
+
+```json
+{
+  "unlockedSongs": ["string"] // List of Song IDs
+}
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/RecommendationEngine/\_getRecommendation
+
+**Description:** Retrieves a previously calculated recommendation by ID.
+
+**Requirements:**
+
+*   The `recommendationId` exists.
+
+**Effects:**
+
+*   Returns the full recommendation object including score, timestamp, and unlocked songs list.
+
+**Request Body:**
+
+```json
+{
+  "recommendationId": "string"
+}
+```
+
+**Success Response Body (Query):**
+
+```json
+[
+  {
+    "_id": "string",
+    "user": "string",
+    "recommendedChord": "string",
+    "unlockedSongs": ["string"],
+    "score": "number",
+    "generatedAt": "string"
+  }
+]
+```
+
+**Error Response Body:**
+
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
 # API Specification: Requesting Concept
 
 **Purpose:** To encapsulate an API server, modeling incoming requests and outgoing responses as concept actions.
@@ -2482,4 +3480,3 @@ After a user logs in, all authenticated API requests should include a `sessionId
   "error": "string"
 }
 ```
-
