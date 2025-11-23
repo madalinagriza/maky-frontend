@@ -121,6 +121,7 @@ import {
   updateAvatar,
   setGenrePreferences,
   changeSkillLevel,
+  getProfile,
 } from '@/services/userProfileService'
 import {
   getKnownChords,
@@ -128,7 +129,7 @@ import {
   updateChordMastery as updateChordMasteryAPI,
   removeChordFromInventory,
 } from '@/services/chordLibraryService'
-import { getSessionId } from '@/utils/sessionStorage'
+import { getSessionId, getUserId } from '@/utils/sessionStorage'
 import { useUserProfile } from '@/composables/useUserProfile'
 
 const availableGenres = [
@@ -258,8 +259,30 @@ async function removeChord(chord: string) {
 
 onMounted(() => {
   loadChords()
-  // TODO: Load existing profile data
+  loadProfile()
 })
+
+async function loadProfile() {
+  try {
+    const userId = getUserId()
+    const sessionId = getSessionId()
+
+    // Prefer calling the new getter by `user` id when available
+    const existing = userId ? await getProfile({ user: userId }) : sessionId ? await getProfile(sessionId) : null
+    if (!existing) return
+
+    // Defensive mapping: only set fields that exist
+    profile.displayName = existing.displayName ?? profile.displayName
+    profile.bio = existing.bio ?? profile.bio
+    profile.avatarUrl = existing.avatarUrl ?? profile.avatarUrl
+    profile.genrePreferences = Array.isArray(existing.genrePreferences)
+      ? existing.genrePreferences
+      : profile.genrePreferences
+    profile.skillLevel = (existing.skillLevel as typeof profile.skillLevel) ?? profile.skillLevel
+  } catch (error) {
+    console.error('Failed to load profile:', error)
+  }
+}
 </script>
 
 <style scoped>

@@ -135,6 +135,7 @@ async function handleRegister() {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  font-family: var(--main-font);
 }
 
 .eyebrow {

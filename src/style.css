@@ -32,6 +32,9 @@
   --logo-font: 'Cooper Black';
   --logo-font-weight: 700;
 
+  --main-font: 'Poppins';
+  --main-font-weight: 400;
+
   --app-bg: radial-gradient(
     circle at top,
     var(--main-top) 0%,

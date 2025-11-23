@@ -73,10 +73,13 @@
 import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { loginUser, registerUser } from '@/services/userAccountService'
+import { getProfile } from '@/services/userProfileService'
 import { useAuth } from '@/composables/useAuth'
+import { useUserProfile } from '@/composables/useUserProfile'
 
 const router = useRouter()
 const { login } = useAuth()
+const { setProfile } = useUserProfile()
 
 const loginForm = reactive({
   username: '',
@@ -102,7 +105,12 @@ async function handleLogin() {
     }
 
     const response = await loginUser(payload)
-    login(response.sessionId)
+    login(response.sessionId, response.user, payload.username)
+    await hydrateProfile({
+      userId: response.user,
+      sessionId: response.sessionId,
+      fallbackName: payload.username,
+    })
 
     feedback.value = {
       kind: 'success',
@@ -134,7 +142,12 @@ async function loginAsTestUser() {
     }
 
     const response = await loginUser(payload)
-    login(response.sessionId)
+    login(response.sessionId, response.user, payload.username)
+    await hydrateProfile({
+      userId: response.user,
+      sessionId: response.sessionId,
+      fallbackName: payload.username,
+    })
 
     feedback.value = {
       kind: 'success',
@@ -160,7 +173,12 @@ async function loginAsTestUser() {
         password: 'testpass123',
       }
       const response = await loginUser(payload)
-      login(response.sessionId)
+      login(response.sessionId, response.user, payload.username)
+      await hydrateProfile({
+        userId: response.user,
+        sessionId: response.sessionId,
+        fallbackName: payload.username,
+      })
 
       feedback.value = {
         kind: 'success',
@@ -176,6 +194,37 @@ async function loginAsTestUser() {
     }
   } finally {
     loading.value = false
+  }
+}
+
+async function hydrateProfile({
+  userId,
+  sessionId,
+  fallbackName,
+}: {
+  userId?: string | null
+  sessionId?: string | null
+  fallbackName: string
+}) {
+  const safeFallback = fallbackName?.trim() || 'User'
+
+  try {
+    const profileData = userId
+      ? await getProfile({ user: userId })
+      : sessionId
+      ? await getProfile(sessionId)
+      : null
+
+    if (profileData) {
+      setProfile({
+        displayName: profileData.displayName?.trim() || safeFallback,
+        avatarUrl: profileData.avatarUrl ?? null,
+      })
+    } else {
+      setProfile({ displayName: safeFallback, avatarUrl: null })
+    }
+  } catch (error) {
+    setProfile({ displayName: safeFallback, avatarUrl: null })
   }
 }
 </script>

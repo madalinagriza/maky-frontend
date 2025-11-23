@@ -19,14 +19,14 @@
             <img 
               v-if="avatarUrl" 
               :src="avatarUrl" 
-              :alt="displayName || 'User'"
+              :alt="displayLabel"
               class="avatar-img"
             />
             <div v-else class="avatar-placeholder">
-              {{ getInitials(displayName || 'User') }}
+              {{ getInitials(displayLabel) }}
             </div>
           </div>
-          <span class="user-name">{{ displayName || 'User' }}</span>
+          <span class="user-name">{{ displayLabel }}</span>
           <span class="dropdown-arrow" :class="{ 'arrow-up': isHovered }">▼</span>
         </div>
         
@@ -47,16 +47,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useUserProfile } from '@/composables/useUserProfile'
 
 const router = useRouter()
-const { logout } = useAuth()
+const { logout, username } = useAuth()
 const { displayName, avatarUrl, getInitials } = useUserProfile()
 
 const isHovered = ref(false)
+
+const displayLabel = computed(() => {
+  const name = displayName.value?.trim()
+  if (name) return name
+  const fallbackUsername = username.value?.trim()
+  if (fallbackUsername) return fallbackUsername
+  return 'User'
+})
 
 function handleLogout() {
   logout()

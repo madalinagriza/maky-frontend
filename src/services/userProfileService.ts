@@ -98,3 +98,32 @@ export async function deleteProfile(sessionId: string) {
   ensureSuccess(data)
 }
 
+// Query: _getProfile — returns an array (query-style). We return the first profile object or null.
+// Accept either a sessionId string or an object with `{ user?: string; sessionId?: string }`.
+export async function getProfile(
+  identifier: string | { user?: string; sessionId?: string }
+) {
+  const body =
+    typeof identifier === 'string'
+      ? { sessionId: identifier }
+      : identifier.user
+      ? { user: identifier.user }
+      : { sessionId: identifier.sessionId }
+
+  const { data } = await apiClient.post<any | ErrorResponse>(
+    `${USER_PROFILE_BASE}/_getProfile`,
+    body
+  )
+
+  const payload = ensureSuccess<any>(data)
+
+  // Query-style response: return first element's `profile` if wrapped, or first item.
+  if (Array.isArray(payload) && payload.length > 0) {
+    // Some syncs wrap the profile in an object: { profile: {...} }
+    const first = payload[0]
+    if (first && typeof first === 'object' && 'profile' in first) return first.profile
+    return first
+  }
+  return null
+}
+
