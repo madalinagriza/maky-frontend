@@ -20,15 +20,45 @@
             </ul>
             <div class="add-friend-section">
               <h3>Add Friend</h3>
-              <input
-                v-model="newFriendUsername"
-                type="text"
-                placeholder="Enter username"
-                class="friend-input"
-              />
-              <button @click="sendFriendRequest" :disabled="!newFriendUsername || loadingRequest" class="add-btn">
-                {{ loadingRequest ? 'Sending...' : 'Send Request' }}
-              </button>
+              <div class="add-friend-row">
+                <div class="add-friend-input-wrapper">
+                  <input
+                    v-model="addFriendQuery"
+                    type="text"
+                    placeholder="Search users by display name"
+                    class="friend-input"
+                    @keyup.enter.prevent="sendFriendRequest"
+                  />
+                  <div v-if="showAddFriendDropdown" class="search-dropdown">
+                    <div v-if="searchingAddFriends" class="dropdown-item muted">Searching...</div>
+                    <button
+                      v-else-if="addFriendResults.length === 0"
+                      class="dropdown-item muted"
+                      disabled
+                    >
+                      No matches yet
+                    </button>
+                    <button
+                      v-else
+                      v-for="result in addFriendResults"
+                      :key="result.user"
+                      type="button"
+                      class="dropdown-item"
+                      @click="selectAddFriend(result)"
+                    >
+                      {{ result.displayName }}
+                    </button>
+                  </div>
+                </div>
+                <button
+                  @click="sendFriendRequest"
+                  :disabled="!addFriendQuery || loadingRequest"
+                  class="add-btn add-btn-inline"
+                >
+                  {{ loadingRequest ? 'Send…' : 'Send' }}
+                </button>
+              </div>
+              <p v-if="addFriendError" class="input-error">{{ addFriendError }}</p>
             </div>
           </div>
         </aside>
@@ -106,32 +136,66 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import Layout from '@/components/Layout.vue'
 import { createPost as createPostAPI } from '@/services/postService'
 import { sendFriendRequest as sendFriendRequestAPI, acceptFriendRequest, declineFriendRequest } from '@/services/friendshipService'
 import { getNotifications } from '@/services/notificationService'
 import { getSessionId } from '@/utils/sessionStorage'
+import { searchProfilesByDisplayName } from '@/services/userProfileService'
+import type { DisplayNameSearchResult } from '@/types/userProfile'
 
 const friendSearchQuery = ref('')
-const newFriendUsername = ref('')
+const addFriendQuery = ref('')
 const newPostContent = ref('')
 const newPostType = ref<'GENERAL' | 'PROGRESS'>('GENERAL')
 const friends = ref<string[]>([])
+const addFriendResults = ref<DisplayNameSearchResult[]>([])
+const selectedAddFriend = ref<DisplayNameSearchResult | null>(null)
 const posts = ref<Array<{ id: string; author: string; content: string; postType: string; hasReaction: boolean }>>([])
 const pendingRequests = ref<Array<{ requester: string }>>([])
 const notifications = ref<Array<{ id: string; message: string }>>([])
 const loadingFriends = ref(false)
+const searchingAddFriends = ref(false)
 const loadingPosts = ref(false)
 const loadingRequests = ref(false)
 const loadingNotifications = ref(false)
 const creatingPost = ref(false)
 const loadingRequest = ref(false)
+const addFriendError = ref('')
 
 const filteredFriends = computed(() => {
   if (!friendSearchQuery.value.trim()) return friends.value
   const query = friendSearchQuery.value.toLowerCase()
   return friends.value.filter(friend => friend.toLowerCase().includes(query))
+})
+
+const showAddFriendDropdown = computed(() =>
+  Boolean(addFriendQuery.value.trim() && (searchingAddFriends.value || addFriendResults.value.length))
+)
+
+let addFriendSearchTimer: ReturnType<typeof setTimeout> | null = null
+let skipNextAddFriendSearch = false
+
+watch(addFriendQuery, newValue => {
+  addFriendError.value = ''
+  if (skipNextAddFriendSearch) {
+    skipNextAddFriendSearch = false
+    return
+  }
+
+  if (!newValue.trim()) {
+    addFriendResults.value = []
+    selectedAddFriend.value = null
+    if (addFriendSearchTimer) clearTimeout(addFriendSearchTimer)
+    return
+  }
+
+  selectedAddFriend.value = null
+  if (addFriendSearchTimer) clearTimeout(addFriendSearchTimer)
+  addFriendSearchTimer = setTimeout(() => {
+    performAddFriendSearch(newValue)
+  }, 300)
 })
 
 async function loadPosts() {
@@ -171,24 +235,70 @@ async function createPost() {
 }
 
 async function sendFriendRequest() {
-  if (!newFriendUsername.value.trim() || loadingRequest.value) return
-  loadingRequest.value = true
+  if (!addFriendQuery.value.trim() || loadingRequest.value) return
 
+  const trimmedQuery = addFriendQuery.value.trim()
+  const match =
+    (selectedAddFriend.value &&
+      selectedAddFriend.value.displayName?.toLowerCase() === trimmedQuery.toLowerCase()
+        ? selectedAddFriend.value
+        : null) || (await resolveAddFriendQuery(addFriendQuery.value))
+  if (!match) {
+    addFriendError.value = 'No users found with that display name.'
+    return
+  }
+
+  await submitFriendRequest(match.user)
+  resetAddFriendSelection()
+}
+
+function selectAddFriend(result: DisplayNameSearchResult) {
+  skipNextAddFriendSearch = true
+  addFriendQuery.value = result.displayName
+  selectedAddFriend.value = result
+  addFriendResults.value = []
+}
+
+async function submitFriendRequest(userId: string) {
+  loadingRequest.value = true
+  addFriendError.value = ''
   try {
     const sessionId = getSessionId()
     if (!sessionId) return
 
     await sendFriendRequestAPI({
       sessionId,
-      recipient: newFriendUsername.value.trim(),
+      recipient: userId,
     })
 
-    newFriendUsername.value = ''
     await loadPendingRequests()
   } catch (error) {
     console.error('Failed to send friend request:', error)
+    addFriendError.value = 'Could not send request. Please try again.'
   } finally {
     loadingRequest.value = false
+  }
+}
+
+function resetAddFriendSelection() {
+  addFriendQuery.value = ''
+  addFriendResults.value = []
+  selectedAddFriend.value = null
+}
+
+async function resolveAddFriendQuery(query: string) {
+  try {
+    const results = await searchProfilesByDisplayName(query)
+    if (!results.length) return null
+
+    const normalized = query.trim().toLowerCase()
+    return (
+      results.find(result => result.displayName?.toLowerCase() === normalized) ||
+      results[0]
+    )
+  } catch (error) {
+    console.error('Failed to resolve display name:', error)
+    return null
   }
 }
 
@@ -238,6 +348,24 @@ async function loadPendingRequests() {
     console.error('Failed to load requests:', error)
   } finally {
     loadingRequests.value = false
+  }
+}
+
+async function performAddFriendSearch(query: string) {
+  const trimmedQuery = query.trim()
+  if (!trimmedQuery) {
+    addFriendResults.value = []
+    return
+  }
+
+  searchingAddFriends.value = true
+  try {
+    addFriendResults.value = await searchProfilesByDisplayName(trimmedQuery)
+  } catch (error) {
+    console.error('Failed to search users:', error)
+    addFriendResults.value = []
+  } finally {
+    searchingAddFriends.value = false
   }
 }
 
@@ -329,6 +457,55 @@ h3 {
   border-radius: 0.5rem;
   color: #f9fafb;
   margin-bottom: 1rem;
+}
+
+.add-friend-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.add-friend-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.add-friend-row .friend-input {
+  margin-bottom: 0;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: var(--main);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  margin-top: 0.25rem;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 3;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.dropdown-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--contrast-mid);
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+
+.dropdown-item:hover:not(.muted) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dropdown-item.muted {
+  cursor: default;
+  color: #9ca3af;
 }
 
 .posts-column {
@@ -494,6 +671,20 @@ h3 {
   background: var(--button);
   color: var(--btn-text);
   width: 100%;
+  margin-top: 0.5rem;
+}
+
+.add-btn-inline {
+  width: auto;
+  margin-top: 0;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.input-error {
+  color: #fca5a5;
+  font-size: 0.85rem;
   margin-top: 0.5rem;
 }
 

@@ -43,3 +43,8 @@ export interface ErrorResponse {
   error: string
 }
 
+export interface DisplayNameSearchResult {
+  user: string
+  displayName: string
+}
+

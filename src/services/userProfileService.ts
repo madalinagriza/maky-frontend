@@ -9,6 +9,7 @@ import type {
   ChangeSkillLevelPayload,
   SetTargetSongPayload,
   ErrorResponse,
+  DisplayNameSearchResult,
 } from '@/types/userProfile'
 
 const USER_PROFILE_BASE = '/UserProfile'
@@ -125,5 +126,17 @@ export async function getProfile(
     return first
   }
   return null
+}
+
+export async function searchProfilesByDisplayName(query: string) {
+  const trimmedQuery = query.trim()
+  if (!trimmedQuery) return [] as DisplayNameSearchResult[]
+
+  const { data } = await apiClient.post<DisplayNameSearchResult[] | ErrorResponse>(
+    `${USER_PROFILE_BASE}/_searchByDisplayName`,
+    { query: trimmedQuery }
+  )
+
+  return ensureSuccess<DisplayNameSearchResult[]>(data)
 }
 
