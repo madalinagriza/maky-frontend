@@ -2,7 +2,7 @@ export interface CreatePostPayload {
   sessionId: string
   content: string
   postType: 'PROGRESS' | 'GENERAL'
-  item?: string
+  items: string[]
 }
 
 export interface CreatePostResponse {
@@ -63,6 +63,26 @@ export interface RemoveReactionFromPostPayload {
   sessionId: string
   post: string
 }
+
+export interface GetPostsForUserPayload {
+  user: string
+}
+
+export interface Post {
+  _id: string
+  author: string
+  content: string
+  items: string[]
+  postType: string
+  createdAt: string
+  editedAt?: string
+}
+
+export interface GetPostsForUserResponseItem {
+  post: Post
+}
+
+export type GetPostsForUserResponse = GetPostsForUserResponseItem[]
 
 export interface ErrorResponse {
   error: string

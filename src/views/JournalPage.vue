@@ -10,19 +10,19 @@
           <div v-if="loadingPosts" class="loading">Loading posts...</div>
           <div v-else-if="posts.length === 0" class="empty-state">You haven't posted anything yet.</div>
           <div v-else class="posts-list">
-            <div v-for="post in posts" :key="post.id" class="post-card">
+            <div v-for="post in posts" :key="post._id" class="post-card">
               <div class="post-header">
                 <span class="post-type">{{ post.postType }}</span>
                 <span class="post-date">{{ formatDate(post.createdAt) }}</span>
               </div>
               <p class="post-content">{{ post.content }}</p>
-              <div class="post-reactions">
-                <div v-if="post.reactions && post.reactions.length > 0" class="reactions-list">
-                  <span v-for="reaction in post.reactions" :key="reaction.id" class="reaction-badge">
-                    {{ getReactionEmoji(reaction.type) }} {{ reaction.type }}
+              <div v-if="post.items && post.items.length > 0" class="post-items">
+                <div class="items-label">Linked items:</div>
+                <div class="items-list">
+                  <span v-for="item in post.items" :key="item" class="item-badge">
+                    {{ item }}
                   </span>
                 </div>
-                <div v-else class="no-reactions">No reactions yet</div>
               </div>
             </div>
           </div>
@@ -64,16 +64,12 @@ import { ref, onMounted } from 'vue'
 import Layout from '@/components/Layout.vue'
 import { getSongsInProgress } from '@/services/songLibraryService'
 import { getKnownChords } from '@/services/chordLibraryService'
-import { getSessionId } from '@/utils/sessionStorage'
+import { getPostsForUser } from '@/services/postService'
+import { getUserId, getSessionId } from '@/utils/sessionStorage'
 import type { SongProgress } from '@/types/songLibrary'
+import type { Post } from '@/types/post'
 
-const posts = ref<Array<{
-  id: string
-  content: string
-  postType: string
-  createdAt: string
-  reactions: Array<{ id: string; type: string }>
-}>>([])
+const posts = ref<Post[]>([])
 const songs = ref<SongProgress[]>([])
 const chords = ref<Array<{ chord: string; mastery: string }>>([])
 const loadingPosts = ref(false)
@@ -83,29 +79,59 @@ const loadingChords = ref(false)
 function formatDate(dateString: string): string {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleDateString()
-}
-
-function getReactionEmoji(type: string): string {
-  switch (type) {
-    case 'LIKE':
-      return '👍'
-    case 'LOVE':
-      return '❤️'
-    case 'CELEBRATE':
-      return '🎉'
-    default:
-      return '👍'
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const postDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  
+  const timeStr = date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit',
+    hour12: true 
+  })
+  
+  // Check if it's today
+  if (postDate.getTime() === today.getTime()) {
+    return `Today at ${timeStr}`
+  }
+  
+  // Check if it's yesterday
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  if (postDate.getTime() === yesterday.getTime()) {
+    return `Yesterday at ${timeStr}`
+  }
+  
+  // Check if it's this year
+  const isThisYear = date.getFullYear() === now.getFullYear()
+  
+  if (isThisYear) {
+    // Format: "December 25 at 3:45 PM"
+    const monthName = date.toLocaleDateString('en-US', { month: 'long' })
+    const day = date.getDate()
+    return `${monthName} ${day} at ${timeStr}`
+  } else {
+    // Format: "December 25, 2023 at 3:45 PM"
+    const monthName = date.toLocaleDateString('en-US', { month: 'long' })
+    const day = date.getDate()
+    const year = date.getFullYear()
+    return `${monthName} ${day}, ${year} at ${timeStr}`
   }
 }
 
 async function loadPosts() {
   loadingPosts.value = true
   try {
-    // TODO: Implement user posts fetching API
-    posts.value = []
+    const userId = getUserId()
+    if (!userId) {
+      posts.value = []
+      return
+    }
+
+    const response = await getPostsForUser({ user: userId })
+    posts.value = response.map(item => item.post)
   } catch (error) {
     console.error('Failed to load posts:', error)
+    posts.value = []
   } finally {
     loadingPosts.value = false
   }
@@ -217,30 +243,31 @@ h2 {
   line-height: 1.6;
 }
 
-.post-reactions {
+.post-items {
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.reactions-list {
+.items-label {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin-bottom: 0.5rem;
+}
+
+.post-items .items-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.reaction-badge {
+.item-badge {
   padding: 0.25rem 0.75rem;
   background: var(--main);
   border: 1px solid rgba(99, 102, 241, 0.3);
   border-radius: 999px;
   font-size: 0.875rem;
   color: #a5b4fc;
-}
-
-.no-reactions {
-  color: #9ca3af;
-  font-size: 0.875rem;
 }
 
 .sidebar {
