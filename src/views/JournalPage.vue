@@ -65,7 +65,7 @@ import Layout from '@/components/Layout.vue'
 import { getSongsInProgress } from '@/services/songLibraryService'
 import { getKnownChords } from '@/services/chordLibraryService'
 import { getPostsForUser } from '@/services/postService'
-import { getUserId } from '@/utils/sessionStorage'
+import { getUserId, getSessionId } from '@/utils/sessionStorage'
 import type { SongProgress } from '@/types/songLibrary'
 import type { Post } from '@/types/post'
 
