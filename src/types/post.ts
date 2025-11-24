@@ -2,7 +2,7 @@ export interface CreatePostPayload {
   sessionId: string
   content: string
   postType: 'PROGRESS' | 'GENERAL'
-  item?: string
+  items: string[]
 }
 
 export interface CreatePostResponse {
