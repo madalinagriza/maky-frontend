@@ -12,6 +12,8 @@ import type {
   AddReactionToPostResponse,
   ChangeReactionTypePayload,
   RemoveReactionFromPostPayload,
+  GetPostsForUserPayload,
+  GetPostsForUserResponse,
   ErrorResponse,
 } from '@/types/post'
 
@@ -55,6 +57,14 @@ export async function editPost(payload: EditPostPayload) {
     payload
   )
   ensureSuccess(data)
+}
+
+export async function getPostsForUser(payload: GetPostsForUserPayload) {
+  const { data } = await apiClient.post<GetPostsForUserResponse | ErrorResponse>(
+    `${POST_BASE}/_getPostsForUser`,
+    payload
+  )
+  return ensureSuccess(data)
 }
 
 // Comment endpoints
