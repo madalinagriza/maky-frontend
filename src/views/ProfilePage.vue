@@ -101,14 +101,19 @@
               <div class="chord-info">
                 <span class="chord-name">{{ chord.chord }}</span>
                 <select
-                  :value="chord.mastery"
-                  @change="updateChordMastery(chord.chord, ($event.target as HTMLSelectElement).value)"
+                  v-model="chordMasterySelections[chord.chord]"
                   class="mastery-select"
                 >
-                  <option value="na">Not Started</option>
                   <option value="in progress">In Progress</option>
                   <option value="mastered">Mastered</option>
                 </select>
+                <button
+                  class="update-btn"
+                  @click="updateChordMastery(chord.chord)"
+                  :disabled="!canUpdateChord(chord.chord, chord.mastery)"
+                >
+                  {{ updatingChord === chord.chord ? 'Updating...' : 'Update' }}
+                </button>
               </div>
               <button @click="removeChord(chord.chord)" class="remove-btn">Remove</button>
             </div>
@@ -178,12 +183,16 @@ const profile = reactive({
 })
 
 const chords = ref<KnownChord[]>([])
+type MasteryLevel = 'in progress' | 'mastered'
+type InventoryMasteryLevel = MasteryLevel | 'na'
 const newChordName = ref('')
-const newChordMastery = ref<'na' | 'in progress' | 'mastered'>('in progress')
+const newChordMastery = ref<InventoryMasteryLevel>('in progress')
 const loadingChords = ref(false)
 const saving = ref(false)
 const addingChord = ref(false)
 const feedback = ref<{ kind: 'success' | 'error'; message: string } | null>(null)
+const chordMasterySelections = ref<Record<string, MasteryLevel>>({})
+const updatingChord = ref<string | null>(null)
 
 const songSearchQuery = ref('')
 const searchResults = ref<Song[]>([])
@@ -240,12 +249,41 @@ async function loadChords() {
       ? response
           .filter((entry): entry is KnownChord => Boolean(entry && entry.chord))
       : []
+    syncChordMasterySelections(chords.value)
   } catch (error) {
     console.error('Failed to load chords:', error)
     chords.value = []
+    chordMasterySelections.value = {}
   } finally {
     loadingChords.value = false
   }
+}
+
+function syncChordMasterySelections(entries: KnownChord[]) {
+  const nextSelections: Record<string, MasteryLevel> = {}
+  entries.forEach(entry => {
+    if (!entry?.chord) return
+    nextSelections[entry.chord] = normalizeMastery(entry.mastery)
+  })
+  chordMasterySelections.value = nextSelections
+}
+
+const allowedMasteries: MasteryLevel[] = ['in progress', 'mastered']
+const fallbackMastery: MasteryLevel = 'in progress'
+
+function normalizeMastery(value: string): MasteryLevel {
+  return allowedMasteries.includes(value as MasteryLevel)
+    ? (value as MasteryLevel)
+    : fallbackMastery
+}
+
+function canUpdateChord(chordName: string, currentMastery: string) {
+  const pending = chordMasterySelections.value[chordName]
+  return (
+    Boolean(pending) &&
+    pending !== normalizeMastery(currentMastery) &&
+    updatingChord.value !== chordName
+  )
 }
 
 async function saveProfile() {
@@ -312,20 +350,30 @@ async function addChord() {
   }
 }
 
-async function updateChordMastery(chord: string, mastery: string) {
+async function updateChordMastery(chord: string) {
+  const selectedMastery = chordMasterySelections.value[chord]
+  const current = chords.value.find(entry => entry.chord === chord)
+  if (!selectedMastery || !current || selectedMastery === normalizeMastery(current.mastery)) {
+    return
+  }
+
   try {
     const sessionId = getSessionId()
     if (!sessionId) return
 
+    updatingChord.value = chord
+
     await updateChordMasteryAPI({
       sessionId,
       chord,
-      newMastery: mastery as 'na' | 'in progress' | 'mastered',
+      newMastery: selectedMastery,
     })
 
     await loadChords()
   } catch (error) {
     console.error('Failed to update chord mastery:', error)
+  } finally {
+    updatingChord.value = updatingChord.value === chord ? null : updatingChord.value
   }
 }
 
@@ -518,6 +566,22 @@ label {
   border-radius: 0.25rem;
   color: #f9fafb;
   font-size: 0.875rem;
+}
+
+.update-btn {
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: #c7d2fe;
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: opacity 0.2s ease;
+}
+
+.update-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .remove-btn {
