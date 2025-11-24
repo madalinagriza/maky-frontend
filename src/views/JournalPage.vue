@@ -35,9 +35,13 @@
             <div v-if="loadingSongs" class="loading">Loading...</div>
             <div v-else-if="songs.length === 0" class="empty-state">No songs yet</div>
             <ul v-else class="items-list">
-              <li v-for="progress in songs" :key="progress.song._id" class="item-card">
-                <div class="item-name">{{ progress.song.title }}</div>
-                <div class="item-mastery">{{ progress.mastery }}</div>
+              <li
+                v-for="(progress, index) in songs"
+                :key="progress.song?._id ?? `song-${index}`"
+                class="item-card"
+              >
+                <div class="item-name">{{ progress.song?.title ?? 'Unknown Song' }}</div>
+                <div class="item-mastery">{{ progress.mastery ?? 'unknown' }}</div>
               </li>
             </ul>
           </section>
@@ -144,7 +148,11 @@ async function loadSongs() {
     if (!sessionId) return
 
     const response = await getSongsInProgress(sessionId)
-    songs.value = response
+    if (Array.isArray(response)) {
+      songs.value = response.filter(progress => progress && progress.song)
+    } else {
+      songs.value = []
+    }
   } catch (error) {
     console.error('Failed to load songs:', error)
     songs.value = []
