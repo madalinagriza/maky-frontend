@@ -68,18 +68,58 @@ const unlockedSongs = ref<string[]>([])
 const loadingSongs = ref(false)
 const loadingChordRec = ref(false)
 
+// Query a few common substrings to approximate an "all songs" catalog since the API lacks a direct endpoint.
+const SONG_CATALOG_QUERIES = ['la', 'er', 'an', 'ti', 'on', 'ch', 'st', 'ra']
+const MAX_CATALOG_SIZE = 80
+let cachedSongCatalog: Song[] | null = null
+
+const isNonEmptyString = (value: string | null | undefined): value is string =>
+  typeof value === 'string' && value.trim().length > 0
+
+const isValidSong = (song: Song | undefined | null): song is Song =>
+  Boolean(song && song._id && Array.isArray(song.chords))
+
+async function getSongCatalog(): Promise<Song[]> {
+  if (cachedSongCatalog?.length) {
+    return cachedSongCatalog
+  }
+
+  const songMap = new Map<string, Song>()
+
+  for (const query of SONG_CATALOG_QUERIES) {
+    try {
+      const results = await searchByTitleOrArtist({ query })
+      results
+        .map(result => result.song)
+        .filter(isValidSong)
+        .forEach(song => songMap.set(song._id, song))
+    } catch (error) {
+      console.warn(`Song search failed for query "${query}":`, error)
+    }
+
+    if (songMap.size >= MAX_CATALOG_SIZE) {
+      break
+    }
+  }
+
+  cachedSongCatalog = Array.from(songMap.values())
+  return cachedSongCatalog
+}
+
 const filteredPlayableSongs = computed(() => {
   if (!searchQuery.value.trim()) return playableSongs.value
   const query = searchQuery.value.toLowerCase()
   return playableSongs.value.filter(song => 
-    song.title.toLowerCase().includes(query) || 
-    song.artist.toLowerCase().includes(query)
+    (song.title?.toLowerCase() ?? '').includes(query) || 
+    (song.artist?.toLowerCase() ?? '').includes(query)
   )
 })
 
 async function loadData() {
   loadingSongs.value = true
   loadingChordRec.value = true
+  recommendedChord.value = null
+  unlockedSongs.value = []
   
   try {
     const sessionId = getSessionId()
@@ -87,33 +127,49 @@ async function loadData() {
 
     // 1. Get Known Chords
     const knownChordsResponse = await getKnownChords(sessionId)
-    const knownChords = knownChordsResponse.map(kc => kc.chord)
+    const knownChords = knownChordsResponse
+      .map(kc => kc.chord)
+      .filter(isNonEmptyString)
 
     // 2. Get Playable Songs
     const playableResponse = await getPlayableSongs({ knownChords })
-    playableSongs.value = playableResponse.map(r => r.song)
+    playableSongs.value = playableResponse
+      .map(r => r.song)
+      .filter(isValidSong)
 
-    // 3. Get All Songs (needed for recommendation)
-    // Assuming empty query returns a list of songs
-    const allSongsResponse = await searchByTitleOrArtist({ query: '' })
-    const allSongs = allSongsResponse.map(r => r.song)
+    // 3. Build a broader song catalog for recommendations
+    const allSongs = await getSongCatalog()
+    if (allSongs.length === 0) {
+      return
+    }
 
     // 4. Get Chord Recommendation
-    if (allSongs.length > 0) {
+    try {
       const recResponse = await requestChordRecommendation({
         knownChords,
         allSongs
       })
-      recommendedChord.value = recResponse.recommendedChord
+      const chordCandidate = recResponse.recommendedChord?.trim()
+      recommendedChord.value = chordCandidate || null
+    } catch (error) {
+      console.error('Failed to fetch chord recommendation:', error)
+      recommendedChord.value = null
+    }
 
-      // 5. Get Unlocked Songs for recommended chord
-      if (recommendedChord.value) {
+    // 5. Get Unlocked Songs for recommended chord
+    if (recommendedChord.value) {
+      try {
         const unlockResponse = await requestSongUnlockRecommendation({
           knownChords,
           potentialChord: recommendedChord.value,
           allSongs
         })
-        unlockedSongs.value = unlockResponse.unlockedSongs
+        unlockedSongs.value = Array.isArray(unlockResponse.unlockedSongs)
+          ? unlockResponse.unlockedSongs
+          : []
+      } catch (error) {
+        console.error('Failed to fetch unlock recommendations:', error)
+        unlockedSongs.value = []
       }
     }
 

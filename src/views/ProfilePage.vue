@@ -162,6 +162,7 @@ import { searchByTitleOrArtist } from '@/services/songService'
 import { getSessionId, getUserId } from '@/utils/sessionStorage'
 import { useUserProfile } from '@/composables/useUserProfile'
 import type { Song } from '@/types/song'
+import type { KnownChord } from '@/types/chordLibrary'
 
 const availableGenres = [
   'Rock', 'Pop', 'Country', 'Jazz', 'Blues', 'Folk', 'Classical', 'Metal', 'R&B', 'Reggae'
@@ -176,7 +177,7 @@ const profile = reactive({
   targetSong: '' as string,
 })
 
-const chords = ref<Array<{ chord: string; mastery: string }>>([])
+const chords = ref<KnownChord[]>([])
 const newChordName = ref('')
 const newChordMastery = ref<'na' | 'in progress' | 'mastered'>('in progress')
 const loadingChords = ref(false)
@@ -235,7 +236,10 @@ async function loadChords() {
     if (!sessionId) return
 
     const response = await getKnownChords(sessionId)
-    chords.value = response
+    chords.value = Array.isArray(response)
+      ? response
+          .filter((entry): entry is KnownChord => Boolean(entry && entry.chord))
+      : []
   } catch (error) {
     console.error('Failed to load chords:', error)
     chords.value = []

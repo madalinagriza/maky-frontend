@@ -20,7 +20,11 @@ export interface KnownChord {
   mastery: string
 }
 
-export interface GetKnownChordsResponse extends Array<KnownChord> {}
+export type GetKnownChordsResponse =
+  | KnownChord[]
+  | {
+      knownChords: KnownChord[]
+    }
 
 export interface ErrorResponse {
   error: string

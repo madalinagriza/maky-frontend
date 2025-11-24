@@ -2417,11 +2417,11 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Description:** Updates the mastery level of a known chord.
 
-**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+**Authentication:** Requires a valid `userId`.
 
 **Requirements:**
 
-*   The user associated with `sessionId` has the specified `chord` in their inventory.
+*   The user associated with `sessionId` has the specified `chord` in their inventory. The user is automatically extracted from the session.
 
 **Effects:**
 

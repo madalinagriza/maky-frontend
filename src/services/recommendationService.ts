@@ -4,6 +4,7 @@ import type {
   CalculateRecommendationResponse,
   RequestChordRecommendationPayload,
   RequestChordRecommendationResponse,
+  RawRequestChordRecommendationResponse,
   RequestSongUnlockRecommendationPayload,
   RequestSongUnlockRecommendationResponse,
   GetRecommendationPayload,
@@ -34,12 +35,33 @@ export async function calculateRecommendation(payload: CalculateRecommendationPa
   return ensureSuccess(data)
 }
 
-export async function requestChordRecommendation(payload: RequestChordRecommendationPayload) {
-  const { data } = await apiClient.post<RequestChordRecommendationResponse | ErrorResponse>(
+export async function requestChordRecommendation(
+  payload: RequestChordRecommendationPayload
+): Promise<RequestChordRecommendationResponse> {
+  const { data } = await apiClient.post<RawRequestChordRecommendationResponse | ErrorResponse>(
     `${RECOMMENDATION_BASE}/requestChordRecommendation`,
     payload
   )
-  return ensureSuccess(data)
+  const raw = ensureSuccess<RawRequestChordRecommendationResponse>(data)
+
+  if (Array.isArray(raw)) {
+    const match = raw.find(
+      entry => entry && typeof entry === 'object' && typeof entry.recommendedChord === 'string'
+    )
+
+    if (match) {
+      return { recommendedChord: match.recommendedChord }
+    }
+  } else if (
+    raw &&
+    typeof raw === 'object' &&
+    'recommendedChord' in raw &&
+    typeof raw.recommendedChord === 'string'
+  ) {
+    return raw
+  }
+
+  return { recommendedChord: '' }
 }
 
 export async function requestSongUnlockRecommendation(

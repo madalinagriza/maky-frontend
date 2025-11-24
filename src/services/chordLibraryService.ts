@@ -67,6 +67,16 @@ export async function getKnownChords(sessionId: string) {
     `${CHORD_LIBRARY_BASE}/_getKnownChords`,
     { sessionId }
   )
-  return ensureSuccess(data)
+  const payload = ensureSuccess<GetKnownChordsResponse>(data)
+
+  if (Array.isArray(payload)) {
+    return payload
+  }
+
+  if (payload && 'knownChords' in payload && Array.isArray(payload.knownChords)) {
+    return payload.knownChords
+  }
+
+  return []
 }
 

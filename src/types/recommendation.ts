@@ -19,6 +19,10 @@ export interface RequestChordRecommendationResponse {
   recommendedChord: string
 }
 
+export type RawRequestChordRecommendationResponse =
+  | RequestChordRecommendationResponse
+  | Array<RequestChordRecommendationResponse>
+
 export interface RequestSongUnlockRecommendationPayload {
   knownChords: string[]
   potentialChord: string
