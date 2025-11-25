@@ -74,12 +74,17 @@ export async function getSongsInProgress(sessionId: string) {
     return payload
   }
 
-  if (payload && Array.isArray(payload.songsInProgress)) {
-    return payload.songsInProgress
+  const maybeWrapped = (payload ?? {}) as {
+    songsInProgress?: GetSongsInProgressResponse
+    songs?: GetSongsInProgressResponse
   }
 
-  if (payload && Array.isArray(payload.songs)) {
-    return payload.songs
+  if (Array.isArray(maybeWrapped.songsInProgress)) {
+    return maybeWrapped.songsInProgress
+  }
+
+  if (Array.isArray(maybeWrapped.songs)) {
+    return maybeWrapped.songs
   }
 
   return []

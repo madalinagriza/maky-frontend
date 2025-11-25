@@ -27,10 +27,8 @@ export interface GetSongsInProgressResponse extends Array<SongProgress> {}
 export type RawSongsInProgressResponse =
   | GetSongsInProgressResponse
   | {
-      songsInProgress: GetSongsInProgressResponse
-    }
-  | {
-    songs: GetSongsInProgressResponse
+    songsInProgress?: GetSongsInProgressResponse
+    songs?: GetSongsInProgressResponse
   }
 
 export interface ErrorResponse {
