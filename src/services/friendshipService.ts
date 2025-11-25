@@ -9,7 +9,6 @@ import type {
   AreFriendsResponse,
   ErrorResponse,
   PendingFriendshipsPayload,
-  PendingFriendship,
   PendingFriendshipsResponse,
   GetFriendsPayload,
   FriendEntry,
@@ -89,9 +88,9 @@ export async function getPendingFriendships(payload: PendingFriendshipsPayload) 
   const results = Array.isArray(data) ? data : (data.results || [])
   
   if (results.length === 0) return []
-  const [first] = results
+  const first = results[0] as PendingFriendshipsResponse
   if (!first || !Array.isArray(first.pendingFriendships)) return []
-  return first.pendingFriendships as PendingFriendship[]
+  return first.pendingFriendships
 }
 
 export async function getFriends(payload: GetFriendsPayload) {
@@ -108,7 +107,7 @@ export async function getFriends(payload: GetFriendsPayload) {
   // 1. Direct array: [{ friend: 'id' }]
   // 2. Wrapper with results: { results: [{ friend: 'id' }] }
   // 3. Wrapper with friends property (as seen in trace): { friends: [{ friend: 'id' }] }
-  let rawList: any[] = []
+  let rawList: FriendEntry[] = []
   
   if (Array.isArray(data)) {
     rawList = data
@@ -119,7 +118,7 @@ export async function getFriends(payload: GetFriendsPayload) {
   }
 
   return rawList
-    .map((entry: any) => entry?.friend)
-    .filter((friend: any): friend is string => Boolean(friend))
+    .map((entry: FriendEntry) => entry?.friend)
+    .filter((friend: string | undefined): friend is string => Boolean(friend))
 }
 
