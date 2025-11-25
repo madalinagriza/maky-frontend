@@ -1315,7 +1315,6 @@ After a user logs in, all authenticated API requests should include a `sessionId
 ---
 
 ### POST /api/Reaction/_getReactionsForPostId
-
 **Description:** Retrieves a summary of reaction counts, grouped by type, for a specific post.
 
 **Requirements:**
@@ -1342,6 +1341,50 @@ After a user logs in, all authenticated API requests should include a `sessionId
   {
     "type": "LOVE",
     "count": 2
+  },
+  {
+    "type": "CELEBRATE",
+    "count": 0
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Reaction/_getReactionOnPostFromUser
+**Description:** Retrieves the reaction of a specific user on a specific post.
+
+**Requirements:**
+- The `user` and `post` exist.
+
+**Effects:**
+- Returns an array of objects, each containing a reaction `type` and its `count` (0 or 1) for the given `user` and `post`.
+
+**Request Body:**
+```json
+{
+  "user": "string",
+  "post": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "type": "LIKE",
+    "count": 1
+  },
+  {
+    "type": "LOVE",
+    "count": 0
   },
   {
     "type": "CELEBRATE",

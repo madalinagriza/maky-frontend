@@ -6,6 +6,53 @@
       <div class="journal-layout">
         <!-- Middle Column: Posts -->
         <main class="posts-column">
+          <!-- Create Post Section -->
+          <div class="create-post-card">
+            <h2>Create Post</h2>
+            <form @submit.prevent="handleCreatePost">
+              <textarea 
+                v-model="newPostContent" 
+                placeholder="What's on your mind?" 
+                required
+                class="post-input"
+              ></textarea>
+              
+              <div class="post-options">
+                <div class="items-input-group">
+                  <input 
+                    v-model="newItemInput" 
+                    @keydown.enter.prevent="addItem"
+                    placeholder="Add an item (e.g. song name)"
+                    class="item-input"
+                  />
+                  <button type="button" @click="addItem" class="add-item-btn">Add</button>
+                </div>
+                
+                <div class="post-type-select">
+                  <label>Type:</label>
+                  <select v-model="newPostType">
+                    <option value="PROGRESS">Progress</option>
+                    <option value="GENERAL">General</option>
+                  </select>
+                </div>
+              </div>
+
+              <div v-if="newPostItems.length > 0" class="new-items-list">
+                <span v-for="(item, index) in newPostItems" :key="index" class="item-badge">
+                  {{ item }}
+                  <button type="button" @click="removeItem(index)" class="remove-item-btn">&times;</button>
+                </span>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" :disabled="isPosting" class="submit-btn">
+                  {{ isPosting ? 'Posting...' : 'Post' }}
+                </button>
+              </div>
+              <div v-if="createPostError" class="error-message">{{ createPostError }}</div>
+            </form>
+          </div>
+
           <h2>My Posts</h2>
           <div v-if="loadingPosts" class="loading">Loading posts...</div>
           <div v-else-if="posts.length === 0" class="empty-state">You haven't posted anything yet.</div>
@@ -71,7 +118,7 @@ import { ref, onMounted } from 'vue'
 import Layout from '@/components/Layout.vue'
 import { getSongsInProgress } from '@/services/songLibraryService'
 import { getKnownChords } from '@/services/chordLibraryService'
-import { getPostsForUser } from '@/services/postService'
+import { getPostsForUser, createPost } from '@/services/postService'
 import { getUserId, getSessionId } from '@/utils/sessionStorage'
 import type { SongProgress } from '@/types/songLibrary'
 import type { Post } from '@/types/post'
@@ -82,6 +129,60 @@ const chords = ref<Array<{ chord: string; mastery: string }>>([])
 const loadingPosts = ref(false)
 const loadingSongs = ref(false)
 const loadingChords = ref(false)
+
+// Create Post State
+const newPostContent = ref('')
+const newPostType = ref<'PROGRESS' | 'GENERAL'>('PROGRESS')
+const newPostItems = ref<string[]>([])
+const newItemInput = ref('')
+const isPosting = ref(false)
+const createPostError = ref('')
+
+function addItem() {
+  const trimmed = newItemInput.value.trim()
+  if (trimmed) {
+    newPostItems.value.push(trimmed)
+    newItemInput.value = ''
+  }
+}
+
+function removeItem(index: number) {
+  newPostItems.value.splice(index, 1)
+}
+
+async function handleCreatePost() {
+  createPostError.value = ''
+  if (!newPostContent.value.trim()) return
+
+  isPosting.value = true
+  try {
+    const sessionId = getSessionId()
+    if (!sessionId) {
+      createPostError.value = 'You must be logged in to post.'
+      return
+    }
+
+    await createPost({
+      sessionId,
+      content: newPostContent.value,
+      postType: newPostType.value,
+      items: newPostItems.value
+    })
+
+    // Reset form
+    newPostContent.value = ''
+    newPostItems.value = []
+    newPostType.value = 'PROGRESS'
+    
+    // Reload posts
+    await loadPosts()
+  } catch (error: any) {
+    console.error('Failed to create post:', error)
+    createPostError.value = error.message || 'Failed to create post'
+  } finally {
+    isPosting.value = false
+  }
+}
 
 function formatDate(dateString: string): string {
   if (!dateString) return ''
@@ -229,6 +330,125 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.create-post-card {
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.post-input {
+  width: 100%;
+  min-height: 100px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  color: #e5e7eb;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 1rem;
+}
+
+.post-input:focus {
+  outline: none;
+  border-color: var(--main);
+}
+
+.post-options {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.items-input-group {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.item-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: #e5e7eb;
+}
+
+.add-item-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 0.5rem;
+  color: #e5e7eb;
+  cursor: pointer;
+}
+
+.post-type-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #9ca3af;
+}
+
+.post-type-select select {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  color: #e5e7eb;
+}
+
+.new-items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.remove-item-btn {
+  background: none;
+  border: none;
+  color: currentColor;
+  margin-left: 0.25rem;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.remove-item-btn:hover {
+  opacity: 1;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.submit-btn {
+  background: var(--main);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #ef4444;
+  margin-top: 1rem;
+  font-size: 0.875rem;
 }
 
 .post-card {

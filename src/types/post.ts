@@ -43,10 +43,12 @@ export interface EditCommentPayload {
   newContent: string
 }
 
+export type ReactionType = 'LIKE' | 'LOVE' | 'CELEBRATE'
+
 export interface AddReactionToPostPayload {
   sessionId: string
   post: string
-  type: 'LIKE' | 'LOVE' | 'CELEBRATE'
+  type: ReactionType
 }
 
 export interface AddReactionToPostResponse {
@@ -56,7 +58,7 @@ export interface AddReactionToPostResponse {
 export interface ChangeReactionTypePayload {
   sessionId: string
   post: string
-  newType: 'LIKE' | 'LOVE' | 'CELEBRATE'
+  newType: ReactionType
 }
 
 export interface RemoveReactionFromPostPayload {
@@ -64,8 +66,23 @@ export interface RemoveReactionFromPostPayload {
   post: string
 }
 
+export interface GetReactionsForPostIdPayload {
+  post: string
+}
+
+export interface ReactionCount {
+  type: ReactionType
+  count: number
+}
+
+export type GetReactionsForPostIdResponse = ReactionCount[]
+
 export interface GetPostsForUserPayload {
   user: string
+}
+
+export interface GetPostsForUsersPayload {
+  users: string[]
 }
 
 export interface Post {
@@ -83,6 +100,28 @@ export interface GetPostsForUserResponseItem {
 }
 
 export type GetPostsForUserResponse = GetPostsForUserResponseItem[]
+
+export interface GetCommentsForPostIdPayload {
+  post: string
+}
+
+export interface CommentSimple {
+  content: string
+  author: string
+}
+
+export interface GetCommentsForPostIdResponseItem {
+  comments: CommentSimple[]
+}
+
+export type GetCommentsForPostIdResponse = GetCommentsForPostIdResponseItem[]
+
+export interface GetReactionOnPostFromUserPayload {
+  user: string
+  post: string
+}
+
+export type GetReactionOnPostFromUserResponse = ReactionCount[]
 
 export interface ErrorResponse {
   error: string

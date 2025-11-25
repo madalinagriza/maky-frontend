@@ -12,8 +12,15 @@ import type {
   AddReactionToPostResponse,
   ChangeReactionTypePayload,
   RemoveReactionFromPostPayload,
+  GetReactionsForPostIdPayload,
+  GetReactionsForPostIdResponse,
   GetPostsForUserPayload,
   GetPostsForUserResponse,
+  GetPostsForUsersPayload,
+  GetCommentsForPostIdPayload,
+  GetCommentsForPostIdResponse,
+  GetReactionOnPostFromUserPayload,
+  GetReactionOnPostFromUserResponse,
   ErrorResponse,
 } from '@/types/post'
 
@@ -60,11 +67,33 @@ export async function editPost(payload: EditPostPayload) {
 }
 
 export async function getPostsForUser(payload: GetPostsForUserPayload) {
-  const { data } = await apiClient.post<GetPostsForUserResponse | ErrorResponse>(
+  const { data } = await apiClient.post<any>(
     `${POST_BASE}/_getPostsForUser`,
     payload
   )
-  return ensureSuccess(data)
+  
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  // Handle potential wrapper object from backend (e.g. { results: [...] })
+  const results = Array.isArray(data) ? data : (data.results || [])
+  return results as GetPostsForUserResponse
+}
+
+export async function getPostsForUsers(payload: GetPostsForUsersPayload) {
+  const { data } = await apiClient.post<any>(
+    `${POST_BASE}/_getPostsForUsers`,
+    payload
+  )
+  
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  // Handle potential wrapper object from backend (e.g. { results: [...] })
+  const results = Array.isArray(data) ? data : (data.results || [])
+  return results as GetPostsForUserResponse
 }
 
 // Comment endpoints
@@ -92,6 +121,21 @@ export async function editComment(payload: EditCommentPayload) {
   ensureSuccess(data)
 }
 
+export async function getCommentsForPostId(payload: GetCommentsForPostIdPayload) {
+  const { data } = await apiClient.post<any>(
+    `${COMMENT_BASE}/_getCommentsForPostId`,
+    payload
+  )
+
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  // Handle potential wrapper object from backend (e.g. { results: [...] })
+  const results = Array.isArray(data) ? data : (data.results || [])
+  return results as GetCommentsForPostIdResponse
+}
+
 // Reaction endpoints
 export async function addReactionToPost(payload: AddReactionToPostPayload) {
   const { data } = await apiClient.post<AddReactionToPostResponse | ErrorResponse>(
@@ -115,5 +159,50 @@ export async function removeReactionFromPost(payload: RemoveReactionFromPostPayl
     payload
   )
   ensureSuccess(data)
+}
+
+export async function getReactionsForPostId(payload: GetReactionsForPostIdPayload) {
+  const { data } = await apiClient.post<any>(
+    `${REACTION_BASE}/_getReactionsForPostId`,
+    payload
+  )
+
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  // Handle potential wrapper object from backend (e.g. { results: [...] })
+  const results = Array.isArray(data) ? data : (data.results || [])
+  return results as GetReactionsForPostIdResponse
+}
+
+export async function getReactionOnPostFromUser(payload: GetReactionOnPostFromUserPayload) {
+  console.log('[postService] getReactionOnPostFromUser payload:', payload)
+  const { data } = await apiClient.post<any>(
+    `${REACTION_BASE}/_getReactionOnPostFromUser`,
+    payload
+  )
+
+  console.log('[postService] getReactionOnPostFromUser response data:', data)
+
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  // Handle potential wrapper object from backend (e.g. { results: [...] })
+  // The user trace shows "results" property in the response object
+  let results = []
+  if (Array.isArray(data)) {
+    results = data
+  } else if (data && typeof data === 'object') {
+    if (Array.isArray(data.results)) {
+      results = data.results
+    } else if (Array.isArray(data.result)) {
+      results = data.result
+    }
+  }
+  
+  console.log('[postService] Parsed results:', results)
+  return results as GetReactionOnPostFromUserResponse
 }
 

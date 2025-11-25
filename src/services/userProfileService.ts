@@ -116,7 +116,12 @@ export async function getProfile(
     body
   )
 
-  const payload = ensureSuccess<any>(data)
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  // Handle potential wrapper object from backend (e.g. { results: [...] })
+  const payload = Array.isArray(data) ? data : (data.results || [])
 
   // Query-style response: return first element's `profile` if wrapped, or first item.
   if (Array.isArray(payload) && payload.length > 0) {
@@ -132,11 +137,17 @@ export async function searchProfilesByDisplayName(query: string) {
   const trimmedQuery = query.trim()
   if (!trimmedQuery) return [] as DisplayNameSearchResult[]
 
-  const { data } = await apiClient.post<DisplayNameSearchResult[] | ErrorResponse>(
+  const { data } = await apiClient.post<any>(
     `${USER_PROFILE_BASE}/_searchByDisplayName`,
     { query: trimmedQuery }
   )
 
-  return ensureSuccess<DisplayNameSearchResult[]>(data)
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  // Handle potential wrapper object from backend (e.g. { results: [...] })
+  const results = Array.isArray(data) ? data : (data.results || [])
+  return results as DisplayNameSearchResult[]
 }
 

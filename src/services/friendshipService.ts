@@ -63,34 +63,63 @@ export async function removeFriend(payload: RemoveFriendPayload) {
 }
 
 export async function areFriends(payload: AreFriendsPayload) {
-  const { data } = await apiClient.post<AreFriendsResponse[] | ErrorResponse>(
+  const { data } = await apiClient.post<any>(
     `${FRIENDSHIP_BASE}/_areFriends`,
     payload
   )
-  return ensureSuccess(data)
+  
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  const results = Array.isArray(data) ? data : (data.results || [])
+  return results as AreFriendsResponse[]
 }
 
 export async function getPendingFriendships(payload: PendingFriendshipsPayload) {
-  const { data } = await apiClient.post<PendingFriendshipsResponse[] | ErrorResponse>(
+  const { data } = await apiClient.post<any>(
     `${FRIENDSHIP_BASE}/_getPendingFriendships`,
     payload
   )
-  const response = ensureSuccess(data)
-  if (!Array.isArray(response) || response.length === 0) return []
-  const [first] = response
+  
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  const results = Array.isArray(data) ? data : (data.results || [])
+  
+  if (results.length === 0) return []
+  const [first] = results
   if (!first || !Array.isArray(first.pendingFriendships)) return []
   return first.pendingFriendships as PendingFriendship[]
 }
 
 export async function getFriends(payload: GetFriendsPayload) {
-  const { data } = await apiClient.post<FriendEntry[] | ErrorResponse>(
+  const { data } = await apiClient.post<any>(
     `${FRIENDSHIP_BASE}/_getFriends`,
     payload
   )
-  const response = ensureSuccess(data)
-  if (!Array.isArray(response)) return []
-  return response
-    .map(entry => entry?.friend)
-    .filter((friend): friend is string => Boolean(friend))
+  
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  // Handle various response formats:
+  // 1. Direct array: [{ friend: 'id' }]
+  // 2. Wrapper with results: { results: [{ friend: 'id' }] }
+  // 3. Wrapper with friends property (as seen in trace): { friends: [{ friend: 'id' }] }
+  let rawList: any[] = []
+  
+  if (Array.isArray(data)) {
+    rawList = data
+  } else if (Array.isArray(data?.results)) {
+    rawList = data.results
+  } else if (Array.isArray(data?.friends)) {
+    rawList = data.friends
+  }
+
+  return rawList
+    .map((entry: any) => entry?.friend)
+    .filter((friend: any): friend is string => Boolean(friend))
 }
 
