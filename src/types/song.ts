@@ -28,6 +28,12 @@ export interface SongResponse {
   song: Song
 }
 
+export type PlayableSongsRawResponse =
+  | SongResponse[]
+  | {
+      songs: SongResponse[]
+    }
+
 export interface ErrorResponse {
   error: string
 }

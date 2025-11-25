@@ -14,23 +14,6 @@
 
       <div class="sections">
         <section class="learn-section">
-          <h2>Practice Your Songs</h2>
-          <div v-if="loadingSongs" class="loading">Loading...</div>
-          <div v-else-if="playableSongs.length === 0" class="empty-state">
-            No playable songs yet. Learn some chords to unlock songs!
-          </div>
-          <ul v-else class="song-list">
-            <li v-for="song in filteredPlayableSongs" :key="song._id" class="song-item">
-              <div class="song-info">
-                <span class="song-title">{{ song.title }}</span>
-                <span class="song-artist">{{ song.artist }}</span>
-              </div>
-              <button @click="startLearningSong(song._id)" class="learn-btn">Start Learning</button>
-            </li>
-          </ul>
-        </section>
-
-        <section class="learn-section">
           <h2>Learn a New Chord</h2>
           <div v-if="loadingChordRec" class="loading">Loading recommendation...</div>
           <div v-else-if="recommendedChord" class="chord-recommendation">
@@ -46,6 +29,63 @@
           </div>
           <div v-else class="empty-state">No chord recommendations available.</div>
         </section>
+
+        <section class="learn-section">
+          <h2>Practice Your Songs</h2>
+          <div v-if="loadingPracticeSongs" class="loading">Loading...</div>
+          <div v-else-if="practiceSongs.length === 0" class="empty-state">
+            You haven't started learning any songs yet.
+          </div>
+          <ul v-else class="song-list">
+            <li
+              v-for="entry in practiceSongs"
+              :key="entry.song._id"
+              class="song-item"
+            >
+              <div class="song-info">
+                <span class="song-title">{{ entry.song.title }}</span>
+                <span class="song-artist">{{ entry.song.artist }}</span>
+              </div>
+              <div class="practice-actions">
+                <select
+                  v-model="songMasterySelections[entry.song._id]"
+                  class="mastery-select"
+                >
+                  <option value="in progress">In Progress</option>
+                  <option value="mastered">Mastered</option>
+                </select>
+                <button
+                  class="learn-btn"
+                  @click="updatePracticeSongMastery(entry.song._id)"
+                  :disabled="!canUpdateSong(entry.song._id, entry.mastery)"
+                >
+                  {{
+                    updatingSongMastery === entry.song._id
+                      ? 'Updating...'
+                      : 'Update'
+                  }}
+                </button>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <section class="learn-section">
+          <h2>Learn a New Song</h2>
+          <div v-if="loadingSongs" class="loading">Loading...</div>
+          <div v-else-if="playableSongs.length === 0" class="empty-state">
+            No playable songs yet. Learn some chords to unlock songs!
+          </div>
+          <ul v-else class="song-list">
+            <li v-for="song in filteredPlayableSongs" :key="song._id" class="song-item">
+              <div class="song-info">
+                <span class="song-title">{{ song.title }}</span>
+                <span class="song-artist">{{ song.artist }}</span>
+              </div>
+              <button @click="startLearningSong(song._id)" class="learn-btn">Start Learning</button>
+            </li>
+          </ul>
+        </section>
       </div>
     </div>
   </Layout>
@@ -55,11 +95,16 @@
 import { ref, computed, onMounted } from 'vue'
 import Layout from '@/components/Layout.vue'
 import { getPlayableSongs, searchByTitleOrArtist } from '@/services/songService'
-import { startLearningSong as startLearningSongAPI } from '@/services/songLibraryService'
+import {
+  getSongsInProgress,
+  startLearningSong as startLearningSongAPI,
+  updateSongMastery as updateSongMasteryAPI,
+} from '@/services/songLibraryService'
 import { requestChordRecommendation, requestSongUnlockRecommendation } from '@/services/recommendationService'
 import { addChordToInventory, getKnownChords } from '@/services/chordLibraryService'
 import { getSessionId } from '@/utils/sessionStorage'
 import type { Song } from '@/types/song'
+import type { SongProgress } from '@/types/songLibrary'
 
 const searchQuery = ref('')
 const playableSongs = ref<Song[]>([])
@@ -67,17 +112,28 @@ const recommendedChord = ref<string | null>(null)
 const unlockedSongs = ref<string[]>([])
 const loadingSongs = ref(false)
 const loadingChordRec = ref(false)
+const practiceSongs = ref<SongProgress[]>([])
+const loadingPracticeSongs = ref(false)
+const songMasterySelections = ref<Record<string, SongMasteryLevel>>({})
+const updatingSongMastery = ref<string | null>(null)
 
 // Query a few common substrings to approximate an "all songs" catalog since the API lacks a direct endpoint.
 const SONG_CATALOG_QUERIES = ['la', 'er', 'an', 'ti', 'on', 'ch', 'st', 'ra']
 const MAX_CATALOG_SIZE = 80
 let cachedSongCatalog: Song[] | null = null
 
+type SongMasteryLevel = 'in progress' | 'mastered'
+const allowedSongMasteries: SongMasteryLevel[] = ['in progress', 'mastered']
+const fallbackSongMastery: SongMasteryLevel = 'in progress'
+
 const isNonEmptyString = (value: string | null | undefined): value is string =>
   typeof value === 'string' && value.trim().length > 0
 
 const isValidSong = (song: Song | undefined | null): song is Song =>
   Boolean(song && song._id && Array.isArray(song.chords))
+
+const isValidSongProgress = (entry: SongProgress | undefined | null): entry is SongProgress =>
+  Boolean(entry && entry.song && isValidSong(entry.song))
 
 async function getSongCatalog(): Promise<Song[]> {
   if (cachedSongCatalog?.length) {
@@ -106,14 +162,68 @@ async function getSongCatalog(): Promise<Song[]> {
   return cachedSongCatalog
 }
 
+const practiceSongIds = computed(() =>
+  new Set(
+    practiceSongs.value
+      .map(entry => entry.song?._id)
+      .filter((id): id is string => Boolean(id))
+  )
+)
+
+const availablePlayableSongs = computed(() =>
+  playableSongs.value.filter(song => !practiceSongIds.value.has(song._id))
+)
+
 const filteredPlayableSongs = computed(() => {
-  if (!searchQuery.value.trim()) return playableSongs.value
+  if (!searchQuery.value.trim()) return availablePlayableSongs.value
   const query = searchQuery.value.toLowerCase()
-  return playableSongs.value.filter(song => 
+  return availablePlayableSongs.value.filter(song => 
     (song.title?.toLowerCase() ?? '').includes(query) || 
     (song.artist?.toLowerCase() ?? '').includes(query)
   )
 })
+
+function normalizeSongMastery(value: string | undefined | null): SongMasteryLevel {
+  return allowedSongMasteries.includes(value as SongMasteryLevel)
+    ? (value as SongMasteryLevel)
+    : fallbackSongMastery
+}
+
+function syncSongMasterySelections(entries: SongProgress[]) {
+  const nextSelections: Record<string, SongMasteryLevel> = {}
+  entries.forEach(entry => {
+    if (!entry?.song?._id) return
+    nextSelections[entry.song._id] = normalizeSongMastery(entry.mastery)
+  })
+  songMasterySelections.value = nextSelections
+}
+
+function canUpdateSong(songId: string, currentMastery: string) {
+  const pending = songMasterySelections.value[songId]
+  return (
+    Boolean(pending) &&
+    pending !== normalizeSongMastery(currentMastery) &&
+    updatingSongMastery.value !== songId
+  )
+}
+
+async function loadPracticeSongs(sessionId: string) {
+  loadingPracticeSongs.value = true
+  try {
+    const response = await getSongsInProgress(sessionId)
+    const validEntries = Array.isArray(response)
+      ? response.filter(isValidSongProgress)
+      : []
+    practiceSongs.value = validEntries
+    syncSongMasterySelections(validEntries)
+  } catch (error) {
+    console.error('Failed to load practice songs:', error)
+    practiceSongs.value = []
+    songMasterySelections.value = {}
+  } finally {
+    loadingPracticeSongs.value = false
+  }
+}
 
 async function loadData() {
   loadingSongs.value = true
@@ -124,6 +234,8 @@ async function loadData() {
   try {
     const sessionId = getSessionId()
     if (!sessionId) return
+
+    await loadPracticeSongs(sessionId)
 
     // 1. Get Known Chords
     const knownChordsResponse = await getKnownChords(sessionId)
@@ -212,6 +324,35 @@ async function startLearningChord(chord: string) {
     await loadData()
   } catch (error) {
     console.error('Failed to add chord:', error)
+  }
+}
+
+async function updatePracticeSongMastery(songId: string) {
+  const selectedMastery = songMasterySelections.value[songId]
+  const current = practiceSongs.value.find(entry => entry.song._id === songId)
+  if (!selectedMastery || !current || selectedMastery === normalizeSongMastery(current.mastery)) {
+    return
+  }
+
+  try {
+    const sessionId = getSessionId()
+    if (!sessionId) return
+
+    updatingSongMastery.value = songId
+
+    await updateSongMasteryAPI({
+      sessionId,
+      song: songId,
+      newMastery: selectedMastery,
+    })
+
+    await loadPracticeSongs(sessionId)
+  } catch (error) {
+    console.error('Failed to update song mastery:', error)
+  } finally {
+    if (updatingSongMastery.value === songId) {
+      updatingSongMastery.value = null
+    }
   }
 }
 
@@ -344,6 +485,21 @@ h2 {
 
 .learn-btn:hover {
   opacity: 0.9;
+}
+
+.practice-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mastery-select {
+  padding: 0.5rem;
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  color: #f9fafb;
+  font-size: 0.9rem;
 }
 </style>
 

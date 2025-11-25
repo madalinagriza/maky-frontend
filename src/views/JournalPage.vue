@@ -40,8 +40,11 @@
                 :key="progress.song?._id ?? `song-${index}`"
                 class="item-card"
               >
-                <div class="item-name">{{ progress.song?.title ?? 'Unknown Song' }}</div>
-                <div class="item-mastery">{{ progress.mastery ?? 'unknown' }}</div>
+                <div class="item-info">
+                  <div class="item-name">{{ progress.song?.title ?? 'Unknown Song' }}</div>
+                  <div class="item-subtext">{{ progress.song?.artist ?? 'Unknown Artist' }}</div>
+                </div>
+                <span class="item-mastery-pill">{{ formatMastery(progress.mastery) }}</span>
               </li>
             </ul>
           </section>
@@ -148,17 +151,24 @@ async function loadSongs() {
     if (!sessionId) return
 
     const response = await getSongsInProgress(sessionId)
-    if (Array.isArray(response)) {
-      songs.value = response.filter(progress => progress && progress.song)
-    } else {
-      songs.value = []
-    }
+    songs.value = Array.isArray(response)
+      ? response.filter(progress => progress && progress.song)
+      : []
   } catch (error) {
     console.error('Failed to load songs:', error)
     songs.value = []
   } finally {
     loadingSongs.value = false
   }
+}
+
+function formatMastery(value: string | undefined | null) {
+  if (!value) return 'Unknown'
+  return value
+    .split(' ')
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
 }
 
 async function loadChords() {
@@ -310,15 +320,36 @@ h2 {
   align-items: center;
 }
 
+.item-info {
+  display: flex;
+  flex-direction: column;
+}
+
 .item-name {
   font-weight: 500;
   color: var(--contrast-mid);
+}
+
+.item-subtext {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin-top: 0.2rem;
 }
 
 .item-mastery {
   font-size: 0.875rem;
   color: #9ca3af;
   text-transform: capitalize;
+}
+
+.item-mastery-pill {
+  font-size: 0.8rem;
+  text-transform: capitalize;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(129, 140, 248, 0.15);
+  color: #c7d2fe;
+  border: 1px solid rgba(129, 140, 248, 0.35);
 }
 
 .loading,

@@ -4,6 +4,7 @@ import type {
   UpdateSongMasteryPayload,
   StopLearningSongPayload,
   GetSongsInProgressResponse,
+  RawSongsInProgressResponse,
   ErrorResponse,
 } from '@/types/songLibrary'
 
@@ -63,10 +64,24 @@ export async function removeUser(sessionId: string) {
 }
 
 export async function getSongsInProgress(sessionId: string) {
-  const { data } = await apiClient.post<GetSongsInProgressResponse | ErrorResponse>(
+  const { data } = await apiClient.post<RawSongsInProgressResponse | ErrorResponse>(
     `${SONG_LIBRARY_BASE}/_getSongsInProgress`,
     { sessionId }
   )
-  return ensureSuccess(data)
+  const payload = ensureSuccess<RawSongsInProgressResponse>(data)
+
+  if (Array.isArray(payload)) {
+    return payload
+  }
+
+  if (payload && Array.isArray(payload.songsInProgress)) {
+    return payload.songsInProgress
+  }
+
+  if (payload && Array.isArray(payload.songs)) {
+    return payload.songs
+  }
+
+  return []
 }
 

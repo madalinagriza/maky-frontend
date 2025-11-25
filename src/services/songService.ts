@@ -4,6 +4,7 @@ import type {
   FilterSongsByGenrePayload,
   SearchSongsPayload,
   SongResponse,
+  PlayableSongsRawResponse,
   ErrorResponse,
 } from '@/types/song'
 
@@ -23,11 +24,21 @@ function ensureSuccess<T>(payload: T | ErrorResponse): T {
 }
 
 export async function getPlayableSongs(payload: GetPlayableSongsPayload) {
-  const { data } = await apiClient.post<SongResponse[] | ErrorResponse>(
+  const { data } = await apiClient.post<PlayableSongsRawResponse | ErrorResponse>(
     `${SONG_BASE}/_getPlayableSongs`,
     payload
   )
-  return ensureSuccess(data)
+  const payloadData = ensureSuccess<PlayableSongsRawResponse>(data)
+
+  if (Array.isArray(payloadData)) {
+    return payloadData
+  }
+
+  if (payloadData && Array.isArray(payloadData.songs)) {
+    return payloadData.songs
+  }
+
+  return []
 }
 
 export async function filterSongsByGenre(payload: FilterSongsByGenrePayload) {
