@@ -73,7 +73,9 @@
 import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { loginUser, registerUser } from '@/services/userAccountService'
-import { getProfile } from '@/services/userProfileService'
+import { getProfile, createProfile } from '@/services/userProfileService'
+import { addUser as addSongLibraryUser } from '@/services/songLibraryService'
+import { addUser as addChordLibraryUser } from '@/services/chordLibraryService'
 import { useAuth } from '@/composables/useAuth'
 import { useUserProfile } from '@/composables/useUserProfile'
 
@@ -134,20 +136,62 @@ async function loginAsTestUser() {
   loading.value = true
   feedback.value = null
 
+  const testCredentials = {
+    username: 'testuser',
+    password: 'testpass123',
+    email: 'test@example.com',
+  }
+
+  const loginPayload = {
+    username: testCredentials.username,
+    password: testCredentials.password,
+  }
+
   try {
-    // First try to login with test credentials
-    const payload = {
-      username: 'testuser',
-      password: 'testpass123',
+    let response
+    try {
+      response = await loginUser(loginPayload)
+    } catch (loginError) {
+      // Login failed - account doesn't exist, will register
+      await registerUser({
+        username: testCredentials.username,
+        email: testCredentials.email,
+        password: testCredentials.password,
+        isKidAccount: false,
+      })
+      response = await loginUser(loginPayload)
     }
 
-    const response = await loginUser(payload)
-    login(response.sessionId, response.user, payload.username)
+    login(response.sessionId, response.user, testCredentials.username)
     await hydrateProfile({
       userId: response.user,
       sessionId: response.sessionId,
-      fallbackName: payload.username,
+      fallbackName: testCredentials.username,
     })
+
+    // Initialize services if they don't exist (errors are ignored)
+    try {
+      await createProfile({
+        sessionId: response.sessionId,
+        displayName: 'Test User',
+        skillLevel: 'BEGINNER',
+        genrePreferences: [],
+      })
+    } catch {
+      // Profile already exists
+    }
+
+    try {
+      await addSongLibraryUser(response.sessionId)
+    } catch {
+      // User already in SongLibrary
+    }
+
+    try {
+      await addChordLibraryUser(response.sessionId)
+    } catch {
+      // User already in ChordLibrary
+    }
 
     feedback.value = {
       kind: 'success',
@@ -158,40 +202,8 @@ async function loginAsTestUser() {
       router.push('/profile')
     }, 500)
   } catch (error) {
-    // If login fails, try to register the test user first
-    try {
-      await registerUser({
-        username: 'testuser',
-        email: 'test@example.com',
-        password: 'testpass123',
-        isKidAccount: false,
-      })
-
-      // Then login
-      const payload = {
-        username: 'testuser',
-        password: 'testpass123',
-      }
-      const response = await loginUser(payload)
-      login(response.sessionId, response.user, payload.username)
-      await hydrateProfile({
-        userId: response.user,
-        sessionId: response.sessionId,
-        fallbackName: payload.username,
-      })
-
-      feedback.value = {
-        kind: 'success',
-        message: 'Test account created and logged in!',
-      }
-
-      setTimeout(() => {
-        router.push('/profile')
-      }, 500)
-    } catch (registerError) {
-      const message = registerError instanceof Error ? registerError.message : 'Unable to create/login test user'
-      feedback.value = { kind: 'error', message }
-    }
+    const message = error instanceof Error ? error.message : 'Unable to create/login test user'
+    feedback.value = { kind: 'error', message }
   } finally {
     loading.value = false
   }
