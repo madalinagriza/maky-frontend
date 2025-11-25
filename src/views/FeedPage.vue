@@ -14,8 +14,24 @@
             />
             <div v-if="loadingFriends" class="loading">Loading...</div>
             <ul v-else class="friends-list">
-              <li v-for="friend in filteredFriends" :key="friend" class="friend-item">
-                {{ friend }}
+              <li v-for="friend in filteredFriends" :key="friend.id" class="friend-item">
+                <div class="friend-info">
+                  <img
+                    v-if="friend.avatarUrl"
+                    :src="friend.avatarUrl"
+                    alt="Friend avatar"
+                    class="friend-avatar"
+                  />
+                  <div v-else class="friend-avatar fallback">
+                    {{ (friend.displayName || friend.id).charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="friend-details">
+                    <span class="friend-name">{{ friend.displayName || friend.id }}</span>
+                    <!-- <span v-if="friend.displayName && friend.displayName !== friend.id" class="friend-handle">
+                      {{ friend.id }}
+                    </span> -->
+                  </div>
+                </div>
               </li>
             </ul>
             <div class="add-friend-section">
@@ -157,10 +173,33 @@
             <div v-else-if="pendingRequests.length === 0" class="empty-state">No pending requests</div>
             <ul v-else class="requests-list">
               <li v-for="request in pendingRequests" :key="request.requester" class="request-item">
-                <span>{{ request.requester }}</span>
+                <div class="requester-info">
+                  <img
+                    v-if="request.avatarUrl"
+                    :src="request.avatarUrl"
+                    alt="Profile avatar"
+                    class="request-avatar"
+                  />
+                  <div v-else class="request-avatar fallback">
+                    {{ (request.displayName || request.requester).charAt(0).toUpperCase() }}
+                  </div>
+                  <span class="requester-name">{{ request.displayName || request.requester }}</span>
+                </div>
                 <div class="request-actions">
-                  <button @click="acceptRequest(request.requester)" class="accept-btn">Accept</button>
-                  <button @click="declineRequest(request.requester)" class="decline-btn">Decline</button>
+                  <button
+                    @click="acceptRequest(request.requester)"
+                    class="accept-btn"
+                    aria-label="Accept request"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    @click="declineRequest(request.requester)"
+                    class="decline-btn"
+                    aria-label="Decline request"
+                  >
+                    ✕
+                  </button>
                 </div>
               </li>
             </ul>
@@ -186,12 +225,18 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import Layout from '@/components/Layout.vue'
 import { createPost as createPostAPI } from '@/services/postService'
-import { sendFriendRequest as sendFriendRequestAPI, acceptFriendRequest, declineFriendRequest } from '@/services/friendshipService'
+import {
+  sendFriendRequest as sendFriendRequestAPI,
+  acceptFriendRequest,
+  declineFriendRequest,
+  getPendingFriendships,
+  getFriends,
+} from '@/services/friendshipService'
 import { getNotifications } from '@/services/notificationService'
 import { getSongsInProgress } from '@/services/songLibraryService'
 import { getKnownChords } from '@/services/chordLibraryService'
-import { getSessionId } from '@/utils/sessionStorage'
-import { searchProfilesByDisplayName } from '@/services/userProfileService'
+import { getSessionId, getUserId } from '@/utils/sessionStorage'
+import { searchProfilesByDisplayName, getProfile } from '@/services/userProfileService'
 import type { DisplayNameSearchResult } from '@/types/userProfile'
 import type { SongProgress } from '@/types/songLibrary'
 import type { KnownChord } from '@/types/chordLibrary'
@@ -202,15 +247,21 @@ interface SelectableItem {
   displayName: string
 }
 
+interface FriendListEntry {
+  id: string
+  displayName?: string
+  avatarUrl?: string
+}
+
 const friendSearchQuery = ref('')
 const addFriendQuery = ref('')
 const newPostContent = ref('')
 const itemSearchQuery = ref('')
-const friends = ref<string[]>([])
+const friends = ref<FriendListEntry[]>([])
 const addFriendResults = ref<DisplayNameSearchResult[]>([])
 const selectedAddFriend = ref<DisplayNameSearchResult | null>(null)
 const posts = ref<Array<{ id: string; author: string; content: string; postType: string; hasReaction: boolean }>>([])
-const pendingRequests = ref<Array<{ requester: string }>>([])
+const pendingRequests = ref<Array<{ requester: string; displayName?: string; avatarUrl?: string }>>([])
 const notifications = ref<Array<{ id: string; message: string }>>([])
 const songs = ref<SongProgress[]>([])
 const chords = ref<KnownChord[]>([])
@@ -230,9 +281,12 @@ const addFriendError = ref('')
 const postError = ref('')
 
 const filteredFriends = computed(() => {
-  if (!friendSearchQuery.value.trim()) return friends.value
-  const query = friendSearchQuery.value.toLowerCase()
-  return friends.value.filter(friend => friend.toLowerCase().includes(query))
+  const query = friendSearchQuery.value.trim().toLowerCase()
+  if (!query) return friends.value
+  return friends.value.filter(friend => {
+    const name = friend.displayName || friend.id
+    return name.toLowerCase().includes(query)
+  })
 })
 
 const showAddFriendDropdown = computed(() =>
@@ -432,8 +486,7 @@ async function acceptRequest(requester: string) {
     if (!sessionId) return
 
     await acceptFriendRequest({ sessionId, requester })
-    await loadPendingRequests()
-    await loadFriends()
+    await Promise.all([loadPendingRequests(), loadFriends(), loadNotifications()])
   } catch (error) {
     console.error('Failed to accept request:', error)
   }
@@ -445,7 +498,7 @@ async function declineRequest(requester: string) {
     if (!sessionId) return
 
     await declineFriendRequest({ sessionId, requester })
-    await loadPendingRequests()
+    await Promise.all([loadPendingRequests(), loadFriends(), loadNotifications()])
   } catch (error) {
     console.error('Failed to decline request:', error)
   }
@@ -454,10 +507,33 @@ async function declineRequest(requester: string) {
 async function loadFriends() {
   loadingFriends.value = true
   try {
-    // TODO: Implement friends fetching API
-    friends.value = []
+    const userId = getUserId()
+    if (!userId) {
+      friends.value = []
+      return
+    }
+
+    const friendIds = await getFriends({ user: userId })
+    const enrichedFriends = await Promise.all(
+      friendIds.map(async friendId => {
+        try {
+          const profile = await getProfile({ user: friendId })
+          return {
+            id: friendId,
+            displayName: profile?.displayName || friendId,
+            avatarUrl: profile?.avatarUrl,
+          }
+        } catch (profileError) {
+          console.error('Failed to load friend profile:', profileError)
+          return { id: friendId }
+        }
+      })
+    )
+
+    friends.value = enrichedFriends
   } catch (error) {
     console.error('Failed to load friends:', error)
+    friends.value = []
   } finally {
     loadingFriends.value = false
   }
@@ -466,10 +542,33 @@ async function loadFriends() {
 async function loadPendingRequests() {
   loadingRequests.value = true
   try {
-    // TODO: Implement pending requests fetching API
-    pendingRequests.value = []
+    const userId = getUserId()
+    if (!userId) {
+      pendingRequests.value = []
+      return
+    }
+
+    const pending = await getPendingFriendships({ user: userId })
+    const enriched = await Promise.all(
+      pending.map(async request => {
+        try {
+          const profile = await getProfile({ user: request.requester })
+          return {
+            requester: request.requester,
+            displayName: profile?.displayName || request.requester,
+            avatarUrl: profile?.avatarUrl,
+          }
+        } catch (profileError) {
+          console.error('Failed to load requester profile:', profileError)
+          return { requester: request.requester }
+        }
+      })
+    )
+
+    pendingRequests.value = enriched
   } catch (error) {
     console.error('Failed to load requests:', error)
+    pendingRequests.value = []
   } finally {
     loadingRequests.value = false
   }
@@ -906,10 +1005,85 @@ h3 {
   border-radius: 0.5rem;
 }
 
+.friend-item {
+  display: flex;
+  align-items: center;
+}
+
+.friend-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.friend-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.friend-avatar.fallback {
+  font-size: 0.95rem;
+}
+
+.friend-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.friend-name {
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.friend-handle {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
 .request-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
+}
+
+.requester-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.request-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.request-avatar.fallback {
+  font-size: 0.95rem;
+}
+
+.requester-name {
+  font-weight: 600;
+  color: #e5e7eb;
 }
 
 .request-actions {

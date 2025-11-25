@@ -8,6 +8,11 @@ import type {
   AreFriendsPayload,
   AreFriendsResponse,
   ErrorResponse,
+  PendingFriendshipsPayload,
+  PendingFriendship,
+  PendingFriendshipsResponse,
+  GetFriendsPayload,
+  FriendEntry,
 } from '@/types/friendship'
 
 const FRIENDSHIP_BASE = '/Friendship'
@@ -63,5 +68,29 @@ export async function areFriends(payload: AreFriendsPayload) {
     payload
   )
   return ensureSuccess(data)
+}
+
+export async function getPendingFriendships(payload: PendingFriendshipsPayload) {
+  const { data } = await apiClient.post<PendingFriendshipsResponse[] | ErrorResponse>(
+    `${FRIENDSHIP_BASE}/_getPendingFriendships`,
+    payload
+  )
+  const response = ensureSuccess(data)
+  if (!Array.isArray(response) || response.length === 0) return []
+  const [first] = response
+  if (!first || !Array.isArray(first.pendingFriendships)) return []
+  return first.pendingFriendships as PendingFriendship[]
+}
+
+export async function getFriends(payload: GetFriendsPayload) {
+  const { data } = await apiClient.post<FriendEntry[] | ErrorResponse>(
+    `${FRIENDSHIP_BASE}/_getFriends`,
+    payload
+  )
+  const response = ensureSuccess(data)
+  if (!Array.isArray(response)) return []
+  return response
+    .map(entry => entry?.friend)
+    .filter((friend): friend is string => Boolean(friend))
 }
 

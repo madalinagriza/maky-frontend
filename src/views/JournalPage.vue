@@ -44,7 +44,7 @@
                   <div class="item-name">{{ progress.song?.title ?? 'Unknown Song' }}</div>
                   <div class="item-subtext">{{ progress.song?.artist ?? 'Unknown Artist' }}</div>
                 </div>
-                <span class="item-mastery-pill">{{ formatMastery(progress.mastery) }}</span>
+                <div class="item-mastery">{{ formatMastery(progress.mastery) }}</div>
               </li>
             </ul>
           </section>
@@ -340,16 +340,6 @@ h2 {
   font-size: 0.875rem;
   color: #9ca3af;
   text-transform: capitalize;
-}
-
-.item-mastery-pill {
-  font-size: 0.8rem;
-  text-transform: capitalize;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  background: rgba(129, 140, 248, 0.15);
-  color: #c7d2fe;
-  border: 1px solid rgba(129, 140, 248, 0.35);
 }
 
 .loading,

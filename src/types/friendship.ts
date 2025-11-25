@@ -35,3 +35,23 @@ export interface ErrorResponse {
   error: string
 }
 
+export interface PendingFriendshipsPayload {
+  user: string
+}
+
+export interface PendingFriendship {
+  requester: string
+}
+
+export interface PendingFriendshipsResponse {
+  pendingFriendships: PendingFriendship[]
+}
+
+export interface GetFriendsPayload {
+  user: string
+}
+
+export interface FriendEntry {
+  friend: string
+}
+
