@@ -17,6 +17,7 @@ export interface UpdateDisplayNamePayload {
 export interface UpdateBioPayload {
   sessionId: string
   newBio?: string
+  bio?: string
 }
 
 export interface UpdateAvatarPayload {

@@ -44,9 +44,17 @@ export async function updateDisplayName(payload: UpdateDisplayNamePayload) {
 }
 
 export async function updateBio(payload: UpdateBioPayload) {
+  const normalizedBio =
+    payload.newBio !== undefined ? payload.newBio : payload.bio
+
+  const requestBody =
+    normalizedBio === undefined
+      ? payload
+      : { ...payload, newBio: normalizedBio, bio: normalizedBio }
+
   const { data } = await apiClient.post<Record<string, never> | ErrorResponse>(
     `${USER_PROFILE_BASE}/updateBio`,
-    payload
+    requestBody
   )
   ensureSuccess(data)
 }
