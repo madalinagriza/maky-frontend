@@ -54,6 +54,7 @@
           </div>
 
           <h2>My Posts</h2>
+          <div v-if="visibilityError" class="error-message">{{ visibilityError }}</div>
           <div v-if="loadingPosts" class="loading">Loading posts...</div>
           <div v-else-if="posts.length === 0" class="empty-state">You haven't posted anything yet.</div>
           <div v-else class="posts-list">
@@ -70,6 +71,19 @@
                     {{ item }}
                   </span>
                 </div>
+              </div>
+              <div class="visibility-controls">
+                <span class="visibility-label">
+                  Visibility: {{ (post.visibility || 'PRIVATE').toLowerCase() === 'public' ? 'Public' : 'Private' }}
+                </span>
+                <button
+                  v-if="(post.visibility || 'PRIVATE') === 'PRIVATE'"
+                  class="visibility-btn"
+                  :disabled="changingVisibilityFor === post._id"
+                  @click="handleVisibilityChange(post, 'PUBLIC')"
+                >
+                  {{ changingVisibilityFor === post._id ? 'Updating…' : 'Make Public' }}
+                </button>
               </div>
             </div>
           </div>
@@ -118,10 +132,10 @@ import { ref, onMounted } from 'vue'
 import Layout from '@/components/Layout.vue'
 import { getSongsInProgress } from '@/services/songLibraryService'
 import { getKnownChords } from '@/services/chordLibraryService'
-import { getPostsForUser, createPost } from '@/services/postService'
+import { createPost, getPersonalPrivatePosts, editPostVisibility } from '@/services/postService'
 import { getUserId, getSessionId } from '@/utils/sessionStorage'
 import type { SongProgress } from '@/types/songLibrary'
-import type { Post } from '@/types/post'
+import type { Post, PostVisibility } from '@/types/post'
 
 const posts = ref<Post[]>([])
 const songs = ref<SongProgress[]>([])
@@ -137,6 +151,8 @@ const newPostItems = ref<string[]>([])
 const newItemInput = ref('')
 const isPosting = ref(false)
 const createPostError = ref('')
+const visibilityError = ref('')
+const changingVisibilityFor = ref<string | null>(null)
 
 function addItem() {
   const trimmed = newItemInput.value.trim()
@@ -166,7 +182,8 @@ async function handleCreatePost() {
       sessionId,
       content: newPostContent.value,
       postType: newPostType.value,
-      items: newPostItems.value
+      items: newPostItems.value,
+      visibility: 'PRIVATE'
     })
 
     // Reset form
@@ -181,6 +198,31 @@ async function handleCreatePost() {
     createPostError.value = error.message || 'Failed to create post'
   } finally {
     isPosting.value = false
+  }
+}
+
+async function handleVisibilityChange(post: Post, nextVisibility: PostVisibility) {
+  visibilityError.value = ''
+  const sessionId = getSessionId()
+  if (!sessionId) {
+    visibilityError.value = 'You must be logged in to change visibility.'
+    return
+  }
+
+  changingVisibilityFor.value = post._id
+  try {
+    await editPostVisibility({
+      sessionId,
+      postId: post._id,
+      newVisibility: nextVisibility,
+    })
+
+    await loadPosts()
+  } catch (error: any) {
+    console.error('Failed to change visibility:', error)
+    visibilityError.value = error.message || 'Failed to change visibility'
+  } finally {
+    changingVisibilityFor.value = null
   }
 }
 
@@ -230,12 +272,13 @@ async function loadPosts() {
   loadingPosts.value = true
   try {
     const userId = getUserId()
-    if (!userId) {
+    const sessionId = getSessionId()
+    if (!userId || !sessionId) {
       posts.value = []
       return
     }
 
-    const response = await getPostsForUser({ user: userId })
+    const response = await getPersonalPrivatePosts({ sessionId, user: userId })
     posts.value = response.map(item => item.post)
   } catch (error) {
     console.error('Failed to load posts:', error)
@@ -485,6 +528,35 @@ h2 {
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.visibility-controls {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.visibility-label {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  text-transform: capitalize;
+}
+
+.visibility-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  color: #f9fafb;
+}
+
+.visibility-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .items-label {

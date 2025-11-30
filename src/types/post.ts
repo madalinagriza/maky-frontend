@@ -1,8 +1,11 @@
+export type PostVisibility = 'PUBLIC' | 'PRIVATE'
+
 export interface CreatePostPayload {
   sessionId: string
   content: string
   postType: 'PROGRESS' | 'GENERAL'
   items: string[]
+  visibility?: PostVisibility
 }
 
 export interface CreatePostResponse {
@@ -20,6 +23,7 @@ export interface EditPostPayload {
   newContent: string
   newItem?: string
   newPostType?: 'PROGRESS' | 'GENERAL'
+  newVisibility?: PostVisibility | 'UNDEFINED'
 }
 
 export interface AddCommentToPostPayload {
@@ -85,12 +89,32 @@ export interface GetPostsForUsersPayload {
   users: string[]
 }
 
+export interface GetPublicPostsForUserPayload {
+  user: string
+}
+
+export interface GetPersonalPrivatePostsPayload {
+  sessionId: string
+  user: string
+}
+
+export interface GetPersonalPublicPostsPayload {
+  sessionId: string
+  user: string
+}
+
+export interface GetPublicPostsOfUsersPayload {
+  sessionId: string
+  users: string[]
+}
+
 export interface Post {
   _id: string
   author: string
   content: string
   items: string[]
   postType: string
+  visibility?: PostVisibility
   createdAt: string
   editedAt?: string
 }
@@ -125,5 +149,11 @@ export type GetReactionOnPostFromUserResponse = ReactionCount[]
 
 export interface ErrorResponse {
   error: string
+}
+
+export interface EditPostVisibilityPayload {
+  sessionId: string
+  postId: string
+  newVisibility: PostVisibility
 }
 
