@@ -17,10 +17,15 @@ import type {
   GetPostsForUserPayload,
   GetPostsForUserResponse,
   GetPostsForUsersPayload,
+  GetPublicPostsForUserPayload,
+  GetPersonalPrivatePostsPayload,
+  GetPersonalPublicPostsPayload,
+  GetPublicPostsOfUsersPayload,
   GetCommentsForPostIdPayload,
   GetCommentsForPostIdResponse,
   GetReactionOnPostFromUserPayload,
   GetReactionOnPostFromUserResponse,
+  EditPostVisibilityPayload,
   ErrorResponse,
 } from '@/types/post'
 
@@ -66,6 +71,14 @@ export async function editPost(payload: EditPostPayload) {
   ensureSuccess(data)
 }
 
+export async function editPostVisibility(payload: EditPostVisibilityPayload) {
+  const { data } = await apiClient.post<Record<string, never> | ErrorResponse>(
+    `${POST_BASE}/editPostVisibility`,
+    payload
+  )
+  ensureSuccess(data)
+}
+
 export async function getPostsForUser(payload: GetPostsForUserPayload) {
   const { data } = await apiClient.post<any>(
     `${POST_BASE}/_getPostsForUser`,
@@ -92,6 +105,62 @@ export async function getPostsForUsers(payload: GetPostsForUsersPayload) {
   }
 
   // Handle potential wrapper object from backend (e.g. { results: [...] })
+  const results = Array.isArray(data) ? data : (data.results || [])
+  return results as GetPostsForUserResponse
+}
+
+export async function getPublicPostsForUser(payload: GetPublicPostsForUserPayload) {
+  const { data } = await apiClient.post<any>(
+    `${POST_BASE}/_getPublicPostsForUser`,
+    payload
+  )
+
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  const results = Array.isArray(data) ? data : (data.results || [])
+  return results as GetPostsForUserResponse
+}
+
+export async function getPersonalPrivatePosts(payload: GetPersonalPrivatePostsPayload) {
+  const { data } = await apiClient.post<any>(
+    `${POST_BASE}/_getPersonalPrivatePosts`,
+    payload
+  )
+
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  const results = Array.isArray(data) ? data : (data.results || [])
+  return results as GetPostsForUserResponse
+}
+
+export async function getPersonalPublicPosts(payload: GetPersonalPublicPostsPayload) {
+  const { data } = await apiClient.post<any>(
+    `${POST_BASE}/_getPersonalPublicPosts`,
+    payload
+  )
+
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  const results = Array.isArray(data) ? data : (data.results || [])
+  return results as GetPostsForUserResponse
+}
+
+export async function getPublicPostsOfUsers(payload: GetPublicPostsOfUsersPayload) {
+  const { data } = await apiClient.post<any>(
+    `${POST_BASE}/_getPublicPostsOfUsers`,
+    payload
+  )
+
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
   const results = Array.isArray(data) ? data : (data.results || [])
   return results as GetPostsForUserResponse
 }

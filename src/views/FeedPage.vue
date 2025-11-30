@@ -81,20 +81,92 @@
 
         <!-- Middle Column: Posts -->
         <main class="posts-column">
-          <div v-if="loadingPosts" class="loading">Loading posts...</div>
-          <div v-else-if="posts.length === 0" class="empty-state">No posts from friends yet. Add friends to see their updates!</div>
+          <div class="feed-tabs">
+            <button
+              type="button"
+              class="feed-tab"
+              :class="{ active: activeFeedTab === 'FRIENDS' }"
+              @click="activeFeedTab = 'FRIENDS'"
+            >
+              Friends' Posts
+            </button>
+            <button
+              type="button"
+              class="feed-tab"
+              :class="{ active: activeFeedTab === 'MY_PUBLIC' }"
+              @click="activeFeedTab = 'MY_PUBLIC'"
+            >
+              My Public Posts
+            </button>
+          </div>
+
+          <div
+            v-if="activeFeedTab === 'MY_PUBLIC'"
+            class="create-post-card"
+          >
+            <h2>Share a Public Update</h2>
+            <form @submit.prevent="handleCreatePublicPost">
+              <textarea
+                v-model="publicPostContent"
+                placeholder="What do you want to share?"
+                required
+                class="post-input"
+              ></textarea>
+
+              <div class="post-options">
+                <div class="items-input-group">
+                  <input
+                    v-model="publicPostItemInput"
+                    @keydown.enter.prevent="addPublicItem"
+                    placeholder="Add an item (e.g. song name)"
+                    class="item-input"
+                  />
+                  <button type="button" @click="addPublicItem" class="add-item-btn">Add</button>
+                </div>
+
+                <div class="post-type-select">
+                  <label>Type:</label>
+                  <select v-model="publicPostType">
+                    <option value="PROGRESS">Progress</option>
+                    <option value="GENERAL">General</option>
+                  </select>
+                </div>
+              </div>
+
+              <div v-if="publicPostItems.length > 0" class="new-items-list">
+                <span
+                  v-for="(item, index) in publicPostItems"
+                  :key="`${item}-${index}`"
+                  class="item-badge"
+                >
+                  {{ item }}
+                  <button type="button" @click="removePublicItem(index)" class="remove-item-btn">&times;</button>
+                </span>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" :disabled="isPostingPublic" class="submit-btn">
+                  {{ isPostingPublic ? 'Posting…' : 'Post Publicly' }}
+                </button>
+              </div>
+              <div v-if="publicPostError" class="error-message">{{ publicPostError }}</div>
+            </form>
+          </div>
+
+          <div v-if="feedVisibilityError && activeFeedTab === 'MY_PUBLIC'" class="error-message">
+            {{ feedVisibilityError }}
+          </div>
+
+          <div v-if="isLoadingPosts" class="loading">Loading posts...</div>
+          <div v-else-if="displayedPosts.length === 0" class="empty-state">{{ emptyPostsMessage }}</div>
           <div v-else class="posts-list">
-            <div v-for="post in posts" :key="post.id" class="post-card">
+            <div v-for="post in displayedPosts" :key="post.id" class="post-card">
               <div class="post-header">
-                <span class="post-author">{{ post.author }}</span>
+                <span class="post-author">{{ post.authorDisplayName }}</span>
                 <span class="post-type">{{ post.postType }}</span>
               </div>
               <p class="post-content">{{ post.content }}</p>
               <div class="post-actions-bar">
-                <!-- DEBUG INFO -->
-                <div style="font-size: 10px; color: orange;">
-                  Reaction: {{ post.userReaction }}
-                </div>
                 <div class="reactions-group">
                   <button 
                     @click="handleReaction(post, 'LIKE')" 
@@ -157,6 +229,21 @@
                   </button>
                 </div>
               </div>
+              <div
+                v-if="activeFeedTab === 'MY_PUBLIC'"
+                class="visibility-controls"
+              >
+                <span class="visibility-label">
+                  Visibility: {{ (post.visibility || 'PUBLIC').toLowerCase() === 'public' ? 'Public' : 'Private' }}
+                </span>
+                <button
+                  class="visibility-btn"
+                  :disabled="changingFeedVisibilityFor === post.id"
+                  @click="handleFeedVisibilityChange(post, 'PRIVATE')"
+                >
+                  {{ changingFeedVisibilityFor === post.id ? 'Updating…' : 'Make Private' }}
+                </button>
+              </div>
             </div>
           </div>
         </main>
@@ -217,7 +304,7 @@ import {
   getFriends,
 } from '@/services/friendshipService'
 import {
-  getPostsForUsers,
+  createPost,
   addReactionToPost,
   changeReactionType,
   removeReactionFromPost,
@@ -225,11 +312,14 @@ import {
   getReactionOnPostFromUser,
   addCommentToPost,
   getCommentsForPostId,
+  getPersonalPublicPosts,
+  getPublicPostsOfUsers,
+  editPostVisibility,
 } from '@/services/postService'
 import { getSessionId, getUserId } from '@/utils/sessionStorage'
 import { searchProfilesByDisplayName, getProfile } from '@/services/userProfileService'
 import type { DisplayNameSearchResult } from '@/types/userProfile'
-import type { ReactionType } from '@/types/post'
+import type { ReactionType, PostVisibility } from '@/types/post'
 
 interface FriendListEntry {
   id: string
@@ -237,30 +327,47 @@ interface FriendListEntry {
   avatarUrl?: string
 }
 
+type FeedTab = 'FRIENDS' | 'MY_PUBLIC'
+
+interface FeedPost {
+  id: string
+  authorId: string
+  authorDisplayName: string
+  content: string
+  postType: string
+  visibility?: PostVisibility
+  userReaction: ReactionType | null
+  reactionCounts: Record<ReactionType, number>
+  comments: Array<{ content: string; author: string; authorDisplayName?: string }>
+  showComments: boolean
+  loadingComments: boolean
+  newCommentText: string
+}
+
 const friendSearchQuery = ref('')
 const addFriendQuery = ref('')
 const friends = ref<FriendListEntry[]>([])
 const addFriendResults = ref<DisplayNameSearchResult[]>([])
 const selectedAddFriend = ref<DisplayNameSearchResult | null>(null)
-const posts = ref<Array<{ 
-  id: string; 
-  author: string; 
-  content: string; 
-  postType: string; 
-  userReaction: ReactionType | null;
-  reactionCounts: Record<ReactionType, number>;
-  comments: Array<{ content: string; author: string; authorDisplayName?: string }>;
-  showComments: boolean;
-  loadingComments: boolean;
-  newCommentText: string;
-}>>([])
+const friendPosts = ref<FeedPost[]>([])
+const myPublicPosts = ref<FeedPost[]>([])
+const activeFeedTab = ref<FeedTab>('FRIENDS')
 const pendingRequests = ref<Array<{ requester: string; displayName?: string; avatarUrl?: string }>>([])
 const loadingFriends = ref(false)
 const searchingAddFriends = ref(false)
-const loadingPosts = ref(false)
+const loadingFriendPosts = ref(false)
+const loadingMyPublicPosts = ref(false)
 const loadingRequests = ref(false)
 const loadingRequest = ref(false)
 const addFriendError = ref('')
+const publicPostContent = ref('')
+const publicPostType = ref<'PROGRESS' | 'GENERAL'>('PROGRESS')
+const publicPostItems = ref<string[]>([])
+const publicPostItemInput = ref('')
+const isPostingPublic = ref(false)
+const publicPostError = ref('')
+const feedVisibilityError = ref('')
+const changingFeedVisibilityFor = ref<string | null>(null)
 
 const filteredFriends = computed(() => {
   const query = friendSearchQuery.value.trim().toLowerCase()
@@ -273,6 +380,20 @@ const filteredFriends = computed(() => {
 
 const showAddFriendDropdown = computed(() =>
   Boolean(addFriendQuery.value.trim() && (searchingAddFriends.value || addFriendResults.value.length))
+)
+
+const displayedPosts = computed(() =>
+  activeFeedTab.value === 'FRIENDS' ? friendPosts.value : myPublicPosts.value
+)
+
+const isLoadingPosts = computed(() =>
+  activeFeedTab.value === 'FRIENDS' ? loadingFriendPosts.value : loadingMyPublicPosts.value
+)
+
+const emptyPostsMessage = computed(() =>
+  activeFeedTab.value === 'FRIENDS'
+    ? 'No posts from friends yet. Add friends to see their updates!'
+    : 'You have not written any public posts yet. Share something!'
 )
 
 let addFriendSearchTimer: ReturnType<typeof setTimeout> | null = null
@@ -299,107 +420,134 @@ watch(addFriendQuery, newValue => {
   }, 300)
 })
 
-async function loadPosts() {
-  loadingPosts.value = true
+watch(activeFeedTab, tab => {
+  if (tab === 'MY_PUBLIC' && myPublicPosts.value.length === 0 && !loadingMyPublicPosts.value) {
+    loadMyPublicPosts()
+  } else if (tab === 'FRIENDS' && friendPosts.value.length === 0 && !loadingFriendPosts.value) {
+    loadFriendPosts()
+  }
+})
+
+async function mapPostItem(item: any, currentUserId: string): Promise<FeedPost> {
+  const postId = item.post._id
+  const authorId = item.post.author
+  let authorDisplayName = authorId
+
+  try {
+    const profile = await getProfile({ user: authorId })
+    if (profile && profile.displayName) {
+      authorDisplayName = profile.displayName
+    }
+  } catch (e) {
+    console.error(`Failed to load profile for post author ${authorId}`, e)
+  }
+
+  const reactionCounts: Record<ReactionType, number> = { LIKE: 0, LOVE: 0, CELEBRATE: 0 }
+  try {
+    const reactions = await getReactionsForPostId({ post: postId })
+    reactions.forEach(r => {
+      if (r.type in reactionCounts) {
+        reactionCounts[r.type] = r.count
+      }
+    })
+  } catch (e) {
+    console.error(`Failed to load reactions for post ${postId}`, e)
+  }
+
+  let userReaction: ReactionType | null = null
+  try {
+    const myReaction = await getReactionOnPostFromUser({ user: currentUserId, post: postId })
+    if (Array.isArray(myReaction)) {
+      const active = myReaction.find(r => Number(r.count) > 0)
+      if (active) {
+        userReaction = active.type as ReactionType
+      }
+    }
+  } catch (e) {
+    console.error(`Failed to load user reaction for post ${postId}`, e)
+  }
+
+  let comments: any[] = []
+  try {
+    const commentsResponse = await getCommentsForPostId({ post: postId }) as any
+    if (commentsResponse && commentsResponse.length > 0 && commentsResponse[0] && 'comments' in commentsResponse[0]) {
+      comments = commentsResponse[0].comments.map((c: any) => ({
+        ...c,
+        authorDisplayName: c.author,
+      }))
+    } else if (Array.isArray(commentsResponse)) {
+      comments = commentsResponse.map((c: any) => ({
+        ...c,
+        authorDisplayName: c.author,
+      }))
+    }
+  } catch (e) {
+    console.error(`Failed to load comments for post ${postId}`, e)
+  }
+
+  return {
+    id: postId,
+    authorId,
+    authorDisplayName,
+    content: item.post.content,
+    postType: item.post.postType,
+    visibility: item.post.visibility,
+    userReaction,
+    reactionCounts,
+    comments,
+    showComments: false,
+    loadingComments: false,
+    newCommentText: '',
+  }
+}
+
+async function loadFriendPosts() {
+  loadingFriendPosts.value = true
   try {
     const userId = getUserId()
-    if (!userId) {
-      posts.value = []
+    const sessionId = getSessionId()
+    if (!userId || !sessionId) {
+      friendPosts.value = []
       return
     }
 
-    // 1. Get friends
     const friendIds = await getFriends({ user: userId })
-    
-    // 2. Only fetch posts from friends, excluding the current user
-    const usersToFetch = [...friendIds]
-    
+    const usersToFetch = friendIds.filter(id => id && id !== userId)
+
     if (usersToFetch.length === 0) {
-      posts.value = []
+      friendPosts.value = []
       return
     }
 
-    // 3. Get posts for these users
-    const response = await getPostsForUsers({ users: usersToFetch })
-    
-    // Map response to component state
-    const mappedPosts = await Promise.all(response.map(async item => {
-      const postId = item.post._id
-      let reactionCounts: Record<ReactionType, number> = { LIKE: 0, LOVE: 0, CELEBRATE: 0 }
-      
-      try {
-        const reactions = await getReactionsForPostId({ post: postId })
-        reactions.forEach(r => {
-          if (r.type in reactionCounts) {
-            reactionCounts[r.type] = r.count
-          }
-        })
-      } catch (e) {
-        console.error(`Failed to load reactions for post ${postId}`, e)
-      }
-
-      let userReaction: ReactionType | null = null
-      try {
-        console.log(`[FeedPage] Fetching reaction for user ${userId} on post ${postId}`)
-        const myReaction = await getReactionOnPostFromUser({ user: userId, post: postId })
-        console.log(`[FeedPage] Reaction response for post ${postId}:`, myReaction)
-        
-        if (Array.isArray(myReaction)) {
-          const active = myReaction.find(r => Number(r.count) > 0)
-          if (active) {
-            userReaction = active.type as ReactionType
-            console.log(`[FeedPage] Found active reaction: ${userReaction}`)
-          } else {
-            console.log(`[FeedPage] No active reaction found in array`)
-          }
-        } else {
-          console.log(`[FeedPage] Response is not an array`, myReaction)
-        }
-      } catch (e) {
-        console.error(`Failed to load user reaction for post ${postId}`, e)
-      }
-
-      let comments: any[] = []
-      try {
-        if (typeof getCommentsForPostId === 'function') {
-          const commentsResponse = await getCommentsForPostId({ post: postId }) as any
-          if (commentsResponse && commentsResponse.length > 0 && commentsResponse[0] && 'comments' in commentsResponse[0]) {
-            comments = commentsResponse[0].comments.map((c: any) => ({
-              ...c,
-              authorDisplayName: c.author
-            }))
-          } else if (Array.isArray(commentsResponse)) {
-            comments = commentsResponse.map((c: any) => ({
-              ...c,
-              authorDisplayName: c.author
-            }))
-          }
-        }
-      } catch (e) {
-        console.error(`Failed to load comments for post ${postId}`, e)
-      }
-
-      return {
-        id: postId,
-        author: item.post.author,
-        content: item.post.content,
-        postType: item.post.postType,
-        userReaction,
-        reactionCounts,
-        comments,
-        showComments: false,
-        loadingComments: false,
-        newCommentText: ''
-      }
-    }))
-
-    posts.value = mappedPosts
-
+    const response = await getPublicPostsOfUsers({ sessionId, users: usersToFetch })
+    const mappedPosts = await Promise.all(response.map(item => mapPostItem(item, userId)))
+    friendPosts.value = mappedPosts
   } catch (error) {
-    console.error('Failed to load posts:', error)
-    posts.value = []
+    console.error('Failed to load friend posts:', error)
+    friendPosts.value = []
   } finally {
-    loadingPosts.value = false
+    loadingFriendPosts.value = false
+  }
+}
+
+async function loadMyPublicPosts() {
+  loadingMyPublicPosts.value = true
+  try {
+    const userId = getUserId()
+    const sessionId = getSessionId()
+    if (!userId || !sessionId) {
+      myPublicPosts.value = []
+      return
+    }
+
+    const response = await getPersonalPublicPosts({ sessionId, user: userId })
+    const mappedPosts = await Promise.all(response.map(item => mapPostItem(item, userId)))
+    myPublicPosts.value = mappedPosts
+  } catch (error) {
+    console.error('Failed to load personal public posts:', error)
+    myPublicPosts.value = []
+  } finally {
+    loadingMyPublicPosts.value = false
   }
 }
 
@@ -453,6 +601,51 @@ function resetAddFriendSelection() {
   addFriendQuery.value = ''
   addFriendResults.value = []
   selectedAddFriend.value = null
+}
+
+function addPublicItem() {
+  const trimmed = publicPostItemInput.value.trim()
+  if (trimmed) {
+    publicPostItems.value.push(trimmed)
+    publicPostItemInput.value = ''
+  }
+}
+
+function removePublicItem(index: number) {
+  publicPostItems.value.splice(index, 1)
+}
+
+async function handleCreatePublicPost() {
+  publicPostError.value = ''
+  if (!publicPostContent.value.trim()) return
+
+  const sessionId = getSessionId()
+  if (!sessionId) {
+    publicPostError.value = 'You must be logged in to post.'
+    return
+  }
+
+  isPostingPublic.value = true
+  try {
+    await createPost({
+      sessionId,
+      content: publicPostContent.value,
+      postType: publicPostType.value,
+      items: publicPostItems.value,
+      visibility: 'PUBLIC',
+    })
+
+    publicPostContent.value = ''
+    publicPostItems.value = []
+    publicPostType.value = 'PROGRESS'
+
+    await loadMyPublicPosts()
+  } catch (error: any) {
+    console.error('Failed to create public post:', error)
+    publicPostError.value = error.message || 'Failed to create post'
+  } finally {
+    isPostingPublic.value = false
+  }
 }
 
 async function resolveAddFriendQuery(query: string) {
@@ -637,6 +830,31 @@ function toggleComments(post: any) {
   }
 }
 
+async function handleFeedVisibilityChange(post: FeedPost, nextVisibility: PostVisibility) {
+  feedVisibilityError.value = ''
+  const sessionId = getSessionId()
+  if (!sessionId) {
+    feedVisibilityError.value = 'You must be logged in to change visibility.'
+    return
+  }
+
+  changingFeedVisibilityFor.value = post.id
+  try {
+    await editPostVisibility({
+      sessionId,
+      postId: post.id,
+      newVisibility: nextVisibility,
+    })
+
+    await loadMyPublicPosts()
+  } catch (error: any) {
+    console.error('Failed to change post visibility:', error)
+    feedVisibilityError.value = error.message || 'Failed to change visibility'
+  } finally {
+    changingFeedVisibilityFor.value = null
+  }
+}
+
 async function loadComments(post: any) {
   post.loadingComments = true
   try {
@@ -699,7 +917,8 @@ onMounted(() => {
   console.log('FeedPage mounted')
   const userId = getUserId()
   console.log('Current userId:', userId)
-  loadPosts()
+  loadFriendPosts()
+  loadMyPublicPosts()
   loadFriends()
   loadPendingRequests()
 })
@@ -810,6 +1029,139 @@ h3 {
   gap: 1.5rem;
 }
 
+.feed-tabs {
+  display: inline-flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.feed-tab {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e5e7eb;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.feed-tab.active {
+  background: var(--button);
+  border-color: var(--button);
+  color: var(--btn-text);
+}
+
+.create-post-card {
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.post-input {
+  width: 100%;
+  min-height: 100px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  color: #e5e7eb;
+  resize: vertical;
+  margin-bottom: 1rem;
+}
+
+.post-options {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.items-input-group {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.item-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: #e5e7eb;
+}
+
+.add-item-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 0.5rem;
+  color: #e5e7eb;
+  cursor: pointer;
+}
+
+.post-type-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #9ca3af;
+}
+
+.post-type-select select {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  color: #e5e7eb;
+}
+
+.new-items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.remove-item-btn {
+  background: none;
+  border: none;
+  color: currentColor;
+  margin-left: 0.25rem;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.remove-item-btn:hover {
+  opacity: 1;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.submit-btn {
+  background: var(--button);
+  color: var(--btn-text);
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #fca5a5;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
 .post-actions {
   display: flex;
   justify-content: space-between;
@@ -900,6 +1252,35 @@ h3 {
 
 .reaction-btn.active .reaction-count {
   color: #e5e7eb;
+}
+
+.visibility-controls {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.visibility-label {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  text-transform: capitalize;
+}
+
+.visibility-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  color: #f9fafb;
+}
+
+.visibility-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .comments-section {
