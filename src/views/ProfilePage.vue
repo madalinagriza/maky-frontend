@@ -59,7 +59,14 @@
               <label>Target Song</label>
               <div v-if="profile.targetSong" class="target-song-display">
                 <span>{{ targetSongDisplay }}</span>
-                <button type="button" @click="removeTarget" class="remove-btn">Remove</button>
+                <button
+                  type="button"
+                  @click="removeTarget"
+                  class="remove-btn"
+                  aria-label="Remove target song"
+                >
+                  ✕
+                </button>
               </div>
               <div v-else class="song-search">
                 <input 

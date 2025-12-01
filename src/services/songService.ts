@@ -50,9 +50,19 @@ export async function filterSongsByGenre(payload: FilterSongsByGenrePayload) {
 }
 
 export async function searchByTitleOrArtist(payload: SearchSongsPayload) {
-  const { data } = await apiClient.post<SongResponse[] | ErrorResponse>(
+  const { data } = await apiClient.post<SongResponse[] | { songs: SongResponse[] } | ErrorResponse>(
     `${SONG_BASE}/_searchByTitleOrArtist`,
     payload
   )
-  return ensureSuccess(data)
+  const response = ensureSuccess(data)
+
+  if (Array.isArray(response)) {
+    return response
+  }
+
+  if (response && Array.isArray(response.songs)) {
+    return response.songs
+  }
+
+  return []
 }
