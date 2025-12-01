@@ -77,7 +77,7 @@
                   Visibility: {{ (post.visibility || 'PRIVATE').toLowerCase() === 'public' ? 'Public' : 'Private' }}
                 </span>
                 <button
-                  v-if="(post.visibility || 'PRIVATE') === 'PRIVATE'"
+                  v-if="canMakePostsPublic && (post.visibility || 'PRIVATE') === 'PRIVATE'"
                   class="visibility-btn"
                   :disabled="changingVisibilityFor === post._id"
                   @click="handleVisibilityChange(post, 'PUBLIC')"
@@ -128,12 +128,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import Layout from '@/components/Layout.vue'
 import { getSongsInProgress } from '@/services/songLibraryService'
 import { getKnownChords } from '@/services/chordLibraryService'
 import { createPost, getPersonalPrivatePosts, editPostVisibility } from '@/services/postService'
 import { getUserId, getSessionId } from '@/utils/sessionStorage'
+import { useAuth } from '@/composables/useAuth'
 import type { SongProgress } from '@/types/songLibrary'
 import type { Post, PostVisibility } from '@/types/post'
 
@@ -153,6 +154,9 @@ const isPosting = ref(false)
 const createPostError = ref('')
 const visibilityError = ref('')
 const changingVisibilityFor = ref<string | null>(null)
+
+const { kidOrPrivateStatus, refreshKidOrPrivateStatus } = useAuth()
+const canMakePostsPublic = computed(() => kidOrPrivateStatus.value !== true)
 
 function addItem() {
   const trimmed = newItemInput.value.trim()
@@ -332,6 +336,9 @@ async function loadChords() {
 }
 
 onMounted(() => {
+  if (kidOrPrivateStatus.value === null) {
+    refreshKidOrPrivateStatus()
+  }
   loadPosts()
   loadSongs()
   loadChords()

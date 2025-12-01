@@ -3,6 +3,7 @@ export interface RegisterPayload {
   email: string
   password: string
   isKidAccount: boolean
+  isPrivateAccount: boolean
 }
 
 export interface RegisterResponse {
@@ -35,6 +36,21 @@ export interface SetKidAccountStatusPayload {
   sessionId: string
   status: boolean
 }
+
+export interface SetPrivateAccountStatusPayload {
+  sessionId: string
+  status: boolean
+}
+
+export interface IsKidOrPrivateAccountPayload {
+  user: string
+}
+
+export interface IsKidOrPrivateAccountResponseItem {
+  isKidOrPrivate: boolean
+}
+
+export type IsKidOrPrivateAccountResponse = IsKidOrPrivateAccountResponseItem[]
 
 export interface DeleteAccountPayload {
   sessionId: string

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { getSessionId } from '@/utils/sessionStorage'
+import { useAuth } from '@/composables/useAuth'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -31,7 +32,7 @@ const routes: RouteRecordRaw[] = [
     path: '/feed',
     name: 'Feed',
     component: () => import('@/views/FeedPage.vue'),
-    meta: { requiresAuth: true, useLayout: true },
+    meta: { requiresAuth: true, useLayout: true, restrictKidOrPrivate: true },
   },
   {
     path: '/journal',
@@ -46,6 +47,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, useLayout: true },
   },
   {
+    path: '/account',
+    name: 'Account',
+    component: () => import('@/views/AccountPage.vue'),
+    meta: { requiresAuth: true, useLayout: true },
+  },
+  {
     path: '/',
     redirect: '/profile',
   },
@@ -56,10 +63,23 @@ const router = createRouter({
   routes,
 })
 
+const auth = useAuth()
+
 // Navigation guard to check authentication and questionnaire completion
 router.beforeEach(async (to, _from, next) => {
   const sessionId = getSessionId()
   const requiresAuth = to.meta.requiresAuth
+  if (to.meta.restrictKidOrPrivate && sessionId) {
+    let kidOrPrivateFlag = auth.kidOrPrivateStatus.value
+    if (kidOrPrivateFlag === null) {
+      kidOrPrivateFlag = await auth.refreshKidOrPrivateStatus()
+    }
+
+    if (kidOrPrivateFlag) {
+      next({ name: 'Profile', query: { restricted: 'feed' } })
+      return
+    }
+  }
 
   // If route requires auth but no session, redirect to login
   // EXCEPT for the learn page which we allow without auth for development

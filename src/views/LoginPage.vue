@@ -158,6 +158,7 @@ async function loginAsTestUser() {
         email: testCredentials.email,
         password: testCredentials.password,
         isKidAccount: false,
+        isPrivateAccount: false,
       })
       response = await loginUser(loginPayload)
     }

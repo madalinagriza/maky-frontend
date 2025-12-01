@@ -7,9 +7,12 @@ import type {
   ChangePasswordPayload,
   UpdateCredentialsPayload,
   SetKidAccountStatusPayload,
+  SetPrivateAccountStatusPayload,
   DeleteAccountPayload,
   SuccessResponse,
   ErrorResponse,
+  IsKidOrPrivateAccountPayload,
+  IsKidOrPrivateAccountResponse,
 } from '@/types/userAccount'
 
 const USER_ACCOUNT_BASE = '/UserAccount'
@@ -68,10 +71,34 @@ export async function setKidAccountStatus(payload: SetKidAccountStatusPayload) {
   ensureSuccess(data)
 }
 
+export async function setPrivateAccountStatus(payload: SetPrivateAccountStatusPayload) {
+  const { data } = await apiClient.post<Record<string, never> | ErrorResponse>(
+    `${USER_ACCOUNT_BASE}/setPrivateAccountStatus`,
+    payload
+  )
+  ensureSuccess(data)
+}
+
 export async function deleteAccount(payload: DeleteAccountPayload) {
   const { data } = await apiClient.post<SuccessResponse | ErrorResponse>(
     `${USER_ACCOUNT_BASE}/deleteAccount`,
     payload
   )
   return ensureSuccess(data)
+}
+
+export async function getIsKidOrPrivateAccount(
+  payload: IsKidOrPrivateAccountPayload
+): Promise<IsKidOrPrivateAccountResponse> {
+  const { data } = await apiClient.post<any>(
+    `${USER_ACCOUNT_BASE}/_isKidOrPrivateAccount`,
+    payload
+  )
+
+  if (data && typeof data === 'object' && 'error' in data) {
+    throw new Error((data as ErrorResponse).error)
+  }
+
+  const results = Array.isArray(data) ? data : data?.results || []
+  return results as IsKidOrPrivateAccountResponse
 }

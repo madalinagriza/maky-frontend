@@ -35,6 +35,11 @@
           <span>Kid account?</span>
         </label>
 
+        <label class="checkbox">
+          <input v-model="registerForm.isPrivateAccount" type="checkbox" />
+          <span>Private account?</span>
+        </label>
+
         <button type="submit" :disabled="!canSubmitRegister || loading">
           {{ loading ? 'Creating account...' : 'Create account' }}
         </button>
@@ -66,6 +71,7 @@ const registerForm = reactive({
   email: '',
   password: '',
   isKidAccount: false,
+  isPrivateAccount: false,
 })
 
 const loading = ref(false)
@@ -90,6 +96,7 @@ async function handleRegister() {
       email: registerForm.email.trim(),
       password: registerForm.password,
       isKidAccount: registerForm.isKidAccount,
+      isPrivateAccount: registerForm.isPrivateAccount,
     }
 
     await registerUser(payload)

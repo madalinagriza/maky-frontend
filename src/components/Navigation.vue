@@ -5,7 +5,13 @@
       <div class="nav-right">
         <div class="nav-links">
           <router-link to="/learn" class="nav-link">Learn</router-link>
-          <router-link to="/feed" class="nav-link">Feed</router-link>
+          <router-link
+            v-if="canAccessFeed"
+            to="/feed"
+            class="nav-link"
+          >
+            Feed
+          </router-link>
           <router-link to="/journal" class="nav-link">Journal</router-link>
         </div>
         
@@ -35,6 +41,9 @@
             <router-link to="/profile" class="dropdown-item" @click="isHovered = false">
               Profile
             </router-link>
+            <router-link to="/account" class="dropdown-item" @click="isHovered = false">
+              Account
+            </router-link>
             <button @click="handleLogout" class="dropdown-item logout-item">
               Logout
             </button>
@@ -47,16 +56,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useUserProfile } from '@/composables/useUserProfile'
 
 const router = useRouter()
-const { logout, username } = useAuth()
+const { logout, username, kidOrPrivateStatus, refreshKidOrPrivateStatus } = useAuth()
 const { displayName, avatarUrl, getInitials } = useUserProfile()
 
 const isHovered = ref(false)
+
+onMounted(() => {
+  if (kidOrPrivateStatus.value === null) {
+    refreshKidOrPrivateStatus()
+  }
+})
 
 const displayLabel = computed(() => {
   const name = displayName.value?.trim()
@@ -65,6 +80,8 @@ const displayLabel = computed(() => {
   if (fallbackUsername) return fallbackUsername
   return 'User'
 })
+
+const canAccessFeed = computed(() => kidOrPrivateStatus.value !== true)
 
 function handleLogout() {
   logout()

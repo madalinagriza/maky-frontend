@@ -207,9 +207,48 @@
                 <div v-if="post.loadingComments" class="loading-comments">Loading comments...</div>
                 <ul v-else class="comments-list">
                   <li v-if="post.comments.length === 0" class="no-comments">No comments yet.</li>
-                  <li v-for="(comment, index) in post.comments" :key="index" class="comment-item">
-                    <span class="comment-author">{{ comment.authorDisplayName || comment.author }}</span>
-                    <span class="comment-text">{{ comment.content }}</span>
+                  <li v-for="(comment, index) in post.comments" :key="comment.id ?? index" class="comment-item">
+                    <div class="comment-header">
+                      <span class="comment-author">{{ comment.authorDisplayName || comment.author }}</span>
+                      <button
+                        v-if="comment.author === currentUserId"
+                        type="button"
+                        class="comment-edit-btn"
+                        @click="comment.isEditing ? cancelEditingComment(comment) : startEditingComment(comment)"
+                      >
+                        {{ comment.isEditing ? 'Cancel' : 'Edit' }}
+                      </button>
+                    </div>
+                    <div v-if="comment.isEditing" class="comment-edit-form">
+                      <input
+                        v-model="comment.editDraft"
+                        type="text"
+                        class="comment-edit-input"
+                        placeholder="Update your comment"
+                        @keyup.enter.prevent="saveCommentEdit(comment)"
+                        @keyup.esc.prevent="cancelEditingComment(comment)"
+                      />
+                      <div class="comment-edit-actions">
+                        <button
+                          type="button"
+                          class="comment-save-btn"
+                          :disabled="comment.isSaving || !(comment.editDraft || '').trim()"
+                          @click="saveCommentEdit(comment)"
+                        >
+                          {{ comment.isSaving ? 'Saving…' : 'Save' }}
+                        </button>
+                        <button
+                          type="button"
+                          class="comment-cancel-btn"
+                          :disabled="comment.isSaving"
+                          @click="cancelEditingComment(comment)"
+                        >
+                          Discard
+                        </button>
+                      </div>
+                      <p v-if="comment.editError" class="comment-error">{{ comment.editError }}</p>
+                    </div>
+                    <span v-else class="comment-text">{{ comment.content }}</span>
                   </li>
                 </ul>
                 <div class="add-comment-box">
@@ -311,6 +350,7 @@ import {
   getReactionsForPostId,
   getReactionOnPostFromUser,
   addCommentToPost,
+  editComment,
   getCommentsForPostId,
   getPersonalPublicPosts,
   getPublicPostsOfUsers,
@@ -329,6 +369,17 @@ interface FriendListEntry {
 
 type FeedTab = 'FRIENDS' | 'MY_PUBLIC'
 
+interface FeedComment {
+  id?: string
+  content: string
+  author: string
+  authorDisplayName?: string
+  isEditing?: boolean
+  editDraft?: string
+  isSaving?: boolean
+  editError?: string
+}
+
 interface FeedPost {
   id: string
   authorId: string
@@ -338,7 +389,7 @@ interface FeedPost {
   visibility?: PostVisibility
   userReaction: ReactionType | null
   reactionCounts: Record<ReactionType, number>
-  comments: Array<{ content: string; author: string; authorDisplayName?: string }>
+  comments: FeedComment[]
   showComments: boolean
   loadingComments: boolean
   newCommentText: string
@@ -349,6 +400,7 @@ const addFriendQuery = ref('')
 const friends = ref<FriendListEntry[]>([])
 const addFriendResults = ref<DisplayNameSearchResult[]>([])
 const selectedAddFriend = ref<DisplayNameSearchResult | null>(null)
+const currentUserId = ref<string | null>(getUserId() || null)
 const friendPosts = ref<FeedPost[]>([])
 const myPublicPosts = ref<FeedPost[]>([])
 const activeFeedTab = ref<FeedTab>('FRIENDS')
@@ -428,6 +480,37 @@ watch(activeFeedTab, tab => {
   }
 })
 
+function extractCommentId(raw: any): string | undefined {
+  return raw?.comment || raw?._id || raw?.id || raw?._docId || undefined
+}
+
+async function enrichComments(rawComments: any[]): Promise<FeedComment[]> {
+  return Promise.all(
+    rawComments.map(async raw => {
+      let displayName = raw.author
+      try {
+        const profile = await getProfile({ user: raw.author })
+        if (profile?.displayName) {
+          displayName = profile.displayName
+        }
+      } catch (e) {
+        console.error('Failed to load commenter profile:', e)
+      }
+
+      return {
+        id: extractCommentId(raw),
+        content: raw.content,
+        author: raw.author,
+        authorDisplayName: raw.authorDisplayName || displayName,
+        isEditing: false,
+        editDraft: '',
+        isSaving: false,
+        editError: '',
+      }
+    })
+  )
+}
+
 async function mapPostItem(item: any, currentUserId: string): Promise<FeedPost> {
   const postId = item.post._id
   const authorId = item.post.author
@@ -467,19 +550,17 @@ async function mapPostItem(item: any, currentUserId: string): Promise<FeedPost> 
     console.error(`Failed to load user reaction for post ${postId}`, e)
   }
 
-  let comments: any[] = []
+  let comments: FeedComment[] = []
   try {
     const commentsResponse = await getCommentsForPostId({ post: postId }) as any
+    let rawComments: any[] = []
     if (commentsResponse && commentsResponse.length > 0 && commentsResponse[0] && 'comments' in commentsResponse[0]) {
-      comments = commentsResponse[0].comments.map((c: any) => ({
-        ...c,
-        authorDisplayName: c.author,
-      }))
+      rawComments = commentsResponse[0].comments
     } else if (Array.isArray(commentsResponse)) {
-      comments = commentsResponse.map((c: any) => ({
-        ...c,
-        authorDisplayName: c.author,
-      }))
+      rawComments = commentsResponse
+    }
+    if (rawComments.length) {
+      comments = await enrichComments(rawComments)
     }
   } catch (e) {
     console.error(`Failed to load comments for post ${postId}`, e)
@@ -855,7 +936,7 @@ async function handleFeedVisibilityChange(post: FeedPost, nextVisibility: PostVi
   }
 }
 
-async function loadComments(post: any) {
+async function loadComments(post: FeedPost) {
   post.loadingComments = true
   try {
     const response = await getCommentsForPostId({ post: post.id }) as any
@@ -867,24 +948,7 @@ async function loadComments(post: any) {
       rawComments = response
     }
 
-    if (rawComments.length > 0) {
-      // Enrich with display names
-      const enrichedComments = await Promise.all(rawComments.map(async (c) => {
-        let displayName = c.author
-        try {
-           const profile = await getProfile({ user: c.author })
-           if (profile) displayName = profile.displayName || c.author
-        } catch (e) { /* ignore */ }
-        return {
-          ...c,
-          authorDisplayName: displayName
-        }
-      }))
-      
-      post.comments = enrichedComments
-    } else {
-      post.comments = []
-    }
+    post.comments = rawComments.length > 0 ? await enrichComments(rawComments) : []
   } catch (error) {
     console.error('Failed to load comments', error)
   } finally {
@@ -913,10 +977,61 @@ async function submitComment(post: any) {
   }
 }
 
+function startEditingComment(comment: FeedComment) {
+  comment.isEditing = true
+  comment.editDraft = comment.content
+  comment.editError = ''
+}
+
+function cancelEditingComment(comment: FeedComment) {
+  comment.isEditing = false
+  comment.editDraft = ''
+  comment.editError = ''
+}
+
+async function saveCommentEdit(comment: FeedComment) {
+  comment.editError = ''
+  const trimmed = (comment.editDraft || '').trim()
+  if (!trimmed) {
+    comment.editError = 'Comment cannot be empty.'
+    return
+  }
+
+  const sessionId = getSessionId()
+  if (!sessionId) {
+    comment.editError = 'You must be logged in to edit comments.'
+    return
+  }
+
+  if (!comment.id) {
+    comment.editError = 'Unable to edit this comment (missing identifier).'
+    return
+  }
+
+  comment.isSaving = true
+  try {
+    await editComment({
+      sessionId,
+      comment: comment.id,
+      newContent: trimmed,
+    })
+
+    comment.content = trimmed
+    comment.isEditing = false
+    comment.editDraft = ''
+  } catch (error: any) {
+    console.error('Failed to edit comment', error)
+    comment.editError = error?.message || 'Failed to edit comment.'
+  } finally {
+    comment.isSaving = false
+  }
+}
+
 onMounted(() => {
   console.log('FeedPage mounted')
   const userId = getUserId()
   console.log('Current userId:', userId)
+  currentUserId.value = userId || null
   loadFriendPosts()
   loadMyPublicPosts()
   loadFriends()
@@ -1314,6 +1429,13 @@ h3 {
   border-radius: 0.5rem;
 }
 
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .comment-author {
   font-weight: 600;
   font-size: 0.85rem;
@@ -1324,6 +1446,70 @@ h3 {
   color: #e5e7eb;
   font-size: 0.95rem;
   line-height: 1.4;
+}
+
+.comment-edit-btn,
+.comment-save-btn,
+.comment-cancel-btn {
+  border: none;
+  border-radius: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f3f4f6;
+}
+
+.comment-edit-btn:hover,
+.comment-save-btn:hover,
+.comment-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.comment-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.comment-edit-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.4rem;
+  padding: 0.45rem 0.6rem;
+  color: #f3f4f6;
+}
+
+.comment-edit-input:focus {
+  outline: none;
+  border-color: #a5b4fc;
+}
+
+.comment-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.comment-save-btn {
+  background: var(--button);
+  color: var(--btn-text);
+}
+
+.comment-cancel-btn {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.comment-save-btn:disabled,
+.comment-cancel-btn:disabled,
+.comment-edit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.comment-error {
+  color: #fca5a5;
+  font-size: 0.8rem;
 }
 
 .add-comment-box {
