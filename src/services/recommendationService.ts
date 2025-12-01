@@ -50,7 +50,10 @@ export async function requestChordRecommendation(
     )
 
     if (match) {
-      return { recommendedChord: match.recommendedChord }
+      return { 
+        recommendedChord: match.recommendedChord,
+        diagram: match.diagram ?? null
+      }
     }
   } else if (
     raw &&
@@ -58,10 +61,13 @@ export async function requestChordRecommendation(
     'recommendedChord' in raw &&
     typeof raw.recommendedChord === 'string'
   ) {
-    return raw
+    return {
+      recommendedChord: raw.recommendedChord,
+      diagram: raw.diagram ?? null
+    }
   }
 
-  return { recommendedChord: '' }
+  return { recommendedChord: '', diagram: null }
 }
 
 export async function requestSongUnlockRecommendation(

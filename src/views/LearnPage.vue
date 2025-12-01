@@ -17,6 +17,12 @@
           <div v-else-if="recommendedChord" class="chord-recommendation">
             <div class="chord-card">
               <h3>{{ recommendedChord }}</h3>
+              <ChordDiagram
+                v-if="recommendedChordDiagram"
+                :diagram="recommendedChordDiagram"
+                :width="140"
+                class="chord-diagram-display"
+              />
               <p v-if="unlockedSongs.length > 0">
                 Learning this chord will unlock {{ unlockedSongs.length }} new songs!
               </p>
@@ -139,6 +145,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import Layout from '@/components/Layout.vue'
+import ChordDiagram from '@/components/ChordDiagram.vue'
 import { getPlayableSongs, searchByTitleOrArtist } from '@/services/songService'
 import {
   getSongsInProgress,
@@ -156,10 +163,12 @@ import { getSessionId } from '@/utils/sessionStorage'
 import type { Song } from '@/types/song'
 import type { SongProgress } from '@/types/songLibrary'
 import type { KnownChord } from '@/types/chordLibrary'
+import type { ChordDiagram as ChordDiagramType } from '@/types/recommendation'
 
 const searchQuery = ref('')
 const playableSongs = ref<Song[]>([])
 const recommendedChord = ref<string | null>(null)
+const recommendedChordDiagram = ref<ChordDiagramType | null>(null)
 const unlockedSongs = ref<string[]>([])
 const loadingSongs = ref(false)
 const loadingChordRec = ref(false)
@@ -331,6 +340,7 @@ async function loadData() {
   loadingSongs.value = true
   loadingChordRec.value = true
   recommendedChord.value = null
+  recommendedChordDiagram.value = null
   unlockedSongs.value = []
   
   try {
@@ -380,9 +390,12 @@ async function populateChordRecommendation({
     })
     const chordCandidate = recResponse.recommendedChord?.trim()
     recommendedChord.value = chordCandidate || null
+    // Store the first diagram voicing if available
+    recommendedChordDiagram.value = recResponse.diagram?.[0] ?? null
   } catch (error) {
     console.error('Failed to fetch chord recommendation:', error)
     recommendedChord.value = null
+    recommendedChordDiagram.value = null
   }
 
   if (!recommendedChord.value) {
@@ -650,6 +663,10 @@ h2 {
   font-size: 2rem;
   margin: 0 0 1rem;
   color: var(--contrast-top);
+}
+
+.chord-diagram-display {
+  margin: 0 auto 1rem;
 }
 
 .learn-btn {
