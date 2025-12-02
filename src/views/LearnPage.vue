@@ -164,31 +164,65 @@
           <div v-else-if="playableSongs.length === 0" class="empty-state">
             No playable songs yet. Learn some chords to unlock songs!
           </div>
-          <ul v-else class="song-list">
-            <li v-for="song in filteredPlayableSongs" :key="song._id" class="song-item">
-              <div class="song-info">
-                <span class="song-title">{{ song.title }}</span>
-                <span class="song-artist">{{ song.artist }}</span>
-                <span class="song-genre-pill">{{ song.genre || 'Unknown genre' }}</span>
-                <div class="song-chords">
-                  <span class="song-chords-label">Chords:</span>
-                  <div class="song-chords-list">
-                    <template v-if="song.chords?.length">
-                      <span
-                        v-for="chord in song.chords"
-                        :key="song._id + chord"
-                        :class="['song-chord-pill', getChordMasteryClass(chord)]"
-                      >
-                        {{ chord }}
-                      </span>
-                    </template>
-                    <span v-else class="song-chords-unavailable">Unavailable</span>
+          <div v-else-if="filteredPlayableSongs.length === 0" class="empty-state">
+            No songs match your filters yet.
+          </div>
+          <div v-else class="song-list-wrapper">
+            <ul class="song-list">
+              <li v-for="song in paginatedPlayableSongs" :key="song._id" class="song-item">
+                <div class="song-info">
+                  <span class="song-title">{{ song.title }}</span>
+                  <span class="song-artist">{{ song.artist }}</span>
+                  <span class="song-genre-pill">{{ song.genre || 'Unknown genre' }}</span>
+                  <div class="song-chords">
+                    <span class="song-chords-label">Chords:</span>
+                    <div class="song-chords-list">
+                      <template v-if="song.chords?.length">
+                        <span
+                          v-for="chord in song.chords"
+                          :key="song._id + chord"
+                          :class="['song-chord-pill', getChordMasteryClass(chord)]"
+                        >
+                          {{ chord }}
+                        </span>
+                      </template>
+                      <span v-else class="song-chords-unavailable">Unavailable</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <button @click="startLearningSong(song._id)" class="learn-btn">Start Learning</button>
-            </li>
-          </ul>
+                <button @click="startLearningSong(song._id)" class="learn-btn">Start Learning</button>
+              </li>
+            </ul>
+            <div v-if="totalSongPages > 1" class="song-pagination">
+              <button
+                class="song-pagination-btn"
+                type="button"
+                @click="goToPreviousSongPage"
+                :disabled="!canGoToPreviousSongPage"
+              >
+                Previous
+              </button>
+              <button
+                v-for="page in totalSongPages"
+                :key="`song-page-${page}`"
+                type="button"
+                class="song-pagination-page"
+                :class="{ 'song-pagination-page--active': page === currentSongPage }"
+                @click="goToSongPage(page)"
+                :aria-current="page === currentSongPage ? 'page' : undefined"
+              >
+                {{ page }}
+              </button>
+              <button
+                class="song-pagination-btn"
+                type="button"
+                @click="goToNextSongPage"
+                :disabled="!canGoToNextSongPage"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </section>
       </div>
     </div>
@@ -237,6 +271,8 @@ const updatingChordMastery = ref<string | null>(null)
 const preferredGenres = ref<string[]>([])
 const showOnlyMasteredSongs = ref(false)
 const showOnlyPreferredGenres = ref(false)
+const SONGS_PER_PAGE = 10
+const currentSongPage = ref(1)
 const chordMasteryLookup = computed<Record<string, ChordMasteryLevel>>(() => {
   const lookup: Record<string, ChordMasteryLevel> = {}
   knownChords.value.forEach(entry => {
@@ -340,6 +376,33 @@ const filteredPlayableSongs = computed(() => {
   )
 })
 
+const totalSongPages = computed(() => {
+  const total = Math.ceil(filteredPlayableSongs.value.length / SONGS_PER_PAGE)
+  return Math.max(total, 1)
+})
+
+const paginatedPlayableSongs = computed(() => {
+  const start = (currentSongPage.value - 1) * SONGS_PER_PAGE
+  return filteredPlayableSongs.value.slice(start, start + SONGS_PER_PAGE)
+})
+
+const canGoToPreviousSongPage = computed(() => currentSongPage.value > 1)
+const canGoToNextSongPage = computed(() => currentSongPage.value < totalSongPages.value)
+
+watch([searchQuery, showOnlyMasteredSongs, showOnlyPreferredGenres], () => {
+  currentSongPage.value = 1
+})
+
+watch(filteredPlayableSongs, songs => {
+  const totalPages = Math.max(1, Math.ceil(songs.length / SONGS_PER_PAGE))
+  if (currentSongPage.value > totalPages) {
+    currentSongPage.value = totalPages
+  }
+  if (currentSongPage.value < 1) {
+    currentSongPage.value = 1
+  }
+})
+
 function normalizeSongMastery(value: string | undefined | null): SongMasteryLevel {
   return allowedSongMasteries.includes(value as SongMasteryLevel)
     ? (value as SongMasteryLevel)
@@ -434,6 +497,25 @@ function matchesPreferredGenre(song: Song) {
   if (songGenres.length === 0) return false
 
   return songGenres.some(genre => preferredGenreSet.value.has(genre))
+}
+
+function goToSongPage(page: number) {
+  const totalPages = totalSongPages.value
+  if (!Number.isFinite(page)) return
+  const clamped = Math.min(Math.max(1, Math.trunc(page)), totalPages)
+  currentSongPage.value = clamped
+}
+
+function goToPreviousSongPage() {
+  if (canGoToPreviousSongPage.value) {
+    currentSongPage.value -= 1
+  }
+}
+
+function goToNextSongPage() {
+  if (canGoToNextSongPage.value) {
+    currentSongPage.value += 1
+  }
 }
 
 async function loadPracticeSongs(sessionId: string) {
@@ -815,6 +897,12 @@ h2 {
   gap: 0.75rem;
 }
 
+.song-list-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .song-item {
   padding: 1rem;
   background: var(--card);
@@ -904,6 +992,37 @@ h2 {
 
 .song-chords-unavailable {
   color: #9ca3af;
+}
+
+.song-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.song-pagination-btn,
+.song-pagination-page {
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f3f4f6;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.song-pagination-page--active {
+  background: var(--button);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.song-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .chord-recommendation {
