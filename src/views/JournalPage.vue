@@ -18,14 +18,55 @@
               ></textarea>
               
               <div class="post-options">
-                <div class="items-input-group">
-                  <input 
-                    v-model="newItemInput" 
-                    @keydown.enter.prevent="addItem"
-                    placeholder="Add an item (e.g. song name)"
-                    class="item-input"
-                  />
-                  <button type="button" @click="addItem" class="add-item-btn">Add</button>
+                <div class="items-input-group item-search-group">
+                  <div class="item-search-toggle" role="tablist" aria-label="Search items by type">
+                    <button
+                      type="button"
+                      class="item-search-tab"
+                      :class="{ active: itemSearchType === 'SONG' }"
+                      @click="setItemSearchType('SONG')"
+                    >
+                      Songs
+                    </button>
+                    <button
+                      type="button"
+                      class="item-search-tab"
+                      :class="{ active: itemSearchType === 'CHORD' }"
+                      @click="setItemSearchType('CHORD')"
+                    >
+                      Chords
+                    </button>
+                  </div>
+                  <div class="item-search-input-wrapper">
+                    <input 
+                      v-model="itemSearchQuery"
+                      @input="handleItemSearchInput"
+                      :placeholder="itemSearchType === 'SONG' ? 'Search songs by title or artist' : 'Search chords by name'"
+                      class="item-input"
+                      type="text"
+                      autocomplete="off"
+                    />
+                    <div v-if="showItemSearchDropdown" class="search-dropdown">
+                      <div v-if="isSearchingItems" class="dropdown-item muted">Searching...</div>
+                      <div
+                        v-else-if="!itemSearchResults.length"
+                        class="dropdown-item muted"
+                      >
+                        No matches yet
+                      </div>
+                      <button
+                        v-else
+                        v-for="option in itemSearchResults"
+                        :key="option.id"
+                        type="button"
+                        class="dropdown-item"
+                        @click="selectItem(option)"
+                      >
+                        <span class="item-line-primary">{{ option.label }}</span>
+                        <span class="item-line-secondary">{{ option.detail }}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 
                 <div class="post-type-select">
@@ -133,10 +174,25 @@ import Layout from '@/components/Layout.vue'
 import { getSongsInProgress } from '@/services/songLibraryService'
 import { getKnownChords } from '@/services/chordLibraryService'
 import { createPost, getPersonalPrivatePosts, editPostVisibility } from '@/services/postService'
+import { searchByTitleOrArtist } from '@/services/songService'
+import { searchChordsByName } from '@/services/chordService'
 import { getUserId, getSessionId } from '@/utils/sessionStorage'
 import { useAuth } from '@/composables/useAuth'
 import type { SongProgress } from '@/types/songLibrary'
 import type { Post, PostVisibility } from '@/types/post'
+import type { Song } from '@/types/song'
+import type { Chord } from '@/types/chord'
+
+type ItemSuggestionType = 'SONG' | 'CHORD'
+
+interface ItemSuggestion {
+  id: string
+  label: string
+  detail?: string
+  type: ItemSuggestionType
+}
+
+const ITEM_SEARCH_RESULT_LIMIT = 10
 
 const posts = ref<Post[]>([])
 const songs = ref<SongProgress[]>([])
@@ -149,7 +205,10 @@ const loadingChords = ref(false)
 const newPostContent = ref('')
 const newPostType = ref<'PROGRESS' | 'GENERAL'>('PROGRESS')
 const newPostItems = ref<string[]>([])
-const newItemInput = ref('')
+const itemSearchType = ref<ItemSuggestionType>('SONG')
+const itemSearchQuery = ref('')
+const itemSearchResults = ref<ItemSuggestion[]>([])
+const isSearchingItems = ref(false)
 const isPosting = ref(false)
 const createPostError = ref('')
 const visibilityError = ref('')
@@ -157,12 +216,82 @@ const changingVisibilityFor = ref<string | null>(null)
 
 const { kidOrPrivateStatus, refreshKidOrPrivateStatus } = useAuth()
 const canMakePostsPublic = computed(() => kidOrPrivateStatus.value !== true)
+const showItemSearchDropdown = computed(() =>
+  itemSearchQuery.value.trim().length >= 2 &&
+  (isSearchingItems.value || itemSearchResults.value.length > 0)
+)
 
-function addItem() {
-  const trimmed = newItemInput.value.trim()
-  if (trimmed) {
-    newPostItems.value.push(trimmed)
-    newItemInput.value = ''
+let itemSearchTimer: ReturnType<typeof setTimeout> | null = null
+
+function setItemSearchType(type: ItemSuggestionType) {
+  if (itemSearchType.value === type) return
+  itemSearchType.value = type
+  itemSearchQuery.value = ''
+  itemSearchResults.value = []
+  if (itemSearchTimer) {
+    clearTimeout(itemSearchTimer)
+    itemSearchTimer = null
+  }
+}
+
+function handleItemSearchInput() {
+  if (itemSearchTimer) {
+    clearTimeout(itemSearchTimer)
+    itemSearchTimer = null
+  }
+
+  if (itemSearchQuery.value.trim().length < 2) {
+    itemSearchResults.value = []
+    return
+  }
+
+  itemSearchTimer = setTimeout(() => {
+    executeItemSearch(itemSearchQuery.value.trim())
+  }, 250)
+}
+
+async function executeItemSearch(term: string) {
+  isSearchingItems.value = true
+  try {
+    if (itemSearchType.value === 'SONG') {
+      const responses = await searchByTitleOrArtist({ query: term })
+      const songs = responses
+        .map(result => result.song)
+        .filter((song): song is Song => Boolean(song && song._id))
+      itemSearchResults.value = songs.slice(0, ITEM_SEARCH_RESULT_LIMIT).map(song => ({
+        id: song._id,
+        label: `${song.title} by ${song.artist}`,
+        detail: 'Song',
+        type: 'SONG',
+      }))
+    } else {
+      const chords = await searchChordsByName(term)
+      itemSearchResults.value = chords.slice(0, ITEM_SEARCH_RESULT_LIMIT).map((chord: Chord) => ({
+        id: chord._id,
+        label: chord.name,
+        detail: chord.notes?.length ? chord.notes.join(', ') : 'Chord',
+        type: 'CHORD',
+      }))
+    }
+  } catch (error) {
+    console.error('Failed to search items for journal post:', error)
+    itemSearchResults.value = []
+  } finally {
+    isSearchingItems.value = false
+  }
+}
+
+function selectItem(option: ItemSuggestion) {
+  const prefix = option.type === 'SONG' ? 'Song' : 'Chord'
+  const label = `${prefix}: ${option.label}`
+  if (!newPostItems.value.includes(label)) {
+    newPostItems.value.push(label)
+  }
+  itemSearchQuery.value = ''
+  itemSearchResults.value = []
+  if (itemSearchTimer) {
+    clearTimeout(itemSearchTimer)
+    itemSearchTimer = null
   }
 }
 
@@ -194,6 +323,8 @@ async function handleCreatePost() {
     newPostContent.value = ''
     newPostItems.value = []
     newPostType.value = 'PROGRESS'
+    itemSearchQuery.value = ''
+    itemSearchResults.value = []
     
     // Reload posts
     await loadPosts()
@@ -421,6 +552,37 @@ h2 {
   flex: 1;
 }
 
+.item-search-group {
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.item-search-toggle {
+  display: inline-flex;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.item-search-tab {
+  background: transparent;
+  border: none;
+  color: #e5e7eb;
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.item-search-tab.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--btn-text);
+}
+
+.item-search-input-wrapper {
+  position: relative;
+}
+
 .item-input {
   flex: 1;
   background: rgba(0, 0, 0, 0.2);
@@ -428,15 +590,6 @@ h2 {
   border-radius: 0.5rem;
   padding: 0.5rem 1rem;
   color: #e5e7eb;
-}
-
-.add-item-btn {
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  border-radius: 0.5rem;
-  color: #e5e7eb;
-  cursor: pointer;
 }
 
 .post-type-select {
@@ -472,6 +625,52 @@ h2 {
 
 .remove-item-btn:hover {
   opacity: 1;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  margin-top: 0.25rem;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.dropdown-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--contrast-mid);
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+
+.dropdown-item:hover:not(.muted) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dropdown-item.muted {
+  cursor: default;
+  color: #9ca3af;
+}
+
+.dropdown-item .item-line-primary {
+  display: block;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.dropdown-item .item-line-secondary {
+  display: block;
+  font-size: 0.8rem;
+  color: #9ca3af;
 }
 
 .form-actions {

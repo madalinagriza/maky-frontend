@@ -114,14 +114,55 @@
               ></textarea>
 
               <div class="post-options">
-                <div class="items-input-group">
-                  <input
-                    v-model="publicPostItemInput"
-                    @keydown.enter.prevent="addPublicItem"
-                    placeholder="Add an item (e.g. song name)"
-                    class="item-input"
-                  />
-                  <button type="button" @click="addPublicItem" class="add-item-btn">Add</button>
+                <div class="items-input-group item-search-group">
+                  <div class="item-search-toggle" role="tablist" aria-label="Search items by type">
+                    <button
+                      type="button"
+                      class="item-search-tab"
+                      :class="{ active: publicItemSearchType === 'SONG' }"
+                      @click="setPublicItemSearchType('SONG')"
+                    >
+                      Songs
+                    </button>
+                    <button
+                      type="button"
+                      class="item-search-tab"
+                      :class="{ active: publicItemSearchType === 'CHORD' }"
+                      @click="setPublicItemSearchType('CHORD')"
+                    >
+                      Chords
+                    </button>
+                  </div>
+                  <div class="item-search-input-wrapper">
+                    <input
+                      v-model="publicItemSearchQuery"
+                      @input="handlePublicItemSearchInput"
+                      :placeholder="publicItemSearchType === 'SONG' ? 'Search songs by title or artist' : 'Search chords by name'"
+                      class="item-input"
+                      type="text"
+                      autocomplete="off"
+                    />
+                    <div v-if="showPublicItemDropdown" class="search-dropdown">
+                      <div v-if="isSearchingPublicItems" class="dropdown-item muted">Searching...</div>
+                      <div
+                        v-else-if="!publicItemSearchResults.length"
+                        class="dropdown-item muted"
+                      >
+                        No matches yet
+                      </div>
+                      <button
+                        v-else
+                        v-for="option in publicItemSearchResults"
+                        :key="option.id"
+                        type="button"
+                        class="dropdown-item"
+                        @click="selectPublicItem(option)"
+                      >
+                        <span class="item-line-primary">{{ option.label }}</span>
+                        <span class="item-line-secondary">{{ option.detail }}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="post-type-select">
@@ -166,6 +207,14 @@
                 <span class="post-type">{{ post.postType }}</span>
               </div>
               <p class="post-content">{{ post.content }}</p>
+              <div v-if="post.items && post.items.length" class="post-items">
+                <div class="items-label">Linked items:</div>
+                <div class="items-list">
+                  <span v-for="item in post.items" :key="item" class="item-badge">
+                    {{ item }}
+                  </span>
+                </div>
+              </div>
               <div class="post-actions-bar">
                 <div class="reactions-group">
                   <button 
@@ -380,8 +429,12 @@ import {
 } from '@/services/postService'
 import { getSessionId, getUserId } from '@/utils/sessionStorage'
 import { searchProfilesByDisplayName, getProfile } from '@/services/userProfileService'
+import { searchByTitleOrArtist } from '@/services/songService'
+import { searchChordsByName } from '@/services/chordService'
 import type { DisplayNameSearchResult } from '@/types/userProfile'
 import type { ReactionType, PostVisibility } from '@/types/post'
+import type { Song } from '@/types/song'
+import type { Chord } from '@/types/chord'
 
 interface FriendListEntry {
   id: string
@@ -390,6 +443,7 @@ interface FriendListEntry {
 }
 
 type FeedTab = 'FRIENDS' | 'MY_PUBLIC'
+const ITEM_SEARCH_RESULT_LIMIT = 10
 
 interface FeedComment {
   id?: string
@@ -411,12 +465,22 @@ interface FeedPost {
   content: string
   postType: string
   visibility?: PostVisibility
+  items: string[]
   userReaction: ReactionType | null
   reactionCounts: Record<ReactionType, number>
   comments: FeedComment[]
   showComments: boolean
   loadingComments: boolean
   newCommentText: string
+}
+
+type ItemSuggestionType = 'SONG' | 'CHORD'
+
+interface ItemSuggestion {
+  id: string
+  label: string
+  detail?: string
+  type: ItemSuggestionType
 }
 
 const friendSearchQuery = ref('')
@@ -437,7 +501,10 @@ const addFriendError = ref('')
 const publicPostContent = ref('')
 const publicPostType = ref<'PROGRESS' | 'GENERAL'>('PROGRESS')
 const publicPostItems = ref<string[]>([])
-const publicPostItemInput = ref('')
+const publicItemSearchType = ref<ItemSuggestionType>('SONG')
+const publicItemSearchQuery = ref('')
+const publicItemSearchResults = ref<ItemSuggestion[]>([])
+const isSearchingPublicItems = ref(false)
 const isPostingPublic = ref(false)
 const publicPostError = ref('')
 const feedVisibilityError = ref('')
@@ -468,6 +535,11 @@ const showAddFriendDropdown = computed(() =>
   Boolean(addFriendQuery.value.trim() && (searchingAddFriends.value || addFriendResults.value.length))
 )
 
+const showPublicItemDropdown = computed(() =>
+  publicItemSearchQuery.value.trim().length >= 2 &&
+  (isSearchingPublicItems.value || publicItemSearchResults.value.length > 0)
+)
+
 const displayedPosts = computed(() =>
   activeFeedTab.value === 'FRIENDS' ? friendFeedPosts.value : myPublicFeedPosts.value
 )
@@ -482,6 +554,7 @@ const emptyPostsMessage = computed(() =>
 
 let addFriendSearchTimer: ReturnType<typeof setTimeout> | null = null
 let skipNextAddFriendSearch = false
+let publicItemSearchTimer: ReturnType<typeof setTimeout> | null = null
 
 watch(addFriendQuery, newValue => {
   addFriendError.value = ''
@@ -656,6 +729,7 @@ async function mapPostItem(item: any, currentUserId: string): Promise<FeedPost> 
     authorDisplayName,
     content: item.post.content,
     postType: item.post.postType,
+    items: Array.isArray(item.post.items) ? item.post.items.filter(Boolean) : [],
     visibility: item.post.visibility,
     userReaction,
     reactionCounts,
@@ -739,16 +813,80 @@ function resetAddFriendSelection() {
   selectedAddFriend.value = null
 }
 
-function addPublicItem() {
-  const trimmed = publicPostItemInput.value.trim()
-  if (trimmed) {
-    publicPostItems.value.push(trimmed)
-    publicPostItemInput.value = ''
+function removePublicItem(index: number) {
+  publicPostItems.value.splice(index, 1)
+}
+
+function setPublicItemSearchType(type: ItemSuggestionType) {
+  if (publicItemSearchType.value === type) return
+  publicItemSearchType.value = type
+  publicItemSearchQuery.value = ''
+  publicItemSearchResults.value = []
+  if (publicItemSearchTimer) {
+    clearTimeout(publicItemSearchTimer)
+    publicItemSearchTimer = null
   }
 }
 
-function removePublicItem(index: number) {
-  publicPostItems.value.splice(index, 1)
+function handlePublicItemSearchInput() {
+  if (publicItemSearchTimer) {
+    clearTimeout(publicItemSearchTimer)
+    publicItemSearchTimer = null
+  }
+
+  if (publicItemSearchQuery.value.trim().length < 2) {
+    publicItemSearchResults.value = []
+    return
+  }
+
+  publicItemSearchTimer = setTimeout(() => {
+    executePublicItemSearch(publicItemSearchQuery.value.trim())
+  }, 250)
+}
+
+async function executePublicItemSearch(term: string) {
+  isSearchingPublicItems.value = true
+  try {
+    if (publicItemSearchType.value === 'SONG') {
+      const responses = await searchByTitleOrArtist({ query: term })
+      const songs = responses
+        .map(result => result.song)
+        .filter((song): song is Song => Boolean(song && song._id))
+      publicItemSearchResults.value = songs.slice(0, ITEM_SEARCH_RESULT_LIMIT).map(song => ({
+        id: song._id,
+        label: `${song.title} by ${song.artist}`,
+        detail: 'Song',
+        type: 'SONG',
+      }))
+    } else {
+      const chords = await searchChordsByName(term)
+      publicItemSearchResults.value = chords.slice(0, ITEM_SEARCH_RESULT_LIMIT).map((chord: Chord) => ({
+        id: chord._id,
+        label: chord.name,
+        detail: chord.notes?.length ? chord.notes.join(', ') : 'Chord',
+        type: 'CHORD',
+      }))
+    }
+  } catch (error) {
+    console.error('Failed to search items for post:', error)
+    publicItemSearchResults.value = []
+  } finally {
+    isSearchingPublicItems.value = false
+  }
+}
+
+function selectPublicItem(option: ItemSuggestion) {
+  const prefix = option.type === 'SONG' ? 'Song' : 'Chord'
+  const label = `${prefix}: ${option.label}`
+  if (!publicPostItems.value.includes(label)) {
+    publicPostItems.value.push(label)
+  }
+  publicItemSearchQuery.value = ''
+  publicItemSearchResults.value = []
+  if (publicItemSearchTimer) {
+    clearTimeout(publicItemSearchTimer)
+    publicItemSearchTimer = null
+  }
 }
 
 async function handleCreatePublicPost() {
@@ -774,6 +912,8 @@ async function handleCreatePublicPost() {
     publicPostContent.value = ''
     publicPostItems.value = []
     publicPostType.value = 'PROGRESS'
+    publicItemSearchQuery.value = ''
+    publicItemSearchResults.value = []
 
     await loadFeedPosts()
   } catch (error: any) {
@@ -1230,6 +1370,18 @@ h3 {
   color: #9ca3af;
 }
 
+.dropdown-item .item-line-primary {
+  display: block;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.dropdown-item .item-line-secondary {
+  display: block;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
 .posts-column {
   display: flex;
   flex-direction: column;
@@ -1290,6 +1442,37 @@ h3 {
   flex: 1;
 }
 
+.item-search-group {
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.item-search-toggle {
+  display: inline-flex;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.item-search-tab {
+  background: transparent;
+  border: none;
+  color: #e5e7eb;
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.item-search-tab.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--btn-text);
+}
+
+.item-search-input-wrapper {
+  position: relative;
+}
+
 .item-input {
   flex: 1;
   background: rgba(0, 0, 0, 0.2);
@@ -1328,6 +1511,33 @@ h3 {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1rem;
+}
+
+.post-items {
+  margin: 0.75rem 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.items-label {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.item-badge {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.85rem;
+  color: #e5e7eb;
 }
 
 .remove-item-btn {
