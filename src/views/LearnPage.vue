@@ -88,6 +88,22 @@
               <div class="song-info">
                 <span class="song-title">{{ entry.song.title }}</span>
                 <span class="song-artist">{{ entry.song.artist }}</span>
+                <span class="song-genre-pill">{{ entry.song.genre || 'Unknown genre' }}</span>
+                <div class="song-chords">
+                  <span class="song-chords-label">Chords:</span>
+                  <div class="song-chords-list">
+                    <template v-if="entry.song.chords?.length">
+                      <span
+                        v-for="chord in entry.song.chords"
+                        :key="chord"
+                        :class="['song-chord-pill', getChordMasteryClass(chord)]"
+                      >
+                        {{ chord }}
+                      </span>
+                    </template>
+                    <span v-else class="song-chords-unavailable">Unavailable</span>
+                  </div>
+                </div>
               </div>
               <div class="practice-actions">
                 <select
@@ -123,6 +139,27 @@
               class="search-input"
             />
           </div>
+          <div class="filter-section">
+            <span class="filter-label">Show only:</span>
+            <label class="filter-option">
+              <input type="checkbox" v-model="showOnlyMasteredSongs" />
+              <span>All chords mastered</span>
+            </label>
+            <label
+              class="filter-option"
+              :class="{ disabled: preferredGenres.length === 0 }"
+            >
+              <input
+                type="checkbox"
+                v-model="showOnlyPreferredGenres"
+                :disabled="preferredGenres.length === 0"
+              />
+              <span>
+                Preferred genres
+                <small v-if="preferredGenres.length === 0">Set genres in Profile</small>
+              </span>
+            </label>
+          </div>
           <div v-if="loadingSongs" class="loading">Loading...</div>
           <div v-else-if="playableSongs.length === 0" class="empty-state">
             No playable songs yet. Learn some chords to unlock songs!
@@ -132,6 +169,22 @@
               <div class="song-info">
                 <span class="song-title">{{ song.title }}</span>
                 <span class="song-artist">{{ song.artist }}</span>
+                <span class="song-genre-pill">{{ song.genre || 'Unknown genre' }}</span>
+                <div class="song-chords">
+                  <span class="song-chords-label">Chords:</span>
+                  <div class="song-chords-list">
+                    <template v-if="song.chords?.length">
+                      <span
+                        v-for="chord in song.chords"
+                        :key="song._id + chord"
+                        :class="['song-chord-pill', getChordMasteryClass(chord)]"
+                      >
+                        {{ chord }}
+                      </span>
+                    </template>
+                    <span v-else class="song-chords-unavailable">Unavailable</span>
+                  </div>
+                </div>
               </div>
               <button @click="startLearningSong(song._id)" class="learn-btn">Start Learning</button>
             </li>
@@ -143,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import Layout from '@/components/Layout.vue'
 import ChordDiagram from '@/components/ChordDiagram.vue'
 import { getPlayableSongs, searchByTitleOrArtist } from '@/services/songService'
@@ -159,7 +212,8 @@ import {
   updateChordMastery as updateChordMasteryAPI,
   removeChordFromInventory,
 } from '@/services/chordLibraryService'
-import { getSessionId } from '@/utils/sessionStorage'
+import { getSessionId, getUserId } from '@/utils/sessionStorage'
+import { getProfile } from '@/services/userProfileService'
 import type { Song } from '@/types/song'
 import type { SongProgress } from '@/types/songLibrary'
 import type { KnownChord } from '@/types/chordLibrary'
@@ -180,6 +234,29 @@ const knownChords = ref<KnownChord[]>([])
 const loadingKnownChords = ref(false)
 const chordMasterySelections = ref<Record<string, ChordMasteryLevel>>({})
 const updatingChordMastery = ref<string | null>(null)
+const preferredGenres = ref<string[]>([])
+const showOnlyMasteredSongs = ref(false)
+const showOnlyPreferredGenres = ref(false)
+const chordMasteryLookup = computed<Record<string, ChordMasteryLevel>>(() => {
+  const lookup: Record<string, ChordMasteryLevel> = {}
+  knownChords.value.forEach(entry => {
+    const key = entry?.chord?.trim().toLowerCase()
+    if (!key) return
+    const pending = chordMasterySelections.value[entry.chord]
+    lookup[key] = normalizeChordMastery(pending ?? entry.mastery)
+  })
+  return lookup
+})
+
+const preferredGenreSet = computed(() =>
+  new Set(preferredGenres.value.map(genre => genre.trim().toLowerCase()).filter(Boolean))
+)
+
+watch(preferredGenres, genres => {
+  if (!genres.length) {
+    showOnlyPreferredGenres.value = false
+  }
+})
 
 // Query a few common substrings to approximate an "all songs" catalog since the API lacks a direct endpoint.
 const SONG_CATALOG_QUERIES = ['la', 'er', 'an', 'ti', 'on', 'ch', 'st', 'ra']
@@ -242,10 +319,23 @@ const availablePlayableSongs = computed(() =>
 )
 
 const filteredPlayableSongs = computed(() => {
-  if (!searchQuery.value.trim()) return availablePlayableSongs.value
-  const query = searchQuery.value.toLowerCase()
-  return availablePlayableSongs.value.filter(song => 
-    (song.title?.toLowerCase() ?? '').includes(query) || 
+  const query = searchQuery.value.trim().toLowerCase()
+  let songs = availablePlayableSongs.value
+
+  if (showOnlyMasteredSongs.value) {
+    songs = songs.filter(areAllChordsMastered)
+  }
+
+  if (showOnlyPreferredGenres.value) {
+    songs = songs.filter(matchesPreferredGenre)
+  }
+
+  if (!query) {
+    return songs
+  }
+
+  return songs.filter(song =>
+    (song.title?.toLowerCase() ?? '').includes(query) ||
     (song.artist?.toLowerCase() ?? '').includes(query)
   )
 })
@@ -298,6 +388,54 @@ function canUpdateChordMastery(chordName: string, currentMastery: string) {
   )
 }
 
+function getChordMasteryClass(chordName?: string | null) {
+  const key = chordName?.trim().toLowerCase()
+  if (!key) return 'song-chord-pill--unknown'
+
+  const mastery = chordMasteryLookup.value[key]
+  if (mastery === 'mastered') return 'song-chord-pill--mastered'
+  if (mastery === 'in progress') return 'song-chord-pill--in-progress'
+  return 'song-chord-pill--unknown'
+}
+
+function areAllChordsMastered(song: Song) {
+  if (!song?.chords?.length) return false
+  return song.chords.every(chord => {
+    const key = chord?.trim().toLowerCase()
+    if (!key) return false
+    return chordMasteryLookup.value[key] === 'mastered'
+  })
+}
+
+function extractSongGenres(song: Song) {
+  const genres: string[] = []
+  const pushTokens = (value?: string | null) => {
+    if (!value) return
+    value
+      .split(/[,&/|]/)
+      .map(token => token.trim().toLowerCase())
+      .filter(Boolean)
+      .forEach(token => genres.push(token))
+  }
+
+  pushTokens(song?.genre)
+  if (Array.isArray(song?.tags)) {
+    song.tags.forEach(pushTokens)
+  }
+
+  return genres
+}
+
+function matchesPreferredGenre(song: Song) {
+  if (!showOnlyPreferredGenres.value) return true
+  if (preferredGenreSet.value.size === 0) return false
+
+  const songGenres = extractSongGenres(song)
+  if (songGenres.length === 0) return false
+
+  return songGenres.some(genre => preferredGenreSet.value.has(genre))
+}
+
 async function loadPracticeSongs(sessionId: string) {
   loadingPracticeSongs.value = true
   try {
@@ -313,6 +451,18 @@ async function loadPracticeSongs(sessionId: string) {
     songMasterySelections.value = {}
   } finally {
     loadingPracticeSongs.value = false
+  }
+}
+
+async function loadPreferredGenres(sessionId: string) {
+  try {
+    const userId = getUserId()
+    const profile = userId ? await getProfile({ user: userId }) : await getProfile({ sessionId })
+    const genres = Array.isArray(profile?.genrePreferences) ? profile?.genrePreferences : []
+    preferredGenres.value = (genres ?? []).filter(isNonEmptyString)
+  } catch (error) {
+    console.error('Failed to load preferred genres:', error)
+    preferredGenres.value = []
   }
 }
 
@@ -347,6 +497,7 @@ async function loadData() {
     const sessionId = getSessionId()
     if (!sessionId) return
 
+    await loadPreferredGenres(sessionId)
     const knownChordNames = await loadKnownChords(sessionId)
     await loadPracticeSongs(sessionId)
 
@@ -570,6 +721,45 @@ h1 {
   margin-bottom: 1rem;
 }
 
+.filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  color: #cbd5f5;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: var(--contrast-mid);
+}
+
+.filter-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.filter-option input[type='checkbox'] {
+  accent-color: var(--button);
+}
+
+.filter-option small {
+  display: block;
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.filter-option.disabled {
+  opacity: 0.6;
+}
+
 .search-input {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -642,6 +832,72 @@ h2 {
 
 .song-artist {
   font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.song-genre-pill {
+  font-size: 0.8rem;
+  color: var(--contrast-mid);
+  text-transform: capitalize;
+  margin-top: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  align-self: flex-start;
+}
+
+.song-chords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #d1d5db;
+}
+
+.song-chords-label {
+  color: var(--contrast-mid);
+  font-weight: 600;
+}
+
+.song-chords-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  color: #e5e7eb;
+}
+
+.song-chord-pill {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f3f4f6;
+  font-size: 0.8rem;
+}
+
+.song-chord-pill--mastered {
+  background: var(--button);
+  border-color: var(--accent);
+  color: var(--btn-text);
+
+}
+
+.song-chord-pill--in-progress {
+  background: var(--contrast-bottom);
+  border-color: var(--contrast-top);
+  color: var(--main);
+}
+
+.song-chord-pill--unknown {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #d1d5db;
+}
+
+.song-chords-unavailable {
   color: #9ca3af;
 }
 
