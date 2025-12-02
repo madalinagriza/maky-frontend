@@ -744,16 +744,21 @@ h1 {
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.05);
+  color: var(--button);
 }
 
 .filter-option input[type='checkbox'] {
-  accent-color: var(--button);
+  accent-color: var(--accent);
+}
+
+.filter-option span {
+  color: var(--accent);
 }
 
 .filter-option small {
   display: block;
   font-size: 0.7rem;
-  color: #9ca3af;
+  color: var(--accent);
 }
 
 .filter-option.disabled {
