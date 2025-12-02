@@ -3,7 +3,7 @@ import type {
   CreateProfilePayload,
   CreateProfileResponse,
   UpdateDisplayNamePayload,
-  UpdateBioPayload,
+  UpdateLearningGoalsPayload,
   UpdateAvatarPayload,
   SetGenrePreferencesPayload,
   ChangeSkillLevelPayload,
@@ -44,17 +44,23 @@ export async function updateDisplayName(payload: UpdateDisplayNamePayload) {
   ensureSuccess(data)
 }
 
-export async function updateBio(payload: UpdateBioPayload) {
-  const normalizedBio =
-    payload.newBio !== undefined ? payload.newBio : payload.bio
+export async function updateLearningGoals(payload: UpdateLearningGoalsPayload) {
+  const normalizedGoals =
+    payload.newLearningGoals !== undefined
+      ? payload.newLearningGoals
+      : payload.learningGoals
 
   const requestBody =
-    normalizedBio === undefined
+    normalizedGoals === undefined
       ? payload
-      : { ...payload, newBio: normalizedBio, bio: normalizedBio }
+      : {
+          ...payload,
+          newLearningGoals: normalizedGoals,
+          learningGoals: normalizedGoals,
+        }
 
   const { data } = await apiClient.post<Record<string, never> | ErrorResponse>(
-    `${USER_PROFILE_BASE}/updateBio`,
+    `${USER_PROFILE_BASE}/updateLearningGoals`,
     requestBody
   )
   ensureSuccess(data)

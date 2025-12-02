@@ -14,11 +14,11 @@
             </div>
 
             <div class="form-group">
-              <label>Bio</label>
+              <label>Learning Goals</label>
               <textarea
-                v-model.trim="profile.bio"
+                v-model.trim="profile.learningGoals"
                 rows="3"
-                placeholder="Tell us about yourself..."
+                placeholder="Describe where you want to grow next..."
                 class="form-textarea"
               ></textarea>
             </div>
@@ -156,7 +156,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import Layout from '@/components/Layout.vue'
 import {
   updateDisplayName,
-  updateBio,
+  updateLearningGoals,
   updateAvatar,
   setGenrePreferences,
   changeSkillLevel,
@@ -182,7 +182,7 @@ const availableGenres = [
 
 const profile = reactive({
   displayName: '',
-  bio: '',
+  learningGoals: '',
   avatarUrl: '',
   genrePreferences: [] as string[],
   skillLevel: 'BEGINNER' as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED',
@@ -304,7 +304,7 @@ async function saveProfile() {
 
     // Update all profile fields
     await updateDisplayName({ sessionId, newDisplayName: profile.displayName })
-    await updateBio({ sessionId, newBio: profile.bio })
+    await updateLearningGoals({ sessionId, newLearningGoals: profile.learningGoals })
     if (profile.avatarUrl) {
       await updateAvatar({ sessionId, newAvatarUrl: profile.avatarUrl })
     }
@@ -414,7 +414,8 @@ async function loadProfile() {
 
     // Defensive mapping: only set fields that exist
     profile.displayName = existing.displayName ?? profile.displayName
-    profile.bio = existing.bio ?? profile.bio
+    profile.learningGoals =
+      existing.learningGoals ?? profile.learningGoals
     profile.avatarUrl = existing.avatarUrl ?? profile.avatarUrl
     profile.genrePreferences = Array.isArray(existing.genrePreferences)
       ? existing.genrePreferences

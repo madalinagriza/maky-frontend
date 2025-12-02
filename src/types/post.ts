@@ -21,9 +21,8 @@ export interface EditPostPayload {
   sessionId: string
   postId: string
   newContent: string
-  newItem?: string
-  newPostType?: 'PROGRESS' | 'GENERAL'
-  newVisibility?: PostVisibility | 'UNDEFINED'
+  newItems: string[] | 'UNDEFINED'
+  newPostType: 'PROGRESS' | 'GENERAL' | 'UNDEFINED'
 }
 
 export interface AddCommentToPostPayload {

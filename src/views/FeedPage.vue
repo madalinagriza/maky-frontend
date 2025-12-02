@@ -203,10 +203,131 @@
           <div v-else class="posts-list">
             <div v-for="post in displayedPosts" :key="post.id" class="post-card">
               <div class="post-header">
-                <span class="post-author">{{ post.authorDisplayName }}</span>
-                <span class="post-type">{{ post.postType }}</span>
+                <div class="post-meta">
+                  <span class="post-author">{{ post.authorDisplayName }}</span>
+                  <span class="post-type">{{ post.postType }}</span>
+                </div>
+                <div v-if="isOwnPost(post)" class="post-owner-actions">
+                  <button
+                    type="button"
+                    class="post-icon-btn"
+                    :class="{ active: post.isEditing }"
+                    :disabled="post.isSavingEdit || post.isDeleting"
+                    @click="post.isEditing ? cancelEditingPost(post) : startEditingPost(post)"
+                    :title="post.isEditing ? 'Cancel editing' : 'Edit post'"
+                    aria-label="Edit post"
+                  >
+                    <span v-if="post.isEditing">✖</span>
+                    <span v-else>✏️</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="post-icon-btn delete"
+                    :disabled="post.isSavingEdit || post.isDeleting"
+                    @click="deletePostItem(post)"
+                    title="Delete post"
+                    aria-label="Delete post"
+                  >
+                    🗑️
+                  </button>
+                </div>
               </div>
-              <p class="post-content">{{ post.content }}</p>
+              <div v-if="post.isEditing" class="post-edit-form">
+                <textarea
+                  v-model="post.editDraft"
+                  class="post-edit-textarea"
+                  placeholder="Update your post"
+                ></textarea>
+                <div class="post-edit-items">
+                  <div class="items-input-group item-search-group">
+                    <div class="item-search-toggle" role="tablist" aria-label="Search edit items by type">
+                      <button
+                        type="button"
+                        class="item-search-tab"
+                        :class="{ active: post.editItemSearchType === 'SONG' }"
+                        @click="setEditItemSearchType(post, 'SONG')"
+                      >
+                        Songs
+                      </button>
+                      <button
+                        type="button"
+                        class="item-search-tab"
+                        :class="{ active: post.editItemSearchType === 'CHORD' }"
+                        @click="setEditItemSearchType(post, 'CHORD')"
+                      >
+                        Chords
+                      </button>
+                    </div>
+                    <div class="item-search-input-wrapper">
+                      <input
+                        v-model="post.editItemSearchQuery"
+                        @input="handleEditItemSearchInput(post)"
+                        :placeholder="post.editItemSearchType === 'SONG' ? 'Search songs by title or artist' : 'Search chords by name'"
+                        class="item-input"
+                        type="text"
+                        autocomplete="off"
+                      />
+                      <div
+                        v-if="post.editItemSearchQuery.trim().length >= 2 && (post.isSearchingEditItems || post.editItemSearchResults.length > 0)"
+                        class="search-dropdown"
+                      >
+                        <div v-if="post.isSearchingEditItems" class="dropdown-item muted">Searching...</div>
+                        <div v-else-if="!post.editItemSearchResults.length" class="dropdown-item muted">
+                          No matches yet
+                        </div>
+                        <button
+                          v-else
+                          v-for="option in post.editItemSearchResults"
+                          :key="option.id"
+                          type="button"
+                          class="dropdown-item"
+                          @click="selectEditItem(post, option)"
+                        >
+                          <span class="item-line-primary">{{ option.label }}</span>
+                          <span class="item-line-secondary">{{ option.detail }}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-if="post.editItems.length" class="new-items-list">
+                    <span
+                      v-for="(item, index) in post.editItems"
+                      :key="`${item}-${index}`"
+                      class="item-badge"
+                    >
+                      {{ item }}
+                      <button
+                        type="button"
+                        @click="removeEditItem(post, index)"
+                        class="remove-item-btn"
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  </div>
+                </div>
+                <div class="post-edit-actions">
+                  <button
+                    type="button"
+                    class="post-edit-save-btn"
+                    :disabled="post.isSavingEdit || !(post.editDraft || '').trim()"
+                    @click="savePostEdit(post)"
+                  >
+                    {{ post.isSavingEdit ? 'Saving…' : 'Save' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="post-edit-cancel-btn"
+                    :disabled="post.isSavingEdit"
+                    @click="cancelEditingPost(post)"
+                  >
+                    Discard
+                  </button>
+                </div>
+                <p v-if="post.editError" class="post-error">{{ post.editError }}</p>
+              </div>
+              <p v-else class="post-content">{{ post.content }}</p>
+              <p v-if="!post.isEditing && post.editError" class="post-error">{{ post.editError }}</p>
               <div v-if="post.items && post.items.length" class="post-items">
                 <div class="items-label">Linked items:</div>
                 <div class="items-list">
@@ -415,6 +536,8 @@ import {
 } from '@/services/friendshipService'
 import {
   createPost,
+  editPost,
+  deletePost,
   addReactionToPost,
   changeReactionType,
   removeReactionFromPost,
@@ -472,6 +595,16 @@ interface FeedPost {
   showComments: boolean
   loadingComments: boolean
   newCommentText: string
+  isEditing: boolean
+  editDraft: string
+  editError: string
+  isSavingEdit: boolean
+  isDeleting: boolean
+  editItems: string[]
+  editItemSearchType: ItemSuggestionType
+  editItemSearchQuery: string
+  editItemSearchResults: ItemSuggestion[]
+  isSearchingEditItems: boolean
 }
 
 type ItemSuggestionType = 'SONG' | 'CHORD'
@@ -555,6 +688,7 @@ const emptyPostsMessage = computed(() =>
 let addFriendSearchTimer: ReturnType<typeof setTimeout> | null = null
 let skipNextAddFriendSearch = false
 let publicItemSearchTimer: ReturnType<typeof setTimeout> | null = null
+const editItemSearchTimers: Record<string, ReturnType<typeof setTimeout> | null> = {}
 
 watch(addFriendQuery, newValue => {
   addFriendError.value = ''
@@ -737,6 +871,16 @@ async function mapPostItem(item: any, currentUserId: string): Promise<FeedPost> 
     showComments: false,
     loadingComments: false,
     newCommentText: '',
+    isEditing: false,
+    editDraft: '',
+    editError: '',
+    isSavingEdit: false,
+    isDeleting: false,
+    editItems: Array.isArray(item.post.items) ? item.post.items.filter(Boolean) : [],
+    editItemSearchType: 'SONG',
+    editItemSearchQuery: '',
+    editItemSearchResults: [],
+    isSearchingEditItems: false,
   }
 }
 
@@ -887,6 +1031,81 @@ function selectPublicItem(option: ItemSuggestion) {
     clearTimeout(publicItemSearchTimer)
     publicItemSearchTimer = null
   }
+}
+
+function clearEditItemSearchTimer(postId: string) {
+  const timer = editItemSearchTimers[postId]
+  if (timer) {
+    clearTimeout(timer)
+    editItemSearchTimers[postId] = null
+  }
+}
+
+function setEditItemSearchType(post: FeedPost, type: ItemSuggestionType) {
+  if (post.editItemSearchType === type) return
+  post.editItemSearchType = type
+  post.editItemSearchQuery = ''
+  post.editItemSearchResults = []
+  clearEditItemSearchTimer(post.id)
+}
+
+function handleEditItemSearchInput(post: FeedPost) {
+  clearEditItemSearchTimer(post.id)
+
+  if (post.editItemSearchQuery.trim().length < 2) {
+    post.editItemSearchResults = []
+    return
+  }
+
+  editItemSearchTimers[post.id] = setTimeout(() => {
+    executeEditItemSearch(post, post.editItemSearchQuery.trim())
+  }, 250)
+}
+
+async function executeEditItemSearch(post: FeedPost, term: string) {
+  post.isSearchingEditItems = true
+  try {
+    if (post.editItemSearchType === 'SONG') {
+      const responses = await searchByTitleOrArtist({ query: term })
+      const songs = responses
+        .map(result => result.song)
+        .filter((song): song is Song => Boolean(song && song._id))
+      post.editItemSearchResults = songs.slice(0, ITEM_SEARCH_RESULT_LIMIT).map(song => ({
+        id: song._id,
+        label: `${song.title} by ${song.artist}`,
+        detail: 'Song',
+        type: 'SONG',
+      }))
+    } else {
+      const chords = await searchChordsByName(term)
+      post.editItemSearchResults = chords.slice(0, ITEM_SEARCH_RESULT_LIMIT).map((chord: Chord) => ({
+        id: chord._id,
+        label: chord.name,
+        detail: chord.notes?.length ? chord.notes.join(', ') : 'Chord',
+        type: 'CHORD',
+      }))
+    }
+  } catch (error) {
+    console.error('Failed to search items while editing post:', error)
+    post.editItemSearchResults = []
+  } finally {
+    post.isSearchingEditItems = false
+  }
+}
+
+function selectEditItem(post: FeedPost, option: ItemSuggestion) {
+  const prefix = option.type === 'SONG' ? 'Song' : 'Chord'
+  const label = `${prefix}: ${option.label}`
+  if (!post.editItems.includes(label)) {
+    post.editItems.push(label)
+  }
+  post.editItemSearchQuery = ''
+  post.editItemSearchResults = []
+  clearEditItemSearchTimer(post.id)
+}
+
+function removeEditItem(post: FeedPost, index: number) {
+  post.editItems.splice(index, 1)
 }
 
 async function handleCreatePublicPost() {
@@ -1260,6 +1479,104 @@ async function deleteCommentItem(post: FeedPost, comment: FeedComment) {
   }
 }
 
+function isOwnPost(post: FeedPost) {
+  const userId = currentUserId.value
+  return Boolean(userId && post.authorId === userId)
+}
+
+function startEditingPost(post: FeedPost) {
+  if (post.isDeleting) return
+  post.isEditing = true
+  post.editDraft = post.content
+  post.editError = ''
+  post.editItems = [...post.items]
+  post.editItemSearchType = 'SONG'
+  post.editItemSearchQuery = ''
+  post.editItemSearchResults = []
+  post.isSearchingEditItems = false
+  clearEditItemSearchTimer(post.id)
+}
+
+function cancelEditingPost(post: FeedPost) {
+  if (post.isSavingEdit) return
+  post.isEditing = false
+  post.editDraft = ''
+  post.editError = ''
+  post.editItems = [...post.items]
+  post.editItemSearchQuery = ''
+  post.editItemSearchResults = []
+  post.isSearchingEditItems = false
+  clearEditItemSearchTimer(post.id)
+}
+
+async function savePostEdit(post: FeedPost) {
+  post.editError = ''
+  const trimmed = (post.editDraft || '').trim()
+  if (!trimmed) {
+    post.editError = 'Post cannot be empty.'
+    return
+  }
+
+  const sessionId = getSessionId()
+  if (!sessionId) {
+    post.editError = 'You must be logged in to edit posts.'
+    return
+  }
+
+  clearEditItemSearchTimer(post.id)
+  post.isSavingEdit = true
+  try {
+    await editPost({
+      sessionId,
+      postId: post.id,
+      newContent: trimmed,
+      newItems: post.editItems,
+      newPostType: 'UNDEFINED',
+    })
+
+    post.content = trimmed
+    post.items = [...post.editItems]
+    post.isEditing = false
+    post.editDraft = ''
+    post.editItemSearchQuery = ''
+    post.editItemSearchResults = []
+  } catch (error: any) {
+    console.error('Failed to edit post', error)
+    post.editError = error?.message || 'Failed to edit post.'
+  } finally {
+    post.isSavingEdit = false
+  }
+}
+
+async function deletePostItem(post: FeedPost) {
+  post.editError = ''
+  if (post.isDeleting) return
+
+  const confirmation = window.confirm('Are you sure you want to delete this post?')
+  if (!confirmation) return
+
+  const sessionId = getSessionId()
+  if (!sessionId) {
+    post.editError = 'You must be logged in to delete posts.'
+    return
+  }
+
+  post.isDeleting = true
+  try {
+    await deletePost({ sessionId, postId: post.id })
+    feedPosts.value = feedPosts.value.filter(entry => entry.id !== post.id)
+  } catch (error: any) {
+    console.error('Failed to delete post', error)
+    post.editError = error?.message || 'Failed to delete post.'
+  } finally {
+    post.isDeleting = false
+    if (post.isEditing) {
+      post.isEditing = false
+      post.editDraft = ''
+    }
+  }
+}
+
 onMounted(() => {
   console.log('FeedPage mounted')
   const userId = getUserId()
@@ -1604,6 +1921,17 @@ h3 {
   margin-bottom: 0.5rem;
 }
 
+.post-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.post-owner-actions {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
 .post-author {
   font-weight: 600;
   color: #a5b4fc;
@@ -1750,7 +2078,8 @@ h3 {
   color: #a5b4fc;
 }
 
-.comment-icon-btn {
+.comment-icon-btn,
+.post-icon-btn {
   border: none;
   background: transparent;
   color: #f3f4f6;
@@ -1763,18 +2092,86 @@ h3 {
   transition: color 0.2s ease, transform 0.1s ease;
 }
 
-.comment-icon-btn:hover:not(:disabled) {
+.comment-icon-btn:hover:not(:disabled),
+.post-icon-btn:hover:not(:disabled) {
   color: #ffffff;
   transform: translateY(-1px);
 }
 
-.comment-icon-btn.delete:hover:not(:disabled) {
+.comment-icon-btn.delete:hover:not(:disabled),
+.post-icon-btn.delete:hover:not(:disabled) {
   color: #fca5a5;
 }
 
-.comment-icon-btn:disabled {
+.comment-icon-btn:disabled,
+.post-icon-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.post-edit-form {
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.post-edit-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.post-edit-textarea {
+  width: 100%;
+  min-height: 120px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  color: #e5e7eb;
+  resize: vertical;
+}
+
+.post-edit-textarea:focus {
+  outline: none;
+  border-color: #a5b4fc;
+}
+
+.post-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.post-edit-save-btn,
+.post-edit-cancel-btn {
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.post-edit-save-btn {
+  background: var(--button);
+  color: var(--btn-text);
+}
+
+.post-edit-cancel-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+}
+
+.post-edit-save-btn:disabled,
+.post-edit-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.post-error {
+  color: #fca5a5;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
 }
 
 .comment-text {

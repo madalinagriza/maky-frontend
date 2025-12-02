@@ -497,9 +497,9 @@ After a user logs in, all authenticated API requests should include a `sessionId
 }
 ```
 ---
-### POST /api/UserProfile/updateBio
+### POST /api/UserProfile/updateLearningGoals
 
-**Description:** Updates the optional bio in a user's profile.
+**Description:** Updates the optional learning goals in a user's profile.
 
 **Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
 
@@ -507,13 +507,13 @@ After a user logs in, all authenticated API requests should include a `sessionId
 - The user associated with `sessionId` exists and has an associated `Profile`.
 
 **Effects:**
-- Updates the `bio` in the authenticated user's `Profile` to `newBio`.
+- Updates the `learningGoals` in the authenticated user's `Profile` to `newLearningGoals`.
 
 **Request Body:**
 ```json
 {
   "sessionId": "string",
-  "newBio": "string" // optional
+  "newLearningGoals": "string" // optional
 }
 ```
 
@@ -768,16 +768,16 @@ After a user logs in, all authenticated API requests should include a `sessionId
 ```
 ---
 ### POST /api/UserProfile/_getProfile
-**Authentication:** Requires a valid `sessionId`. The session user must either match the requested `user` or already be accepted friends with that user.
+
+**Description:** Retrieves all profile information for a given user.
+
+**Authentication:** Requires a valid `sessionId`. The session user must either match the requested `user` or already be accepted friends with that user.    
 
 **Requirements:**
 - The `user` must exist. The requester must be the same user or an accepted friend.
 
-**Requirements:**
-- The `user` must exist and match the authenticated session.
-
 **Effects:**
-- Returns an array containing a single profile object for the specified user (or an empty array when no profile exists) and wraps it in the `{ "results": [...], "error": string | null }` envelope used by authenticated queries.
+- Returns an array containing a single profile object for the specified user (or an empty array when no profile exists) and wraps it in the `{ "results": [...], "error": string | null }` envelope used by authenticated queries. Each profile highlights the user's display name, optional `learningGoals` blurb (a short note about what they're practicing toward), avatar, genre preferences, skill level, and target song.
 
 **Request Body:**
 ```json
@@ -794,7 +794,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
     {
       "profile": {
         "displayName": "string",
-        "bio": "string",
+        "learningGoals": "string",
         "avatarUrl": "string",
         "genrePreferences": ["string"],
         "skillLevel": "string",

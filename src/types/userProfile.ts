@@ -14,10 +14,10 @@ export interface UpdateDisplayNamePayload {
   newDisplayName: string
 }
 
-export interface UpdateBioPayload {
+export interface UpdateLearningGoalsPayload {
   sessionId: string
-  newBio?: string
-  bio?: string
+  newLearningGoals?: string
+  learningGoals?: string
 }
 
 export interface UpdateAvatarPayload {
