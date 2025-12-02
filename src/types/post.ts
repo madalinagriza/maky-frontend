@@ -108,6 +108,11 @@ export interface GetPublicPostsOfUsersPayload {
   users: string[]
 }
 
+export interface GetPostsViewableToUserPayload {
+  sessionId: string
+  user: string
+}
+
 export interface Post {
   _id: string
   author: string
@@ -132,6 +137,9 @@ export interface GetCommentsForPostIdPayload {
 export interface CommentSimple {
   content: string
   author: string
+  comment?: string
+  commentId?: string
+  comment_id?: string
 }
 
 export interface GetCommentsForPostIdResponseItem {

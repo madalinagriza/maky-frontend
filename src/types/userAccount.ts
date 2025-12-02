@@ -43,6 +43,7 @@ export interface SetPrivateAccountStatusPayload {
 }
 
 export interface IsKidOrPrivateAccountPayload {
+  sessionId: string
   user: string
 }
 

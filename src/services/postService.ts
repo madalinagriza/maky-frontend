@@ -21,6 +21,7 @@ import type {
   GetPersonalPrivatePostsPayload,
   GetPersonalPublicPostsPayload,
   GetPublicPostsOfUsersPayload,
+  GetPostsViewableToUserPayload,
   GetCommentsForPostIdPayload,
   GetCommentsForPostIdResponse,
   GetReactionOnPostFromUserPayload,
@@ -44,6 +45,15 @@ function ensureSuccess<T>(payload: T | ErrorResponse): T {
     throw new Error(payload.error)
   }
   return payload as T
+}
+
+function assertNoQueryError(data: any) {
+  if (data && typeof data === 'object' && 'error' in data) {
+    const maybeError = (data as { error?: string | null }).error
+    if (maybeError) {
+      throw new Error(maybeError)
+    }
+  }
 }
 
 // Post endpoints
@@ -85,9 +95,7 @@ export async function getPostsForUser(payload: GetPostsForUserPayload) {
     payload
   )
   
-  if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
-  }
+  assertNoQueryError(data)
 
   // Handle potential wrapper object from backend (e.g. { results: [...] })
   const results = Array.isArray(data) ? data : (data.results || [])
@@ -100,9 +108,7 @@ export async function getPostsForUsers(payload: GetPostsForUsersPayload) {
     payload
   )
   
-  if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
-  }
+  assertNoQueryError(data)
 
   // Handle potential wrapper object from backend (e.g. { results: [...] })
   const results = Array.isArray(data) ? data : (data.results || [])
@@ -115,9 +121,7 @@ export async function getPublicPostsForUser(payload: GetPublicPostsForUserPayloa
     payload
   )
 
-  if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
-  }
+  assertNoQueryError(data)
 
   const results = Array.isArray(data) ? data : (data.results || [])
   return results as GetPostsForUserResponse
@@ -129,9 +133,7 @@ export async function getPersonalPrivatePosts(payload: GetPersonalPrivatePostsPa
     payload
   )
 
-  if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
-  }
+  assertNoQueryError(data)
 
   const results = Array.isArray(data) ? data : (data.results || [])
   return results as GetPostsForUserResponse
@@ -143,9 +145,7 @@ export async function getPersonalPublicPosts(payload: GetPersonalPublicPostsPayl
     payload
   )
 
-  if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
-  }
+  assertNoQueryError(data)
 
   const results = Array.isArray(data) ? data : (data.results || [])
   return results as GetPostsForUserResponse
@@ -157,9 +157,19 @@ export async function getPublicPostsOfUsers(payload: GetPublicPostsOfUsersPayloa
     payload
   )
 
-  if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
-  }
+  assertNoQueryError(data)
+
+  const results = Array.isArray(data) ? data : (data.results || [])
+  return results as GetPostsForUserResponse
+}
+
+export async function getPostsViewableToUser(payload: GetPostsViewableToUserPayload) {
+  const { data } = await apiClient.post<any>(
+    `${POST_BASE}/_getPostsViewableToUser`,
+    payload
+  )
+
+  assertNoQueryError(data)
 
   const results = Array.isArray(data) ? data : (data.results || [])
   return results as GetPostsForUserResponse
@@ -196,9 +206,7 @@ export async function getCommentsForPostId(payload: GetCommentsForPostIdPayload)
     payload
   )
 
-  if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
-  }
+  assertNoQueryError(data)
 
   // Handle potential wrapper object from backend (e.g. { results: [...] })
   const results = Array.isArray(data) ? data : (data.results || [])
@@ -236,9 +244,7 @@ export async function getReactionsForPostId(payload: GetReactionsForPostIdPayloa
     payload
   )
 
-  if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
-  }
+  assertNoQueryError(data)
 
   // Handle potential wrapper object from backend (e.g. { results: [...] })
   const results = Array.isArray(data) ? data : (data.results || [])
@@ -254,9 +260,7 @@ export async function getReactionOnPostFromUser(payload: GetReactionOnPostFromUs
 
   console.log('[postService] getReactionOnPostFromUser response data:', data)
 
-  if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
-  }
+  assertNoQueryError(data)
 
   // Handle potential wrapper object from backend (e.g. { results: [...] })
   // The user trace shows "results" property in the response object

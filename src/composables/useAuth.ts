@@ -122,8 +122,15 @@ export function useAuth() {
       return null
     }
 
+    const activeSessionId = sessionId.value || getSessionId()
+    if (!activeSessionId) {
+      isKidOrPrivateAccount.value = null
+      persistKidOrPrivateToStorage(null, effectiveUserId)
+      return null
+    }
+
     try {
-      const response = await getIsKidOrPrivateAccount({ user: effectiveUserId })
+      const response = await getIsKidOrPrivateAccount({ sessionId: activeSessionId, user: effectiveUserId })
       const flag = Array.isArray(response) && response[0] ? Boolean(response[0].isKidOrPrivate) : false
       isKidOrPrivateAccount.value = flag
       persistKidOrPrivateToStorage(flag, effectiveUserId)

@@ -96,7 +96,10 @@ export async function getIsKidOrPrivateAccount(
   )
 
   if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
+    const maybeError = (data as { error?: string | null }).error
+    if (maybeError) {
+      throw new Error(maybeError)
+    }
   }
 
   const results = Array.isArray(data) ? data : data?.results || []

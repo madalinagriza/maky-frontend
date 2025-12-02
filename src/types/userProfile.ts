@@ -49,3 +49,8 @@ export interface DisplayNameSearchResult {
   displayName: string
 }
 
+export interface GetProfilePayload {
+  sessionId: string
+  user?: string
+}
+

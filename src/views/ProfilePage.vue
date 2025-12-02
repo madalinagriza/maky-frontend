@@ -406,8 +406,10 @@ async function loadProfile() {
     const userId = getUserId()
     const sessionId = getSessionId()
 
+    if (!sessionId) return
+
     // Prefer calling the new getter by `user` id when available
-    const existing = userId ? await getProfile({ user: userId }) : sessionId ? await getProfile(sessionId) : null
+    const existing = await getProfile({ sessionId, user: userId || undefined })
     if (!existing) return
 
     // Defensive mapping: only set fields that exist

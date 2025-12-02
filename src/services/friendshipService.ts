@@ -68,7 +68,10 @@ export async function areFriends(payload: AreFriendsPayload) {
   )
   
   if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
+    const maybeError = (data as { error?: string | null }).error
+    if (maybeError) {
+      throw new Error(maybeError)
+    }
   }
 
   const results = Array.isArray(data) ? data : (data.results || [])
@@ -82,7 +85,10 @@ export async function getPendingFriendships(payload: PendingFriendshipsPayload) 
   )
   
   if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
+    const maybeError = (data as { error?: string | null }).error
+    if (maybeError) {
+      throw new Error(maybeError)
+    }
   }
 
   const results = Array.isArray(data) ? data : (data.results || [])
@@ -100,7 +106,10 @@ export async function getFriends(payload: GetFriendsPayload) {
   )
   
   if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
+    const maybeError = (data as { error?: string | null }).error
+    if (maybeError) {
+      throw new Error(maybeError)
+    }
   }
 
   // Handle various response formats:

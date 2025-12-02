@@ -36,6 +36,7 @@ export interface ErrorResponse {
 }
 
 export interface PendingFriendshipsPayload {
+  sessionId: string
   user: string
 }
 
@@ -48,6 +49,7 @@ export interface PendingFriendshipsResponse {
 }
 
 export interface GetFriendsPayload {
+  sessionId: string
   user: string
 }
 

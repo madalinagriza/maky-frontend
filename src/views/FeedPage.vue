@@ -210,14 +210,30 @@
                   <li v-for="(comment, index) in post.comments" :key="comment.id ?? index" class="comment-item">
                     <div class="comment-header">
                       <span class="comment-author">{{ comment.authorDisplayName || comment.author }}</span>
-                      <button
-                        v-if="comment.author === currentUserId"
-                        type="button"
-                        class="comment-edit-btn"
-                        @click="comment.isEditing ? cancelEditingComment(comment) : startEditingComment(comment)"
-                      >
-                        {{ comment.isEditing ? 'Cancel' : 'Edit' }}
-                      </button>
+                      <div v-if="comment.author === currentUserId" class="comment-actions">
+                        <button
+                          type="button"
+                          class="comment-icon-btn"
+                          :class="{ active: comment.isEditing }"
+                          :disabled="comment.isSaving || comment.isDeleting"
+                          @click="comment.isEditing ? cancelEditingComment(comment) : startEditingComment(comment)"
+                          :title="comment.isEditing ? 'Cancel editing' : 'Edit comment'"
+                          aria-label="Edit comment"
+                        >
+                          <span v-if="comment.isEditing">✖</span>
+                          <span v-else>✏️</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="comment-icon-btn delete"
+                          :disabled="comment.isSaving || comment.isDeleting"
+                          @click="deleteCommentItem(post, comment)"
+                          title="Delete comment"
+                          aria-label="Delete comment"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
                     <div v-if="comment.isEditing" class="comment-edit-form">
                       <input
@@ -249,6 +265,12 @@
                       <p v-if="comment.editError" class="comment-error">{{ comment.editError }}</p>
                     </div>
                     <span v-else class="comment-text">{{ comment.content }}</span>
+                    <p
+                      v-if="!comment.isEditing && comment.editError"
+                      class="comment-error"
+                    >
+                      {{ comment.editError }}
+                    </p>
                   </li>
                 </ul>
                 <div class="add-comment-box">
@@ -351,9 +373,9 @@ import {
   getReactionOnPostFromUser,
   addCommentToPost,
   editComment,
+  deleteComment,
   getCommentsForPostId,
-  getPersonalPublicPosts,
-  getPublicPostsOfUsers,
+  getPostsViewableToUser,
   editPostVisibility,
 } from '@/services/postService'
 import { getSessionId, getUserId } from '@/utils/sessionStorage'
@@ -378,6 +400,8 @@ interface FeedComment {
   editDraft?: string
   isSaving?: boolean
   editError?: string
+  isDeleting?: boolean
+  rawSource?: any
 }
 
 interface FeedPost {
@@ -401,14 +425,12 @@ const friends = ref<FriendListEntry[]>([])
 const addFriendResults = ref<DisplayNameSearchResult[]>([])
 const selectedAddFriend = ref<DisplayNameSearchResult | null>(null)
 const currentUserId = ref<string | null>(getUserId() || null)
-const friendPosts = ref<FeedPost[]>([])
-const myPublicPosts = ref<FeedPost[]>([])
+const feedPosts = ref<FeedPost[]>([])
 const activeFeedTab = ref<FeedTab>('FRIENDS')
 const pendingRequests = ref<Array<{ requester: string; displayName?: string; avatarUrl?: string }>>([])
 const loadingFriends = ref(false)
 const searchingAddFriends = ref(false)
-const loadingFriendPosts = ref(false)
-const loadingMyPublicPosts = ref(false)
+const loadingFeedPosts = ref(false)
 const loadingRequests = ref(false)
 const loadingRequest = ref(false)
 const addFriendError = ref('')
@@ -430,17 +452,27 @@ const filteredFriends = computed(() => {
   })
 })
 
+const friendFeedPosts = computed(() => {
+  const userId = currentUserId.value
+  if (!userId) return feedPosts.value
+  return feedPosts.value.filter(post => post.authorId !== userId)
+})
+
+const myPublicFeedPosts = computed(() => {
+  const userId = currentUserId.value
+  if (!userId) return []
+  return feedPosts.value.filter(post => post.authorId === userId && (post.visibility || 'PUBLIC') === 'PUBLIC')
+})
+
 const showAddFriendDropdown = computed(() =>
   Boolean(addFriendQuery.value.trim() && (searchingAddFriends.value || addFriendResults.value.length))
 )
 
 const displayedPosts = computed(() =>
-  activeFeedTab.value === 'FRIENDS' ? friendPosts.value : myPublicPosts.value
+  activeFeedTab.value === 'FRIENDS' ? friendFeedPosts.value : myPublicFeedPosts.value
 )
 
-const isLoadingPosts = computed(() =>
-  activeFeedTab.value === 'FRIENDS' ? loadingFriendPosts.value : loadingMyPublicPosts.value
-)
+const isLoadingPosts = computed(() => loadingFeedPosts.value)
 
 const emptyPostsMessage = computed(() =>
   activeFeedTab.value === 'FRIENDS'
@@ -472,33 +504,80 @@ watch(addFriendQuery, newValue => {
   }, 300)
 })
 
-watch(activeFeedTab, tab => {
-  if (tab === 'MY_PUBLIC' && myPublicPosts.value.length === 0 && !loadingMyPublicPosts.value) {
-    loadMyPublicPosts()
-  } else if (tab === 'FRIENDS' && friendPosts.value.length === 0 && !loadingFriendPosts.value) {
-    loadFriendPosts()
+watch(activeFeedTab, () => {
+  if (!feedPosts.value.length && !loadingFeedPosts.value) {
+    loadFeedPosts()
   }
 })
 
 function extractCommentId(raw: any): string | undefined {
-  return raw?.comment || raw?._id || raw?.id || raw?._docId || undefined
+  if (!raw || typeof raw !== 'object') return undefined
+
+  const directId =
+    (typeof raw.comment === 'string' && raw.comment) ||
+    raw.commentId ||
+    raw.commentID ||
+    raw.comment_id ||
+    raw.commentRef ||
+    raw._id ||
+    raw.id ||
+    raw._docId
+
+  if (directId) return directId
+
+  if (raw.comment && typeof raw.comment === 'object') {
+    return (
+      raw.comment.comment ||
+      raw.comment.commentId ||
+      raw.comment.commentID ||
+      raw.comment.comment_id ||
+      raw.comment._id ||
+      raw.comment.id ||
+      raw.comment._docId ||
+      undefined
+    )
+  }
+
+  return undefined
+}
+
+function resolveCommentIdentifier(comment: FeedComment): string | undefined {
+  return (
+    comment.id ||
+    extractCommentId(comment.rawSource) ||
+    (comment as any)?.comment ||
+    (comment as any)?.commentId ||
+    (comment as any)?.comment_id ||
+    (comment as any)?._id ||
+    (comment as any)?.id ||
+    (comment as any)?._docId ||
+    undefined
+  )
 }
 
 async function enrichComments(rawComments: any[]): Promise<FeedComment[]> {
+  const sessionId = getSessionId()
   return Promise.all(
     rawComments.map(async raw => {
       let displayName = raw.author
-      try {
-        const profile = await getProfile({ user: raw.author })
-        if (profile?.displayName) {
-          displayName = profile.displayName
+      if (sessionId) {
+        try {
+          const profile = await getProfile({ sessionId, user: raw.author })
+          if (profile?.displayName) {
+            displayName = profile.displayName
+          }
+        } catch (e) {
+          console.error('Failed to load commenter profile:', e)
         }
-      } catch (e) {
-        console.error('Failed to load commenter profile:', e)
+      }
+
+      const identifier = extractCommentId(raw)
+      if (!identifier) {
+        console.warn('FeedPage: missing comment identifier for payload', raw)
       }
 
       return {
-        id: extractCommentId(raw),
+        id: identifier,
         content: raw.content,
         author: raw.author,
         authorDisplayName: raw.authorDisplayName || displayName,
@@ -506,6 +585,8 @@ async function enrichComments(rawComments: any[]): Promise<FeedComment[]> {
         editDraft: '',
         isSaving: false,
         editError: '',
+        isDeleting: false,
+        rawSource: raw,
       }
     })
   )
@@ -515,14 +596,17 @@ async function mapPostItem(item: any, currentUserId: string): Promise<FeedPost> 
   const postId = item.post._id
   const authorId = item.post.author
   let authorDisplayName = authorId
+  const sessionId = getSessionId()
 
-  try {
-    const profile = await getProfile({ user: authorId })
-    if (profile && profile.displayName) {
-      authorDisplayName = profile.displayName
+  if (sessionId) {
+    try {
+      const profile = await getProfile({ sessionId, user: authorId })
+      if (profile && profile.displayName) {
+        authorDisplayName = profile.displayName
+      }
+    } catch (e) {
+      console.error(`Failed to load profile for post author ${authorId}`, e)
     }
-  } catch (e) {
-    console.error(`Failed to load profile for post author ${authorId}`, e)
   }
 
   const reactionCounts: Record<ReactionType, number> = { LIKE: 0, LOVE: 0, CELEBRATE: 0 }
@@ -582,53 +666,24 @@ async function mapPostItem(item: any, currentUserId: string): Promise<FeedPost> 
   }
 }
 
-async function loadFriendPosts() {
-  loadingFriendPosts.value = true
+async function loadFeedPosts() {
+  loadingFeedPosts.value = true
   try {
     const userId = getUserId()
     const sessionId = getSessionId()
     if (!userId || !sessionId) {
-      friendPosts.value = []
+      feedPosts.value = []
       return
     }
 
-    const friendIds = await getFriends({ user: userId })
-    const usersToFetch = friendIds.filter(id => id && id !== userId)
-
-    if (usersToFetch.length === 0) {
-      friendPosts.value = []
-      return
-    }
-
-    const response = await getPublicPostsOfUsers({ sessionId, users: usersToFetch })
+    const response = await getPostsViewableToUser({ sessionId, user: userId })
     const mappedPosts = await Promise.all(response.map(item => mapPostItem(item, userId)))
-    friendPosts.value = mappedPosts
+    feedPosts.value = mappedPosts
   } catch (error) {
-    console.error('Failed to load friend posts:', error)
-    friendPosts.value = []
+    console.error('Failed to load feed posts:', error)
+    feedPosts.value = []
   } finally {
-    loadingFriendPosts.value = false
-  }
-}
-
-async function loadMyPublicPosts() {
-  loadingMyPublicPosts.value = true
-  try {
-    const userId = getUserId()
-    const sessionId = getSessionId()
-    if (!userId || !sessionId) {
-      myPublicPosts.value = []
-      return
-    }
-
-    const response = await getPersonalPublicPosts({ sessionId, user: userId })
-    const mappedPosts = await Promise.all(response.map(item => mapPostItem(item, userId)))
-    myPublicPosts.value = mappedPosts
-  } catch (error) {
-    console.error('Failed to load personal public posts:', error)
-    myPublicPosts.value = []
-  } finally {
-    loadingMyPublicPosts.value = false
+    loadingFeedPosts.value = false
   }
 }
 
@@ -720,7 +775,7 @@ async function handleCreatePublicPost() {
     publicPostItems.value = []
     publicPostType.value = 'PROGRESS'
 
-    await loadMyPublicPosts()
+    await loadFeedPosts()
   } catch (error: any) {
     console.error('Failed to create public post:', error)
     publicPostError.value = error.message || 'Failed to create post'
@@ -774,20 +829,21 @@ async function loadFriends() {
   loadingFriends.value = true
   try {
     const userId = getUserId()
+    const sessionId = getSessionId()
     console.log('loadFriends userId:', userId)
-    if (!userId) {
+    if (!userId || !sessionId) {
       console.log('No userId, skipping loadFriends')
       friends.value = []
       return
     }
 
     console.log('Calling getFriends API...')
-    const friendIds = await getFriends({ user: userId })
+    const friendIds = await getFriends({ sessionId, user: userId })
     console.log('getFriends result:', friendIds)
     const enrichedFriends = await Promise.all(
       friendIds.map(async (friendId: string) => {
         try {
-          const profile = await getProfile({ user: friendId })
+          const profile = await getProfile({ sessionId, user: friendId })
           return {
             id: friendId,
             displayName: profile?.displayName || friendId,
@@ -813,16 +869,17 @@ async function loadPendingRequests() {
   loadingRequests.value = true
   try {
     const userId = getUserId()
-    if (!userId) {
+    const sessionId = getSessionId()
+    if (!userId || !sessionId) {
       pendingRequests.value = []
       return
     }
 
-    const pending = await getPendingFriendships({ user: userId })
+    const pending = await getPendingFriendships({ sessionId, user: userId })
     const enriched = await Promise.all(
       pending.map(async request => {
         try {
-          const profile = await getProfile({ user: request.requester })
+          const profile = await getProfile({ sessionId, user: request.requester })
           return {
             requester: request.requester,
             displayName: profile?.displayName || request.requester,
@@ -927,7 +984,7 @@ async function handleFeedVisibilityChange(post: FeedPost, nextVisibility: PostVi
       newVisibility: nextVisibility,
     })
 
-    await loadMyPublicPosts()
+    await loadFeedPosts()
   } catch (error: any) {
     console.error('Failed to change post visibility:', error)
     feedVisibilityError.value = error.message || 'Failed to change visibility'
@@ -1003,7 +1060,8 @@ async function saveCommentEdit(comment: FeedComment) {
     return
   }
 
-  if (!comment.id) {
+  const commentId = resolveCommentIdentifier(comment)
+  if (!commentId) {
     comment.editError = 'Unable to edit this comment (missing identifier).'
     return
   }
@@ -1012,7 +1070,7 @@ async function saveCommentEdit(comment: FeedComment) {
   try {
     await editComment({
       sessionId,
-      comment: comment.id,
+      comment: commentId,
       newContent: trimmed,
     })
 
@@ -1027,13 +1085,47 @@ async function saveCommentEdit(comment: FeedComment) {
   }
 }
 
+async function deleteCommentItem(post: FeedPost, comment: FeedComment) {
+  comment.editError = ''
+  if (comment.isDeleting) return
+
+  const commentId = resolveCommentIdentifier(comment)
+  if (!commentId) {
+    comment.editError = 'Unable to delete this comment (missing identifier).'
+    return
+  }
+
+  const confirmation = window.confirm('Are you sure you want to delete this comment?')
+  if (!confirmation) return
+
+  const sessionId = getSessionId()
+  if (!sessionId) {
+    comment.editError = 'You must be logged in to delete comments.'
+    return
+  }
+
+  comment.isDeleting = true
+  try {
+    await deleteComment({ sessionId, comment: commentId })
+    post.comments = post.comments.filter(entry => entry !== comment)
+  } catch (error: any) {
+    console.error('Failed to delete comment', error)
+    comment.editError = error?.message || 'Failed to delete comment.'
+  } finally {
+    comment.isDeleting = false
+    if (comment.isEditing) {
+      comment.isEditing = false
+      comment.editDraft = ''
+    }
+  }
+}
+
 onMounted(() => {
   console.log('FeedPage mounted')
   const userId = getUserId()
   console.log('Current userId:', userId)
   currentUserId.value = userId || null
-  loadFriendPosts()
-  loadMyPublicPosts()
+  loadFeedPosts()
   loadFriends()
   loadPendingRequests()
 })
@@ -1436,10 +1528,43 @@ h3 {
   gap: 0.5rem;
 }
 
+.comment-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .comment-author {
   font-weight: 600;
   font-size: 0.85rem;
   color: #a5b4fc;
+}
+
+.comment-icon-btn {
+  border: none;
+  background: transparent;
+  color: #f3f4f6;
+  padding: 0.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.1s ease;
+}
+
+.comment-icon-btn:hover:not(:disabled) {
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.comment-icon-btn.delete:hover:not(:disabled) {
+  color: #fca5a5;
+}
+
+.comment-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .comment-text {

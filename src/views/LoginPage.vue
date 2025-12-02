@@ -222,11 +222,12 @@ async function hydrateProfile({
   const safeFallback = fallbackName?.trim() || 'User'
 
   try {
-    const profileData = userId
-      ? await getProfile({ user: userId })
-      : sessionId
-      ? await getProfile(sessionId)
-      : null
+    if (!sessionId) {
+      setProfile({ displayName: safeFallback, avatarUrl: null })
+      return
+    }
+
+    const profileData = await getProfile({ sessionId, user: userId || undefined })
 
     if (profileData) {
       setProfile({

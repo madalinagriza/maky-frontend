@@ -10,6 +10,7 @@ import type {
   SetTargetSongPayload,
   ErrorResponse,
   DisplayNameSearchResult,
+  GetProfilePayload,
 } from '@/types/userProfile'
 
 const USER_PROFILE_BASE = '/UserProfile'
@@ -108,16 +109,14 @@ export async function deleteProfile(sessionId: string) {
 }
 
 // Query: _getProfile — returns an array (query-style). We return the first profile object or null.
-// Accept either a sessionId string or an object with `{ user?: string; sessionId?: string }`.
-export async function getProfile(
-  identifier: string | { user?: string; sessionId?: string }
-) {
-  const body =
-    typeof identifier === 'string'
-      ? { sessionId: identifier }
-      : identifier.user
-      ? { user: identifier.user }
-      : { sessionId: identifier.sessionId }
+export async function getProfile(payload: GetProfilePayload) {
+  if (!payload?.sessionId) {
+    throw new Error('sessionId is required to load a profile')
+  }
+
+  const body = payload.user
+    ? { sessionId: payload.sessionId, user: payload.user }
+    : { sessionId: payload.sessionId }
 
   const { data } = await apiClient.post<any | ErrorResponse>(
     `${USER_PROFILE_BASE}/_getProfile`,
@@ -125,16 +124,19 @@ export async function getProfile(
   )
 
   if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
+    const maybeError = (data as { error?: string | null }).error
+    if (maybeError) {
+      throw new Error(maybeError)
+    }
   }
 
   // Handle potential wrapper object from backend (e.g. { results: [...] })
-  const payload = Array.isArray(data) ? data : (data.results || [])
+  const resultArray = Array.isArray(data) ? data : (data.results || [])
 
   // Query-style response: return first element's `profile` if wrapped, or first item.
-  if (Array.isArray(payload) && payload.length > 0) {
+  if (Array.isArray(resultArray) && resultArray.length > 0) {
     // Some syncs wrap the profile in an object: { profile: {...} }
-    const first = payload[0]
+    const first = resultArray[0]
     if (first && typeof first === 'object' && 'profile' in first) return first.profile
     return first
   }
@@ -151,7 +153,10 @@ export async function searchProfilesByDisplayName(query: string) {
   )
 
   if (data && typeof data === 'object' && 'error' in data) {
-    throw new Error((data as ErrorResponse).error)
+    const maybeError = (data as { error?: string | null }).error
+    if (maybeError) {
+      throw new Error(maybeError)
+    }
   }
 
   // Handle potential wrapper object from backend (e.g. { results: [...] })
