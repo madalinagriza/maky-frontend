@@ -13,6 +13,7 @@
             Feed
           </router-link>
           <router-link to="/journal" class="nav-link">Journal</router-link>
+          <router-link to="/discover" class="nav-link">Discover</router-link>
         </div>
         
         <div 

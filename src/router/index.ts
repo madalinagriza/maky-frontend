@@ -29,6 +29,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: false, useLayout: true },
   },
   {
+    path: '/discover',
+    name: 'Discover',
+    component: () => import('@/views/DiscoverPage.vue'),
+    meta: { requiresAuth: false, useLayout: true },
+  },
+  {
     path: '/feed',
     name: 'Feed',
     component: () => import('@/views/FeedPage.vue'),

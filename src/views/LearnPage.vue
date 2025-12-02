@@ -233,7 +233,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import Layout from '@/components/Layout.vue'
 import ChordDiagram from '@/components/ChordDiagram.vue'
-import { getPlayableSongs, searchByTitleOrArtist } from '@/services/songService'
+import { getPlayableSongs, getSongCatalog } from '@/services/songService'
 import {
   getSongsInProgress,
   startLearningSong as startLearningSongAPI,
@@ -294,10 +294,6 @@ watch(preferredGenres, genres => {
   }
 })
 
-// Query a few common substrings to approximate an "all songs" catalog since the API lacks a direct endpoint.
-const SONG_CATALOG_QUERIES = ['la', 'er', 'an', 'ti', 'on', 'ch', 'st', 'ra']
-const MAX_CATALOG_SIZE = 80
-let cachedSongCatalog: Song[] | null = null
 
 type SongMasteryLevel = 'in progress' | 'mastered'
 const allowedSongMasteries: SongMasteryLevel[] = ['in progress', 'mastered']
@@ -314,33 +310,6 @@ const isValidSong = (song: Song | undefined | null): song is Song =>
 
 const isValidSongProgress = (entry: SongProgress | undefined | null): entry is SongProgress =>
   Boolean(entry && entry.song && isValidSong(entry.song))
-
-async function getSongCatalog(): Promise<Song[]> {
-  if (cachedSongCatalog?.length) {
-    return cachedSongCatalog
-  }
-
-  const songMap = new Map<string, Song>()
-
-  for (const query of SONG_CATALOG_QUERIES) {
-    try {
-      const results = await searchByTitleOrArtist({ query })
-      results
-        .map(result => result.song)
-        .filter(isValidSong)
-        .forEach(song => songMap.set(song._id, song))
-    } catch (error) {
-      console.warn(`Song search failed for query "${query}":`, error)
-    }
-
-    if (songMap.size >= MAX_CATALOG_SIZE) {
-      break
-    }
-  }
-
-  cachedSongCatalog = Array.from(songMap.values())
-  return cachedSongCatalog
-}
 
 const practiceSongIds = computed(() =>
   new Set(
