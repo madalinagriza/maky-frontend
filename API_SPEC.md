@@ -88,8 +88,53 @@ After a user logs in, all authenticated API requests should include a `sessionId
 ```
 ---
 ### POST /api/UserAccount/login
+### POST /api/Comment/_getCommentsForPostId
 
-**Description:** Authenticates a user and returns both their user object and a session ID.
+**Description:** Retrieves a simplified list of comments for a post while respecting the viewer's permissions.
+
+**Authentication:** Requires a valid `sessionId`. The session user must be allowed to view the post (author or accepted friend when applicable).
+
+**Requirements:**
+- The `post` exists and the authenticated user is allowed to view it.
+
+**Effects:**
+- Returns a single-element `results` array whose object exposes a `comments` array of simplified comment objects, wrapped in the `{ "results": [...], "error": string | null }` envelope.
+
+**Request Body:**
+```json
+{
+  "sessionId": "string",
+  "post": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+{
+  "results": [
+    {
+      "comments": [
+        {
+          "commentId": "string",
+          "content": "string",
+          "author": "string"
+        }
+      ]
+    }
+  ],
+  "error": null // remains null on success
+}
+```
+
+**Error Response Body:**
+```json
+{
+  "results": [],
+  "error": "string" // e.g., "Invalid session" or "Unauthorized"
+}
+```
+
+---
 
 **Requirements:**
 - A User exists with the given `username` and the provided `password` matches their `passwordHash`.
@@ -1287,45 +1332,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 ---
 
-
-### POST /api/Comment/_getCommentsForPostId
-
-**Description:** Retrieves a simplified list of comments for a specific post. The response is a single-element array whose first object exposes the `comments` array.
-
 **Requirements:**
-- The `post` must exist.
-
-**Effects:**
-- Returns a single-element array; the element contains a `comments` property holding the simplified comment objects (`{ commentId, content, author }`).
-
-**Request Body:**
-```json
-{
-  "post": "Post"
-}
-```
-
-**Success Response Body (Query):**
-```json
-[
-  {
-    "comments": [
-      {
-        "commentId": "string",
-        "content": "string",
-        "author": "User"
-      }
-    ]
-  }
-]
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
 ---
 # API Specification: Reaction Concept
 
@@ -1504,48 +1511,56 @@ After a user logs in, all authenticated API requests should include a `sessionId
 ---
 
 ### POST /api/Reaction/_getReactionsForPostId
-**Description:** Retrieves a summary of reaction counts, grouped by type, for a specific post.
+**Description:** Retrieves a summary of reaction counts, grouped by type, for a specific post. Requires authentication so only the post author or their accepted friends can view aggregate reactions.
+
+**Authentication:** Requires a valid `sessionId` that belongs to the post author or an accepted friend of the author.
 
 **Requirements:**
-
--   The `post` exists.
+- The `post` exists.
 
 **Effects:**
-- Returns an array of objects, each containing a reaction `type` and its total `count` for the given `post`. Includes types with a count of 0.
+- Returns an array of objects, each containing a reaction `type` and its total `count` for the given `post` (including types with a count of 0), wrapped in the `{ "results": [...], "error": string | null }` envelope. Authentication/authorization failures reuse the same envelope with an empty `results` array and an error message.
 
 **Request Body:**
 ```json
 {
+  "sessionId": "string",
   "post": "string"
 }
 ```
 
 **Success Response Body (Query):**
 ```json
-[
-  {
-    "type": "LIKE",
-    "count": 5
-  },
-  {
-    "type": "LOVE",
-    "count": 2
-  },
-  {
-    "type": "CELEBRATE",
-    "count": 0
-  }
-]
+{
+  "results": [
+    {
+      "type": "LIKE",
+      "count": 5
+    },
+    {
+      "type": "LOVE",
+      "count": 2
+    },
+    {
+      "type": "CELEBRATE",
+      "count": 0
+    }
+  ],
+  "error": null // remains null on success
+}
 ```
 
 **Error Response Body:**
 ```json
 {
-  "error": "string"
+  "results": [],
+  "error": "string" // e.g., "Invalid session" or "Unauthorized"
 }
 ```
 
 ---
+
+
 
 ### POST /api/Reaction/_getReactionOnPostFromUser
 **Description:** Retrieves the reaction of a specific user on a specific post.
