@@ -49,8 +49,8 @@ export interface DisplayNameSearchResult {
   displayName: string
 }
 
-export interface GetProfilePayload {
-  sessionId: string
-  user?: string
-}
+export type GetProfilePayload =
+  | { sessionId: string; user?: string }
+  | { user: string }
+  | { sessionId: string }
 
