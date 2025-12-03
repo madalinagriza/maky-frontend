@@ -69,6 +69,7 @@ export interface ErrorResponse {
 
 export interface JamGroupQueryResult {
   group?: JamGroup
+  groupData?: JamGroup
 }
 
 export interface JamGroupResultsResponse {

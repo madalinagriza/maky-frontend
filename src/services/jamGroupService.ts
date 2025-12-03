@@ -105,8 +105,8 @@ function extractJamGroup(entry: JamGroup | JamGroupQueryResult | null | undefine
     return undefined
   }
 
-  if (isJamGroupQueryResult(entry) && entry.group) {
-    return entry.group
+  if (isJamGroupQueryResult(entry)) {
+    return entry.groupData ?? entry.group ?? undefined
   }
 
   return entry as JamGroup
@@ -116,7 +116,7 @@ function isJamGroupQueryResult(entry: unknown): entry is JamGroupQueryResult {
   return Boolean(
     entry &&
     typeof entry === 'object' &&
-    'group' in entry
+    ('group' in entry || 'groupData' in entry)
   )
 }
 
