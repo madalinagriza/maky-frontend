@@ -20,7 +20,7 @@
               </div>
               <div class="info-item">
                 <span class="label">Creator</span>
-                <p class="value">{{ group.creator }}</p>
+                <p class="value">{{ creatorDisplayName }}</p>
               </div>
               <div class="info-item">
                 <span class="label">Created</span>
@@ -33,22 +33,22 @@
                 <h2>Members ({{ group.members.length }})</h2>
               </div>
               <ul class="members-list">
-                <li v-for="member in group.members" :key="member" class="member-item">
+                <li v-for="member in membersWithProfiles" :key="member.id" class="member-item">
                   <div class="member-info">
-                    <div class="member-avatar">{{ member.charAt(0).toUpperCase() }}</div>
-                    <span class="member-name">{{ member }}</span>
-                    <span v-if="member === group.creator" class="creator-tag">Creator</span>
+                    <div class="member-avatar">{{ member.initials }}</div>
+                    <span class="member-name">{{ member.displayName }}</span>
+                    <span v-if="member.isCreator" class="creator-tag">Creator</span>
                   </div>
                   <button
-                    v-if="isCreator && member !== group.creator"
-                    @click="confirmRemoveMember(member)"
+                    v-if="isCreator && !member.isCreator"
+                    @click="confirmRemoveMember(member.id)"
                     class="remove-member-btn"
-                    :disabled="removingMember === member"
+                    :disabled="removingMember === member.id"
                   >
-                    {{ removingMember === member ? 'Removing...' : 'Remove' }}
+                    {{ removingMember === member.id ? 'Removing...' : 'Remove' }}
                   </button>
                   <button
-                    v-else-if="member === currentUsername && !isCreator"
+                    v-else-if="member.id === currentUsername && !isCreator"
                     @click="confirmLeaveGroup"
                     class="leave-btn"
                     :disabled="leavingGroup"
@@ -68,8 +68,12 @@
               <div v-else class="add-friend-controls">
                 <select v-model="selectedFriend" class="friend-select">
                   <option value="">Select a friend...</option>
-                  <option v-for="friend in availableFriends" :key="friend" :value="friend">
-                    {{ friend }}
+                  <option
+                    v-for="friend in availableFriends"
+                    :key="friend.id"
+                    :value="friend.id"
+                  >
+                    {{ friend.displayName }}
                   </option>
                 </select>
                 <button
@@ -192,20 +196,22 @@ import {
   startJamSession,
 } from '@/services/jamSessionService'
 import { getFriends } from '@/services/friendshipService'
+import { getProfile } from '@/services/userProfileService'
 import type { JamGroup } from '@/types/jamGroup'
 import type { JamSession } from '@/types/jamSession'
 import type { Song } from '@/types/song'
 
 const router = useRouter()
 const route = useRoute()
-const { username, kidOrPrivateStatus } = useAuth()
+const { username, kidOrPrivateStatus, sessionId, userId } = useAuth()
 
 const group = ref<JamGroup | null>(null)
 const sessions = ref<JamSession[]>([])
 const activeSession = ref<JamSession | null>(null)
 const commonChords = ref<string[]>([])
 const playableSongs = ref<Song[]>([])
-const friends = ref<string[]>([])
+const friends = ref<Array<{ id: string; displayName: string }>>([])
+const userProfiles = ref<Record<string, { displayName: string; avatarUrl?: string | null }>>({})
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -224,29 +230,51 @@ const addFriendError = ref<string | null>(null)
 
 const groupId = computed(() => route.params.groupId as string)
 const currentUsername = computed(() => username.value || '')
+const currentUserId = computed(() => userId.value || '')
 const isCreator = computed(() => group.value?.creator === currentUsername.value)
 const isPrivateOrKid = computed(() => kidOrPrivateStatus.value === true)
+const creatorDisplayName = computed(() => {
+  if (!group.value?.creator) return 'Unknown'
+  return userProfiles.value[group.value.creator]?.displayName || group.value.creator
+})
+const membersWithProfiles = computed(() => {
+  if (!group.value) return []
+  return group.value.members.map(memberId => {
+    const profile = userProfiles.value[memberId]
+    const fallbackName = profile?.displayName?.trim() || memberId || 'Member'
+    return {
+      id: memberId,
+      displayName: fallbackName,
+      initials: fallbackName.charAt(0)?.toUpperCase() || memberId.charAt(0)?.toUpperCase() || '?',
+      isCreator: memberId === group.value!.creator,
+    }
+  })
+})
 
 const availableFriends = computed(() => {
   if (!group.value) return []
-  return friends.value.filter(friend => !group.value!.members.includes(friend))
+  const memberSet = new Set(group.value.members)
+  return friends.value.filter(friend => !memberSet.has(friend.id))
 })
 
 async function loadGroupDetails() {
   loading.value = true
   error.value = null
+  userProfiles.value = {}
   try {
     group.value = await getJamGroupById(groupId.value)
     if (!group.value) {
       error.value = 'Group not found'
       return
     }
+    const membersToFetch = [...group.value.members, group.value.creator].filter(Boolean)
     await Promise.all([
       loadSessions(),
       loadActiveSession(),
       loadCommonChords(),
       loadPlayableSongs(),
       loadFriends(),
+      loadMemberProfiles(membersToFetch as string[]),
     ])
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load group details'
@@ -302,11 +330,62 @@ async function loadFriends() {
   if (isPrivateOrKid.value) return
   loadingFriends.value = true
   try {
-    friends.value = await getFriends({ sessionId: '', user: currentUsername.value })
+    const activeSessionId = sessionId.value
+    const activeUserId = currentUserId.value
+    if (!activeSessionId || !activeUserId) {
+      friends.value = []
+      return
+    }
+
+    const friendIds = await getFriends({ sessionId: activeSessionId, user: activeUserId })
+    if (friendIds.length) {
+      await loadMemberProfiles(friendIds)
+    }
+    friends.value = friendIds.map(friendId => ({
+      id: friendId,
+      displayName: userProfiles.value[friendId]?.displayName || friendId,
+    }))
   } catch (err) {
     console.error('Error loading friends:', err)
+    friends.value = []
   } finally {
     loadingFriends.value = false
+  }
+}
+
+async function loadMemberProfiles(memberIds: string[]) {
+  const activeSessionId = sessionId.value
+  if (!activeSessionId || !memberIds.length) return
+
+  const uniqueIds = Array.from(new Set(memberIds.filter(Boolean)))
+  const results = await Promise.all(
+    uniqueIds.map(async id => {
+      try {
+        const profile = await getProfile({ sessionId: activeSessionId, user: id })
+        return { id, profile }
+      } catch (err) {
+        console.warn(`Failed to load profile for member ${id}`, err)
+        return { id, profile: null }
+      }
+    })
+  )
+
+  const nextProfiles: Record<string, { displayName: string; avatarUrl?: string | null }> = {}
+  results.forEach(({ id, profile }) => {
+    if (profile) {
+      const displayName = (profile.displayName || '').trim() || id
+      nextProfiles[id] = {
+        displayName,
+        avatarUrl: profile.avatarUrl ?? null,
+      }
+    } else if (!(id in memberProfiles.value)) {
+      nextProfiles[id] = { displayName: id }
+    }
+  })
+
+  userProfiles.value = {
+    ...userProfiles.value,
+    ...nextProfiles,
   }
 }
 
@@ -602,6 +681,11 @@ h3 {
   border-radius: 0.5rem;
   color: var(--contrast-top);
   font-size: 1rem;
+}
+
+.friend-select option {
+  color: #0f172a;
+  background-color: #ffffff;
 }
 
 .add-btn {

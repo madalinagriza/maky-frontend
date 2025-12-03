@@ -205,35 +205,37 @@
               <div class="post-header">
                 <div class="post-meta">
                   <span class="post-author">{{ post.authorDisplayName }}</span>
+                </div>
+                <div class="post-header-right">
                   <span
                     :class="['post-type', post.postType?.toUpperCase() === 'GENERAL' ? 'general' : 'progress']"
                   >
                     {{ formatPostTypeLabel(post.postType) }}
                   </span>
-                </div>
-                <div v-if="isOwnPost(post)" class="post-owner-actions">
-                  <button
-                    type="button"
-                    class="post-icon-btn"
-                    :class="{ active: post.isEditing }"
-                    :disabled="post.isSavingEdit || post.isDeleting"
-                    @click="post.isEditing ? cancelEditingPost(post) : startEditingPost(post)"
-                    :title="post.isEditing ? 'Cancel editing' : 'Edit post'"
-                    aria-label="Edit post"
-                  >
-                    <span v-if="post.isEditing">✖</span>
-                    <span v-else>✏️</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="post-icon-btn delete"
-                    :disabled="post.isSavingEdit || post.isDeleting"
-                    @click="deletePostItem(post)"
-                    title="Delete post"
-                    aria-label="Delete post"
-                  >
-                    🗑️
-                  </button>
+                  <div v-if="isOwnPost(post)" class="post-owner-actions">
+                    <button
+                      type="button"
+                      class="post-icon-btn"
+                      :class="{ active: post.isEditing }"
+                      :disabled="post.isSavingEdit || post.isDeleting"
+                      @click="post.isEditing ? cancelEditingPost(post) : startEditingPost(post)"
+                      :title="post.isEditing ? 'Cancel editing' : 'Edit post'"
+                      aria-label="Edit post"
+                    >
+                      <span v-if="post.isEditing">✖</span>
+                      <span v-else>✏️</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="post-icon-btn delete"
+                      :disabled="post.isSavingEdit || post.isDeleting"
+                      @click="deletePostItem(post)"
+                      title="Delete post"
+                      aria-label="Delete post"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               </div>
               <div v-if="post.isEditing" class="post-edit-form">
@@ -2001,6 +2003,12 @@ h3 {
 .post-meta {
   display: flex;
   flex-direction: column;
+}
+
+.post-header-right {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
 .post-owner-actions {
