@@ -1,4 +1,5 @@
 import { apiClient } from './apiClient'
+import { getSessionId } from '@/utils/sessionStorage'
 import type {
   JamGroup,
   CreateJamGroupPayload,
@@ -17,6 +18,14 @@ import type { Song } from '@/types/song'
 
 const JAM_GROUP_BASE = '/JamGroup'
 
+function requireSessionId(actionDescription: string) {
+  const sessionId = getSessionId()
+  if (!sessionId) {
+    throw new Error(`You must be logged in to ${actionDescription}.`)
+  }
+  return sessionId
+}
+
 function ensureSuccess<T>(payload: T | ErrorResponse): T {
   if (
     payload &&
@@ -31,15 +40,19 @@ function ensureSuccess<T>(payload: T | ErrorResponse): T {
 }
 
 export async function getJamGroupsForUser() {
+  const sessionId = requireSessionId('view your jam groups')
   const { data } = await apiClient.post<JamGroup[] | ErrorResponse>(
     `${JAM_GROUP_BASE}/_getJamGroupsForUser`,
-    {}
+    { sessionId }
   )
   return ensureSuccess(data)
 }
 
 export async function getJamGroupById(groupId: string) {
-  const payload: GetJamGroupByIdPayload = { sessionId: '', group: groupId }
+  const payload: GetJamGroupByIdPayload = {
+    sessionId: requireSessionId('view this jam group'),
+    group: groupId,
+  }
   const { data } = await apiClient.post<JamGroup[] | ErrorResponse>(
     `${JAM_GROUP_BASE}/_getJamGroupById`,
     payload
@@ -50,7 +63,7 @@ export async function getJamGroupById(groupId: string) {
 
 export async function createJamGroup(name: string, description: string) {
   const payload: CreateJamGroupPayload = {
-    sessionId: '',
+    sessionId: requireSessionId('create a jam group'),
     name,
     description,
   }
@@ -63,7 +76,7 @@ export async function createJamGroup(name: string, description: string) {
 
 export async function addMemberToGroup(groupId: string, memberId: string) {
   const payload: AddMemberPayload = {
-    sessionId: '',
+    sessionId: requireSessionId('add members to a jam group'),
     group: groupId,
     newMember: memberId,
   }
@@ -76,7 +89,7 @@ export async function addMemberToGroup(groupId: string, memberId: string) {
 
 export async function removeUserFromGroup(groupId: string, userId: string) {
   const payload: RemoveUserPayload = {
-    sessionId: '',
+    sessionId: requireSessionId('update jam group members'),
     group: groupId,
     user: userId,
   }
@@ -89,7 +102,7 @@ export async function removeUserFromGroup(groupId: string, userId: string) {
 
 export async function disbandJamGroup(groupId: string) {
   const payload: DisbandJamGroupPayload = {
-    sessionId: '',
+    sessionId: requireSessionId('disband a jam group'),
     group: groupId,
   }
   const { data } = await apiClient.post<SuccessResponse | ErrorResponse>(
@@ -101,7 +114,7 @@ export async function disbandJamGroup(groupId: string) {
 
 export async function getCommonChordsForGroup(groupId: string) {
   const payload: GetCommonChordsPayload = {
-    sessionId: '',
+    sessionId: requireSessionId('view common chords'),
     group: groupId,
   }
   const { data } = await apiClient.post<GetCommonChordsResponse | ErrorResponse>(
@@ -113,7 +126,7 @@ export async function getCommonChordsForGroup(groupId: string) {
 
 export async function getPlayableSongsForGroup(groupId: string) {
   const payload: GetPlayableSongsForGroupPayload = {
-    sessionId: '',
+    sessionId: requireSessionId('view playable songs'),
     group: groupId,
   }
   const { data } = await apiClient.post<Song[] | ErrorResponse>(
