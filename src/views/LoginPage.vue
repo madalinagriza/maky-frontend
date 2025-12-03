@@ -11,6 +11,62 @@
         <label>
           <span>Username</span>
           <input
+            type="text"
+            v-model.trim="loginForm.username"
+            name="username"
+            autocomplete="username"
+            minlength="3"
+            pattern="[A-Za-z0-9_-]+"
+            title="Only letters, numbers, underscores and hyphens are allowed"
+            required
+          />
+        </label>
+
+        <label>
+          <span>Password</span>
+          <input
+            v-model="loginForm.password"
+            type="password"
+            name="current-password"
+            autocomplete="current-password"
+            required
+          />
+        </label>
+
+        <button type="submit" :disabled="!canSubmitLogin || loading">
+          {{ loading ? 'Signing in...' : 'Sign in' }}
+        </button>
+      </form>
+
+      <p v-if="feedback" class="feedback" :class="feedback.kind" role="status" aria-live="polite">
+        {{ feedback.message }}
+      </p>
+
+      <footer class="footnote">
+        <p>
+          Don't have an account?
+          <router-link to="/register" class="link">Register here</router-link>
+        </p>
+      </footer>
+    </section>
+  </main>
+</template>
+
+<script setup lang="ts">
+import { reactive, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { loginUser } from '@/services/userAccountService'
+import { getProfile } from '@/services/userProfileService'
+import { useAuth } from '@/composables/useAuth'
+import { useUserProfile } from '@/composables/useUserProfile'
+
+const router = useRouter()
+const { login } = useAuth()
+const { setProfile } = useUserProfile()
+
+const loginForm = reactive({
+  username: '',
+  password: '',
 })
 
 const loading = ref(false)
@@ -202,70 +258,6 @@ button[disabled] {
   background: rgba(248, 113, 113, 0.15);
   color: #fecaca;
   border: 1px solid rgba(248, 113, 113, 0.35);
-}
-
-.test-account-section {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 1rem 0;
-  color: #9ca3af;
-  font-size: 0.875rem;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.divider span {
-  padding: 0 1rem;
-}
-
-.test-login-btn {
-  width: 100%;
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  border-radius: 0.9rem;
-  padding: 0.85rem 1.25rem;
-  background: rgba(251, 191, 36, 0.1);
-  color: #fbbf24;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 0.5rem;
-}
-
-.test-login-btn:hover:not(:disabled) {
-  background: rgba(251, 191, 36, 0.2);
-  border-color: rgba(251, 191, 36, 0.5);
-}
-
-.test-login-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.test-account-info {
-  margin: 0;
-  font-size: 0.75rem;
-  color: #9ca3af;
-  text-align: center;
-}
-
-.test-account-info code {
-  background: rgba(0, 0, 0, 0.35);
-  padding: 0.15rem 0.35rem;
-  border-radius: 0.3rem;
-  font-size: 0.875rem;
 }
 
 .footnote {

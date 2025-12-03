@@ -378,7 +378,7 @@ async function loadMemberProfiles(memberIds: string[]) {
         displayName,
         avatarUrl: profile.avatarUrl ?? null,
       }
-    } else if (!(id in memberProfiles.value)) {
+    } else if (!(id in userProfiles.value)) {
       nextProfiles[id] = { displayName: id }
     }
   })
