@@ -6,13 +6,19 @@
         <div class="nav-links">
           <router-link to="/learn" class="nav-link">Learn</router-link>
           <router-link
-            v-if="canAccessFeed"
+            v-if="canAccessCommunity"
             to="/feed"
             class="nav-link"
           >
             Feed
           </router-link>
-          <router-link to="/jam" class="nav-link">Jam</router-link>
+          <router-link
+            v-if="canAccessCommunity"
+            to="/jam"
+            class="nav-link"
+          >
+            Jam
+          </router-link>
           <router-link to="/journal" class="nav-link">Journal</router-link>
           <router-link to="/discover" class="nav-link">Discover</router-link>
         </div>
@@ -83,7 +89,7 @@ const displayLabel = computed(() => {
   return 'User'
 })
 
-const canAccessFeed = computed(() => kidOrPrivateStatus.value !== true)
+const canAccessCommunity = computed(() => kidOrPrivateStatus.value !== true)
 
 function handleLogout() {
   logout()

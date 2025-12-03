@@ -62,19 +62,19 @@ const routes: RouteRecordRaw[] = [
     path: '/jam',
     name: 'Jam',
     component: () => import('@/views/JamPage.vue'),
-    meta: { requiresAuth: true, useLayout: true },
+    meta: { requiresAuth: true, useLayout: true, restrictKidOrPrivate: true },
   },
   {
     path: '/jam/:groupId',
     name: 'JamGroupDetail',
     component: () => import('@/views/JamGroupDetailPage.vue'),
-    meta: { requiresAuth: true, useLayout: true },
+    meta: { requiresAuth: true, useLayout: true, restrictKidOrPrivate: true },
   },
   {
     path: '/jam/:groupId/session/:sessionId',
     name: 'JamSession',
     component: () => import('@/views/JamSessionPage.vue'),
-    meta: { requiresAuth: true, useLayout: true },
+    meta: { requiresAuth: true, useLayout: true, restrictKidOrPrivate: true },
   },
   {
     path: '/',
@@ -100,7 +100,8 @@ router.beforeEach(async (to, _from, next) => {
     }
 
     if (kidOrPrivateFlag) {
-      next({ name: 'Profile', query: { restricted: 'feed' } })
+      const restrictedTarget = typeof to.name === 'string' ? to.name.toLowerCase() : 'restricted'
+      next({ name: 'Profile', query: { restricted: restrictedTarget } })
       return
     }
   }
