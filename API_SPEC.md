@@ -2086,16 +2086,20 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Success Response Body (Query):**
 ```json
-[
-  {
-    "_id": "string",
-    "name": "string",
-    "description": "string",
-    "creator": "string",
-    "members": ["string"],
-    "createdAt": "string"
-  }
-]
+{
+  "results": [
+    {
+      "group": {
+        "_id": "string",
+        "name": "string",
+        "description": "string",
+        "creator": "string",
+        "members": ["string"],
+        "createdAt": "string"
+      }
+    }
+  ]
+}
 ```
 
 **Error Response Body:**

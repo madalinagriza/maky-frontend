@@ -51,7 +51,7 @@ import { useAuth } from '@/composables/useAuth'
 import type { JamGroup } from '@/types/jamGroup'
 
 const router = useRouter()
-const { username } = useAuth()
+const { username, userId } = useAuth()
 
 const jamGroups = ref<JamGroup[]>([])
 const loading = ref(true)
@@ -59,16 +59,18 @@ const error = ref<string | null>(null)
 const showCreateModal = ref(false)
 
 const currentUsername = computed(() => username.value || '')
+const currentUserId = computed(() => userId.value || '')
 
 async function loadJamGroups() {
   loading.value = true
   error.value = null
   try {
     const groups = await getJamGroupsForUser()
-    // Filter to show only groups where user is a member
-    jamGroups.value = groups.filter(group => 
-      group.members.includes(currentUsername.value)
-    )
+    // Filter to show only groups where user is a member (guard missing members arrays)
+    const activeUserId = currentUserId.value
+    jamGroups.value = !activeUserId
+      ? groups
+      : groups.filter(group => Array.isArray(group.members) && group.members.includes(activeUserId))
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load jam groups'
     console.error('Error loading jam groups:', err)

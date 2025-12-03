@@ -67,3 +67,11 @@ export interface ErrorResponse {
   error: string
 }
 
+export interface JamGroupQueryResult {
+  group?: JamGroup
+}
+
+export interface JamGroupResultsResponse {
+  results: Array<JamGroupQueryResult | JamGroup>
+}
+

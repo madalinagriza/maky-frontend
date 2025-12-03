@@ -2,6 +2,8 @@ import { apiClient } from './apiClient'
 import { getSessionId } from '@/utils/sessionStorage'
 import type {
   JamGroup,
+  JamGroupResultsResponse,
+  JamGroupQueryResult,
   CreateJamGroupPayload,
   CreateJamGroupResponse,
   AddMemberPayload,
@@ -39,13 +41,93 @@ function ensureSuccess<T>(payload: T | ErrorResponse): T {
   return payload as T
 }
 
+function normalizeJamGroupList(payload: unknown): JamGroup[] {
+  if (Array.isArray(payload)) {
+    return payload
+  }
+
+  if (
+    payload &&
+    typeof payload === 'object' &&
+    'groups' in payload &&
+    Array.isArray((payload as { groups: JamGroup[] }).groups)
+  ) {
+    return (payload as { groups: JamGroup[] }).groups
+  }
+
+  if (
+    payload &&
+    typeof payload === 'object' &&
+    'results' in payload &&
+    Array.isArray((payload as JamGroupResultsResponse).results)
+  ) {
+    const entries = (payload as JamGroupResultsResponse).results
+    return entries
+      .map(entry => extractJamGroup(entry))
+      .filter((group): group is JamGroup => Boolean(group))
+  }
+
+  if (!payload) {
+    return []
+  }
+
+  throw new Error(
+    `Unexpected jam groups response format received from server (received ${describePayload(payload)}).`
+  )
+}
+
+function describePayload(payload: unknown): string {
+  if (payload === null) {
+    return 'null'
+  }
+
+  if (Array.isArray(payload)) {
+    return `array(length=${payload.length})`
+  }
+
+  const payloadType = typeof payload
+  if (payloadType !== 'object') {
+    return payloadType
+  }
+
+  const keys = Object.keys(payload as Record<string, unknown>)
+  if (!keys.length) {
+    return 'object(with no enumerable keys)'
+  }
+
+  const preview = keys.slice(0, 5).join(', ')
+  const suffix = keys.length > 5 ? ` +${keys.length - 5} more` : ''
+  return `object(keys: ${preview}${suffix})`
+}
+
+function extractJamGroup(entry: JamGroup | JamGroupQueryResult | null | undefined): JamGroup | undefined {
+  if (!entry) {
+    return undefined
+  }
+
+  if (isJamGroupQueryResult(entry) && entry.group) {
+    return entry.group
+  }
+
+  return entry as JamGroup
+}
+
+function isJamGroupQueryResult(entry: unknown): entry is JamGroupQueryResult {
+  return Boolean(
+    entry &&
+    typeof entry === 'object' &&
+    'group' in entry
+  )
+}
+
 export async function getJamGroupsForUser() {
   const sessionId = requireSessionId('view your jam groups')
-  const { data } = await apiClient.post<JamGroup[] | ErrorResponse>(
+  const { data } = await apiClient.post<JamGroup[] | JamGroupResultsResponse | ErrorResponse>(
     `${JAM_GROUP_BASE}/_getJamGroupsForUser`,
     { sessionId }
   )
-  return ensureSuccess(data)
+  const response = ensureSuccess(data)
+  return normalizeJamGroupList(response)
 }
 
 export async function getJamGroupById(groupId: string) {
@@ -57,7 +139,7 @@ export async function getJamGroupById(groupId: string) {
     `${JAM_GROUP_BASE}/_getJamGroupById`,
     payload
   )
-  const response = ensureSuccess(data)
+  const response = normalizeJamGroupList(ensureSuccess(data))
   return response.length > 0 ? response[0] : null
 }
 
