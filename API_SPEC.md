@@ -1966,7 +1966,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
 **Authentication:** Requires a valid `sessionId`. The requester is automatically extracted from the session.
 
 **Requirements:**
-- The `group` exists, and `newMember` exists. The `newMember` is not already in the `members` set and is a friend of one of the members in the group.
+- The `group` exists, and `newMember` exists. The `newMember` is not already in the `members` set and is a friend of the requester. The `newMember` must not be a kid account or private account.
 
 **Effects:**
 - Adds `newMember` to the `members` set of the `group`.
@@ -1982,7 +1982,9 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Success Response Body (Action):**
 ```json
-{}
+{
+  "success": true
+}
 ```
 
 **Error Response Body:**
@@ -1994,27 +1996,30 @@ After a user logs in, all authenticated API requests should include a `sessionId
 ---
 ### POST /api/JamGroup/removeUserFromJamGroup
 
-**Description:** Removes a user from a jam group.
+**Description:** Removes a specified user from a jam group.
 
-**Authentication:** Requires a valid `sessionId`. The user to remove is automatically extracted from the session.
+**Authentication:** Requires a valid `sessionId`. The requester is automatically extracted from the session.
 
 **Requirements:**
-- The `group` exists and the user associated with `sessionId` is currently in the `members` set.
+- The `group` exists and the specified `user` is currently in the `members` set.
 
 **Effects:**
-- Removes the authenticated user from the `members` set of the `group`.
+- Removes the specified `user` from the `members` set of the `group`.
 
 **Request Body:**
 ```json
 {
   "sessionId": "string",
-  "group": "string"
+  "group": "string",
+  "user": "string"
 }
 ```
 
 **Success Response Body (Action):**
 ```json
-{}
+{
+  "success": true
+}
 ```
 
 **Error Response Body:**
@@ -2046,7 +2051,168 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Success Response Body (Action):**
 ```json
-{}
+{
+  "success": true
+}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
+### POST /api/JamGroup/_getJamGroupsForUser
+
+**Description:** Retrieves all jam groups where the authenticated user is a member.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+- The user associated with `sessionId` exists.
+
+**Effects:**
+- Returns all jam groups where the user is a member, ordered by creation date (newest first).
+
+**Request Body:**
+```json
+{
+  "sessionId": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "_id": "string",
+    "name": "string",
+    "description": "string",
+    "creator": "string",
+    "members": ["string"],
+    "createdAt": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
+### POST /api/JamGroup/_getJamGroupById
+
+**Description:** Retrieves details for a specific jam group.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+- The user associated with `sessionId` exists.
+
+**Effects:**
+- Returns the jam group with the given id, or an empty array if not found.
+
+**Request Body:**
+```json
+{
+  "sessionId": "string",
+  "group": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "_id": "string",
+    "name": "string",
+    "description": "string",
+    "creator": "string",
+    "members": ["string"],
+    "createdAt": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
+### POST /api/JamGroup/_getCommonChordsForGroup
+
+**Description:** Retrieves the intersection of all members' known chords for a jam group. This is critical for determining what songs the group can play together.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+- The `group` exists and the user associated with `sessionId` is authenticated.
+
+**Effects:**
+- Queries each member's known chords from ChordLibrary and computes the intersection. Returns the set of chords that ALL members know.
+
+**Request Body:**
+```json
+{
+  "sessionId": "string",
+  "group": "string"
+}
+```
+
+**Success Response Body:**
+```json
+{
+  "commonChords": ["string"]
+}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
+### POST /api/JamGroup/_getPlayableSongsForGroup
+
+**Description:** Retrieves songs that can be played by the jam group based on their common chords. This is critical for song recommendations during jam sessions.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+- The `group` exists and the user associated with `sessionId` is authenticated.
+
+**Effects:**
+- Computes the group's common chords and queries SongLibrary for songs that can be played with those chords. Returns playable songs for the group.
+
+**Request Body:**
+```json
+{
+  "sessionId": "string",
+  "group": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "_id": "string",
+    "title": "string",
+    "artist": "string",
+    "chords": ["string"],
+    "genre": "string"
+  }
+]
 ```
 
 **Error Response Body:**
@@ -2155,7 +2321,9 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Success Response Body (Action):**
 ```json
-{}
+{
+  "success": true
+}
 ```
 
 **Error Response Body:**
@@ -2189,7 +2357,9 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Success Response Body (Action):**
 ```json
-{}
+{
+  "success": true
+}
 ```
 
 **Error Response Body:**
@@ -2223,7 +2393,9 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Success Response Body (Action):**
 ```json
-{}
+{
+  "success": true
+}
 ```
 
 **Error Response Body:**
@@ -2240,7 +2412,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
 **Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
 
 **Requirements:**
-- The `session` exists and is `ACTIVE`. The user associated with `sessionId` is a member of the associated `JamGroup`.
+- The `session` exists and is `ACTIVE`.
 
 **Effects:**
 - Updates the `status` to `COMPLETED` and sets `endTime` to the current time.
@@ -2255,7 +2427,9 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Success Response Body (Action):**
 ```json
-{}
+{
+  "success": true
+}
 ```
 
 **Error Response Body:**
@@ -2265,6 +2439,153 @@ After a user logs in, all authenticated API requests should include a `sessionId
 }
 ```
 ---
+
+### POST /api/JamSession/_getJamSessionsForGroup
+
+**Description:** Retrieves all jam sessions for a specific jam group.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+- The `group` exists and the user associated with `sessionId` is authenticated.
+
+**Effects:**
+- Returns all jam sessions for the given group, ordered by start time (newest first).
+
+**Request Body:**
+```json
+{
+  "sessionId": "string",
+  "group": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "_id": "string",
+    "jamGroup": "string",
+    "startTime": "string",
+    "endTime": "string",
+    "participants": ["string"],
+    "sharedSongs": [
+      {
+        "song": "string",
+        "participant": "string",
+        "currentStatus": "string"
+      }
+    ],
+    "status": "ACTIVE | COMPLETED | SCHEDULED"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
+### POST /api/JamSession/_getJamSessionById
+
+**Description:** Retrieves details for a specific jam session.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+- The user associated with `sessionId` is authenticated.
+
+**Effects:**
+- Returns the jam session with the given id, or an empty array if not found.
+
+**Request Body:**
+```json
+{
+  "sessionId": "string",
+  "session": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "_id": "string",
+    "jamGroup": "string",
+    "startTime": "string",
+    "endTime": "string",
+    "participants": ["string"],
+    "sharedSongs": [
+      {
+        "song": "string",
+        "participant": "string",
+        "currentStatus": "string"
+      }
+    ],
+    "status": "ACTIVE | COMPLETED | SCHEDULED"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
+### POST /api/JamSession/_getActiveSessionForGroup
+
+**Description:** Retrieves the currently active jam session for a group, if any exists.
+
+**Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
+
+**Requirements:**
+- The `group` exists and the user associated with `sessionId` is authenticated.
+
+**Effects:**
+- Returns the active jam session for the given group, or an empty array if no session is currently active.
+
+**Request Body:**
+```json
+{
+  "sessionId": "string",
+  "group": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "_id": "string",
+    "jamGroup": "string",
+    "startTime": "string",
+    "participants": ["string"],
+    "sharedSongs": [
+      {
+        "song": "string",
+        "participant": "string",
+        "currentStatus": "string"
+      }
+    ],
+    "status": "ACTIVE"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---
+
 
 # API Specification: SongLibrary Concept
 
