@@ -1967,6 +1967,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Requirements:**
 - The `group` exists, and `newMember` exists. The `newMember` is not already in the `members` set and is a friend of the requester. The `newMember` must not be a kid account or private account.
+- The `group` exists, and `newMember` exists. The `newMember` is not already in the `members` set and is a friend of the requester. The `newMember` must not be a kid account or private account.
 
 **Effects:**
 - Adds `newMember` to the `members` set of the `group`.
@@ -2427,9 +2428,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Success Response Body (Action):**
 ```json
-{
-  "success": true
-}
+{}
 ```
 
 **Error Response Body:**
