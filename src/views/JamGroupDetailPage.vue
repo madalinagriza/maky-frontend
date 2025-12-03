@@ -302,8 +302,7 @@ async function loadFriends() {
   if (isPrivateOrKid.value) return
   loadingFriends.value = true
   try {
-    const response = await getFriends({ sessionId: '', user: currentUsername.value })
-    friends.value = response.results.map(entry => entry.friend)
+    friends.value = await getFriends({ sessionId: '', user: currentUsername.value })
   } catch (err) {
     console.error('Error loading friends:', err)
   } finally {

@@ -135,12 +135,12 @@ export async function getJamGroupById(groupId: string) {
     sessionId: requireSessionId('view this jam group'),
     group: groupId,
   }
-  const { data } = await apiClient.post<JamGroup[] | ErrorResponse>(
+  const { data } = await apiClient.post<JamGroup[] | JamGroupResultsResponse | ErrorResponse>(
     `${JAM_GROUP_BASE}/_getJamGroupById`,
     payload
   )
   const response = normalizeJamGroupList(ensureSuccess(data))
-  return response.length > 0 ? response[0] : null
+  return response[0] ?? null
 }
 
 export async function createJamGroup(name: string, description: string) {

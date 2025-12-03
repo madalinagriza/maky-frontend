@@ -52,7 +52,7 @@ export async function getJamSessionById(sessionId: string) {
     payload
   )
   const response = ensureSuccess(data)
-  return response.length > 0 ? response[0] : null
+  return response[0] ?? null
 }
 
 export async function getActiveSessionForGroup(groupId: string) {
@@ -65,7 +65,7 @@ export async function getActiveSessionForGroup(groupId: string) {
     payload
   )
   const response = ensureSuccess(data)
-  return response.length > 0 ? response[0] : null
+  return response[0] ?? null
 }
 
 export async function startJamSession(groupId: string) {
