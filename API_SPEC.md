@@ -2469,23 +2469,27 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Success Response Body (Query):**
 ```json
-[
-  {
-    "_id": "string",
-    "jamGroup": "string",
-    "startTime": "string",
-    "endTime": "string",
-    "participants": ["string"],
-    "sharedSongs": [
-      {
-        "song": "string",
-        "participant": "string",
-        "currentStatus": "string"
+{
+  "results": [
+    {
+      "session": {
+        "_id": "string",
+        "jamGroup": "string",
+        "startTime": "string",
+        "endTime": "string",
+        "participants": ["string"],
+        "sharedSongs": [
+          {
+            "song": "string",
+            "participant": "string",
+            "currentStatus": "string"
+          }
+        ],
+        "status": "ACTIVE | COMPLETED | SCHEDULED"
       }
-    ],
-    "status": "ACTIVE | COMPLETED | SCHEDULED"
-  }
-]
+    }
+  ]
+}
 ```
 
 **Error Response Body:**
@@ -2518,23 +2522,27 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Success Response Body (Query):**
 ```json
-[
-  {
-    "_id": "string",
-    "jamGroup": "string",
-    "startTime": "string",
-    "endTime": "string",
-    "participants": ["string"],
-    "sharedSongs": [
-      {
-        "song": "string",
-        "participant": "string",
-        "currentStatus": "string"
+{
+  "results": [
+    {
+      "sessionData": {
+        "_id": "string",
+        "jamGroup": "string",
+        "startTime": "string",
+        "endTime": "string",
+        "participants": ["string"],
+        "sharedSongs": [
+          {
+            "song": "string",
+            "participant": "string",
+            "currentStatus": "string"
+          }
+        ],
+        "status": "ACTIVE | COMPLETED | SCHEDULED"
       }
-    ],
-    "status": "ACTIVE | COMPLETED | SCHEDULED"
-  }
-]
+    }
+  ]
+}
 ```
 
 **Error Response Body:**
@@ -2567,22 +2575,26 @@ After a user logs in, all authenticated API requests should include a `sessionId
 
 **Success Response Body (Query):**
 ```json
-[
-  {
-    "_id": "string",
-    "jamGroup": "string",
-    "startTime": "string",
-    "participants": ["string"],
-    "sharedSongs": [
-      {
-        "song": "string",
-        "participant": "string",
-        "currentStatus": "string"
+{
+  "results": [
+    {
+      "session": {
+        "_id": "string",
+        "jamGroup": "string",
+        "startTime": "string",
+        "participants": ["string"],
+        "sharedSongs": [
+          {
+            "song": "string",
+            "participant": "string",
+            "currentStatus": "string"
+          }
+        ],
+        "status": "ACTIVE"
       }
-    ],
-    "status": "ACTIVE"
-  }
-]
+    }
+  ]
+}
 ```
 
 **Error Response Body:**

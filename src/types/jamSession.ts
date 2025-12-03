@@ -78,3 +78,12 @@ export interface ErrorResponse {
   error: string
 }
 
+export interface JamSessionResultEntry {
+  session?: JamSession
+  sessionData?: JamSession
+}
+
+export interface JamSessionResultsResponse {
+  results: Array<JamSession | JamSessionResultEntry>
+}
+
