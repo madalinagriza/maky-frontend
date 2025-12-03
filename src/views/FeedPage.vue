@@ -205,7 +205,11 @@
               <div class="post-header">
                 <div class="post-meta">
                   <span class="post-author">{{ post.authorDisplayName }}</span>
-                  <span class="post-type">{{ post.postType }}</span>
+                  <span
+                    :class="['post-type', post.postType?.toUpperCase() === 'GENERAL' ? 'general' : 'progress']"
+                  >
+                    {{ formatPostTypeLabel(post.postType) }}
+                  </span>
                 </div>
                 <div v-if="isOwnPost(post)" class="post-owner-actions">
                   <button
@@ -565,6 +569,16 @@ interface FriendListEntry {
   avatarUrl?: string
 }
 
+interface ProfilePreview {
+  displayName?: string
+  avatarUrl?: string
+}
+
+interface ProfilePreview {
+  displayName?: string
+  avatarUrl?: string
+}
+
 type FeedTab = 'FRIENDS' | 'MY_PUBLIC'
 const ITEM_SEARCH_RESULT_LIMIT = 10
 
@@ -618,6 +632,7 @@ interface ItemSuggestion {
 
 const friendSearchQuery = ref('')
 const addFriendQuery = ref('')
+const profilePreviewCache = new Map<string, ProfilePreview>()
 const friends = ref<FriendListEntry[]>([])
 const addFriendResults = ref<DisplayNameSearchResult[]>([])
 const selectedAddFriend = ref<DisplayNameSearchResult | null>(null)
@@ -1236,19 +1251,18 @@ async function loadPendingRequests() {
 
     const pending = await getPendingFriendships({ sessionId, user: userId })
     const enriched = await Promise.all(
-      pending.map(async request => {
-        try {
-          const profile = await getProfile({ sessionId, user: request.requester })
+      pending
+        .filter((request): request is typeof request & { requester: string } => Boolean(request?.requester))
+        .map(async request => {
+          const fallbackDisplayName =
+            (request as any).displayName || (request as any).requesterDisplayName || ''
+          const preview = await resolveProfilePreview(request.requester, sessionId)
           return {
             requester: request.requester,
-            displayName: profile?.displayName || request.requester,
-            avatarUrl: profile?.avatarUrl,
+            displayName: preview.displayName || fallbackDisplayName || request.requester,
+            avatarUrl: preview.avatarUrl,
           }
-        } catch (profileError) {
-          console.error('Failed to load requester profile:', profileError)
-          return { requester: request.requester }
-        }
-      })
+        })
     )
 
     pendingRequests.value = enriched
@@ -1276,6 +1290,44 @@ async function performAddFriendSearch(query: string) {
   } finally {
     searchingAddFriends.value = false
   }
+}
+
+async function resolveProfilePreview(userId: string, sessionId: string): Promise<ProfilePreview> {
+  if (!userId) return {}
+  if (profilePreviewCache.has(userId)) {
+    return profilePreviewCache.get(userId) || {}
+  }
+
+  let preview: ProfilePreview = {}
+
+  if (sessionId) {
+    try {
+      const profile = await getProfile({ sessionId, user: userId })
+      if (profile) {
+        preview = {
+          displayName: profile.displayName,
+          avatarUrl: profile.avatarUrl,
+        }
+      }
+    } catch (error) {
+      console.warn(`Pending requests: profile lookup failed for ${userId}`, error)
+    }
+  }
+
+  if (!preview.displayName) {
+    try {
+      const matches = await searchProfilesByDisplayName(userId)
+      const exactMatch = matches.find(result => result.user === userId)
+      if (exactMatch) {
+        preview.displayName = exactMatch.displayName
+      }
+    } catch (searchError) {
+      console.error(`Pending requests: display-name search failed for ${userId}`, searchError)
+    }
+  }
+
+  profilePreviewCache.set(userId, preview)
+  return preview
 }
 
 async function handleReaction(post: any, type: ReactionType) {
@@ -1577,6 +1629,11 @@ async function deletePostItem(post: FeedPost) {
   }
 }
 
+function formatPostTypeLabel(type?: string | null) {
+  if (!type) return 'Progress'
+  return type.toUpperCase() === 'GENERAL' ? 'General' : 'Progress'
+}
+
 onMounted(() => {
   console.log('FeedPage mounted')
   const userId = getUserId()
@@ -1766,15 +1823,16 @@ h3 {
 
 .item-search-toggle {
   display: inline-flex;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(217, 70, 52, 0.35);
   border-radius: 0.5rem;
   overflow: hidden;
+  background: rgba(217, 70, 52, 0.08);
 }
 
 .item-search-tab {
   background: transparent;
   border: none;
-  color: #e5e7eb;
+  color: var(--contrast-mid);
   padding: 0.35rem 0.85rem;
   cursor: pointer;
   font-size: 0.85rem;
@@ -1782,7 +1840,7 @@ h3 {
 }
 
 .item-search-tab.active {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(217, 70, 52, 0.35);
   color: var(--btn-text);
 }
 
@@ -1792,11 +1850,17 @@ h3 {
 
 .item-input {
   flex: 1;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(217, 70, 52, 0.35);
   border-radius: 0.5rem;
   padding: 0.5rem 1rem;
-  color: #e5e7eb;
+  color: var(--contrast-top);
+  transition: border-color 0.2s ease;
+}
+
+.item-input:focus {
+  outline: none;
+  border-color: var(--button);
 }
 
 .add-item-btn {
@@ -1812,15 +1876,27 @@ h3 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #9ca3af;
+  color: var(--contrast-top);
+}
+
+.post-type-select label {
+  font-weight: 600;
 }
 
 .post-type-select select {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--main-top);
+  border: 1px solid rgba(217, 70, 52, 0.45);
   border-radius: 0.5rem;
-  padding: 0.5rem;
-  color: #e5e7eb;
+  padding: 0.45rem 0.75rem;
+  color: var(--contrast-top);
+  font-weight: 600;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.post-type-select select:focus {
+  outline: none;
+  border-color: var(--button);
+  box-shadow: 0 0 0 2px rgba(217, 70, 52, 0.25);
 }
 
 .new-items-list {
@@ -1849,12 +1925,13 @@ h3 {
 }
 
 .item-badge {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(217, 70, 52, 0.15);
+  border: 1px solid rgba(217, 70, 52, 0.45);
   border-radius: 999px;
-  padding: 0.2rem 0.75rem;
+  padding: 0.2rem 0.85rem;
   font-size: 0.85rem;
-  color: #e5e7eb;
+  color: var(--contrast-top);
+  font-weight: 500;
 }
 
 .remove-item-btn {
@@ -1934,12 +2011,32 @@ h3 {
 
 .post-author {
   font-weight: 600;
-  color: #a5b4fc;
+  color: var(--contrast-top);
 }
 
 .post-type {
-  font-size: 0.875rem;
-  color: #9ca3af;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--contrast-mid);
+  border-radius: 999px;
+  padding: 0.1rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.post-type.progress {
+  background: rgba(217, 70, 52, 0.22);
+  border-color: rgba(217, 70, 52, 0.55);
+  color: var(--btn-text);
+}
+
+.post-type.general {
+  background: rgba(251, 225, 172, 0.18);
+  border-color: rgba(251, 225, 172, 0.45);
+  color: var(--contrast-top);
 }
 
 .post-content {
@@ -2075,7 +2172,7 @@ h3 {
 .comment-author {
   font-weight: 600;
   font-size: 0.85rem;
-  color: #a5b4fc;
+  color: var(--contrast-top);
 }
 
 .comment-icon-btn,
@@ -2135,7 +2232,7 @@ h3 {
 
 .post-edit-textarea:focus {
   outline: none;
-  border-color: #a5b4fc;
+  border-color: var(--button);
 }
 
 .post-edit-actions {
@@ -2207,15 +2304,15 @@ h3 {
 .comment-edit-input {
   width: 100%;
   background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(217, 70, 52, 0.35);
   border-radius: 0.4rem;
   padding: 0.45rem 0.6rem;
-  color: #f3f4f6;
+  color: var(--contrast-top);
 }
 
 .comment-edit-input:focus {
   outline: none;
-  border-color: #a5b4fc;
+  border-color: var(--button);
 }
 
 .comment-edit-actions {
@@ -2251,17 +2348,17 @@ h3 {
 
 .comment-input {
   flex: 1;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(217, 70, 52, 0.35);
   border-radius: 0.5rem;
   padding: 0.5rem 0.75rem;
-  color: #f9fafb;
+  color: var(--contrast-top);
   font-size: 0.95rem;
 }
 
 .comment-input:focus {
   outline: none;
-  border-color: #a5b4fc;
+  border-color: var(--button);
 }
 
 .post-comment-btn {

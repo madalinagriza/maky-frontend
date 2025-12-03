@@ -102,7 +102,11 @@
             <div v-for="post in posts" :key="post._id" class="post-card">
               <div class="post-header">
                 <div class="post-meta">
-                  <span class="post-type">{{ post.postType }}</span>
+                  <span
+                    :class="['post-type', post.postType?.toUpperCase() === 'GENERAL' ? 'general' : 'progress']"
+                  >
+                    {{ formatPostTypeLabel(post.postType) }}
+                  </span>
                   <span class="post-date">{{ formatDate(post.createdAt) }}</span>
                 </div>
                 <div class="post-owner-actions">
@@ -1097,6 +1101,11 @@ function formatMastery(value: string | undefined | null) {
     .join(' ')
 }
 
+function formatPostTypeLabel(type?: string | null) {
+  if (!type) return 'Progress'
+  return type.toUpperCase() === 'GENERAL' ? 'General' : 'Progress'
+}
+
 async function loadChords() {
   loadingChords.value = true
   try {
@@ -1207,15 +1216,16 @@ h2 {
 
 .item-search-toggle {
   display: inline-flex;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(217, 70, 52, 0.35);
   border-radius: 0.5rem;
   overflow: hidden;
+  background: rgba(217, 70, 52, 0.08);
 }
 
 .item-search-tab {
   background: transparent;
   border: none;
-  color: #e5e7eb;
+  color: var(--contrast-mid);
   padding: 0.35rem 0.85rem;
   cursor: pointer;
   font-size: 0.85rem;
@@ -1223,7 +1233,7 @@ h2 {
 }
 
 .item-search-tab.active {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(217, 70, 52, 0.35);
   color: var(--btn-text);
 }
 
@@ -1233,26 +1243,44 @@ h2 {
 
 .item-input {
   flex: 1;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(217, 70, 52, 0.35);
   border-radius: 0.5rem;
   padding: 0.5rem 1rem;
-  color: #e5e7eb;
+  color: var(--contrast-top);
+  transition: border-color 0.2s ease;
+}
+
+.item-input:focus {
+  outline: none;
+  border-color: var(--button);
 }
 
 .post-type-select {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #9ca3af;
+  color: var(--contrast-top);
+}
+
+.post-type-select label {
+  font-weight: 600;
 }
 
 .post-type-select select {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--main-top);
+  border: 1px solid rgba(217, 70, 52, 0.45);
   border-radius: 0.5rem;
-  padding: 0.5rem;
-  color: #e5e7eb;
+  padding: 0.45rem 0.75rem;
+  color: var(--contrast-top);
+  font-weight: 600;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.post-type-select select:focus {
+  outline: none;
+  border-color: var(--button);
+  box-shadow: 0 0 0 2px rgba(217, 70, 52, 0.25);
 }
 
 .new-items-list {
@@ -1497,9 +1525,28 @@ h2 {
 }
 
 .post-type {
-  font-size: 0.875rem;
-  color: #9ca3af;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--contrast-mid);
+  border-radius: 999px;
+  padding: 0.1rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.post-type.progress {
+  background: rgba(217, 70, 52, 0.22);
+  border-color: rgba(217, 70, 52, 0.55);
+  color: var(--btn-text);
+}
+
+.post-type.general {
+  background: rgba(251, 225, 172, 0.18);
+  border-color: rgba(251, 225, 172, 0.45);
+  color: var(--contrast-top);
 }
 
 .post-date {
@@ -1562,11 +1609,12 @@ h2 {
 
 .item-badge {
   padding: 0.25rem 0.75rem;
-  background: var(--main);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: rgba(217, 70, 52, 0.15);
+  border: 1px solid rgba(217, 70, 52, 0.45);
   border-radius: 999px;
-  font-size: 0.875rem;
-  color: #a5b4fc;
+  font-size: 0.85rem;
+  color: var(--contrast-top);
+  font-weight: 500;
 }
 
 .sidebar {
@@ -1676,7 +1724,7 @@ h2 {
 .comment-author {
   font-weight: 600;
   font-size: 0.9rem;
-  color: #a5b4fc;
+  color: var(--contrast-top);
 }
 
 .comment-icon-btn {
@@ -1729,7 +1777,7 @@ h2 {
 
 .comment-edit-input:focus {
   outline: none;
-  border-color: #a5b4fc;
+  border-color: var(--button);
 }
 
 .comment-edit-actions {
@@ -1784,7 +1832,7 @@ h2 {
 
 .comment-input:focus {
   outline: none;
-  border-color: #a5b4fc;
+  border-color: var(--button);
 }
 
 .post-comment-btn {
