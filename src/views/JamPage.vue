@@ -22,13 +22,17 @@
         </button>
       </div>
       <div v-else class="groups-grid">
-        <JamGroupCard
+        <RouterLink
           v-for="group in jamGroups"
           :key="group._id"
-          :group="group"
-          :current-user="currentUsername"
-          @click="navigateToGroup(group._id)"
-        />
+          :to="{ name: 'JamGroupDetail', params: { groupId: group._id } }"
+          class="jam-group-link"
+        >
+          <JamGroupCard
+            :group="group"
+            :current-user="currentUsername"
+          />
+        </RouterLink>
       </div>
 
       <CreateJamGroupModal
@@ -42,7 +46,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import Layout from '@/components/Layout.vue'
 import JamGroupCard from '@/components/JamGroupCard.vue'
 import CreateJamGroupModal from '@/components/CreateJamGroupModal.vue'
@@ -50,7 +53,6 @@ import { getJamGroupsForUser } from '@/services/jamGroupService'
 import { useAuth } from '@/composables/useAuth'
 import type { JamGroup } from '@/types/jamGroup'
 
-const router = useRouter()
 const { username, userId } = useAuth()
 
 const jamGroups = ref<JamGroup[]>([])
@@ -77,10 +79,6 @@ async function loadJamGroups() {
   } finally {
     loading.value = false
   }
-}
-
-function navigateToGroup(groupId: string) {
-  router.push(`/jam/${groupId}`)
 }
 
 function handleGroupCreated() {
@@ -206,6 +204,11 @@ h1 {
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1.5rem;
   margin-top: 2rem;
+}
+
+.jam-group-link {
+  text-decoration: none;
+  color: inherit;
 }
 
 @media (max-width: 768px) {
