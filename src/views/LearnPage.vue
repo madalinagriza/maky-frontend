@@ -88,7 +88,7 @@
               <div class="song-info">
                 <span class="song-title">{{ entry.song.title }}</span>
                 <span class="song-artist">{{ entry.song.artist }}</span>
-                <span class="song-genre-pill">{{ entry.song.genre || 'Unknown genre' }}</span>
+                <span class="song-genre-pill">{{ getSongGenreLabel(entry.song) }}</span>
                 <div class="song-chords">
                   <span class="song-chords-label">Chords:</span>
                   <div class="song-chords-list">
@@ -173,7 +173,7 @@
                 <div class="song-info">
                   <span class="song-title">{{ song.title }}</span>
                   <span class="song-artist">{{ song.artist }}</span>
-                  <span class="song-genre-pill">{{ song.genre || 'Unknown genre' }}</span>
+                  <span class="song-genre-pill">{{ getSongGenreLabel(song) }}</span>
                   <div class="song-chords">
                     <span class="song-chords-label">Chords:</span>
                     <div class="song-chords-list">
@@ -248,6 +248,7 @@ import {
 } from '@/services/chordLibraryService'
 import { getSessionId, getUserId } from '@/utils/sessionStorage'
 import { getProfile } from '@/services/userProfileService'
+import { mapGenreToOption, type GenreOption } from '@/constants/genres'
 import type { Song } from '@/types/song'
 import type { SongProgress } from '@/types/songLibrary'
 import type { KnownChord } from '@/types/chordLibrary'
@@ -439,23 +440,41 @@ function areAllChordsMastered(song: Song) {
   })
 }
 
-function extractSongGenres(song: Song) {
-  const genres: string[] = []
-  const pushTokens = (value?: string | null) => {
-    if (!value) return
-    value
-      .split(/[,&/|]/)
-      .map(token => token.trim().toLowerCase())
-      .filter(Boolean)
-      .forEach(token => genres.push(token))
+function resolveSongGenreOption(song: Song): GenreOption {
+  if (song?.genre) {
+    return mapGenreToOption(song.genre)
   }
-
-  pushTokens(song?.genre)
   if (Array.isArray(song?.tags)) {
-    song.tags.forEach(pushTokens)
+    for (const tag of song.tags) {
+      if (tag) {
+        return mapGenreToOption(tag)
+      }
+    }
+  }
+  return mapGenreToOption(undefined)
+}
+
+function getSongGenreLabel(song: Song) {
+  return resolveSongGenreOption(song)
+}
+
+function extractSongGenres(song: Song) {
+  const genres = new Set<string>()
+  const pushCanonical = (value?: string | null) => {
+    const mapped = mapGenreToOption(value)
+    genres.add(mapped.toLowerCase())
   }
 
-  return genres
+  pushCanonical(song?.genre)
+  if (Array.isArray(song?.tags)) {
+    song.tags.forEach(tag => pushCanonical(tag))
+  }
+
+  if (genres.size === 0) {
+    pushCanonical(undefined)
+  }
+
+  return Array.from(genres)
 }
 
 function matchesPreferredGenre(song: Song) {

@@ -141,6 +141,31 @@
             placeholder="Search by title or artist"
             class="song-input"
           />
+
+          <div class="genre-inline-filter" v-if="availableGenres.length">
+            <span class="genre-inline-label">Sort By</span>
+            <div class="genre-inline-options">
+              <button
+                v-for="genre in availableGenres"
+                :key="`genre-filter-${genre}`"
+                type="button"
+                class="genre-inline-pill"
+                :class="{ 'genre-inline-pill--active': isGenreSelected(genre) }"
+                @click="toggleGenreSelection(genre)"
+                :aria-pressed="isGenreSelected(genre)"
+              >
+                {{ genre }}
+              </button>
+            </div>
+            <button
+              type="button"
+              class="genre-inline-clear"
+              @click="clearGenreFilters"
+              :disabled="!selectedGenres.length"
+            >
+              Clear
+            </button>
+          </div>
         </div>
 
         <div class="song-status" v-if="loadingSongs">
@@ -159,7 +184,7 @@
                 <div>
                   <p class="song-artist">{{ song.artist }}</p>
                   <h3 class="song-title">{{ song.title }}</h3>
-                  <p class="song-genre">{{ song.genre || 'Unknown genre' }}</p>
+                  <p class="song-genre">{{ getSongGenreOption(song) }}</p>
                 </div>
                 <div class="song-chords">
                   <span class="song-chords-label">Chords:</span>
@@ -205,6 +230,7 @@ import Layout from '@/components/Layout.vue'
 import ChordDiagram from '@/components/ChordDiagram.vue'
 import { getChordVocabulary, getChordDiagramByName } from '@/services/chordService'
 import { getSongCatalog } from '@/services/songService'
+import { GENRE_OPTIONS, mapGenreToOption, type GenreOption } from '@/constants/genres'
 import type { ChordDiagram as ChordDiagramType } from '@/types/recommendation'
 import type { Song } from '@/types/song'
 
@@ -230,6 +256,8 @@ const loadingSongs = ref(false)
 const songError = ref<string | null>(null)
 const songQuery = ref('')
 const currentSongPage = ref(1)
+const availableGenres = GENRE_OPTIONS
+const selectedGenres = ref<GenreOption[]>([])
 
 const normalizedChordQuery = computed(() => chordQuery.value.trim().toLowerCase())
 const canSearchChord = computed(() => Boolean(normalizedChordQuery.value))
@@ -270,11 +298,19 @@ const filteredChordVocabulary = computed(() => {
 const chordSuggestions = computed(() => filteredChordVocabulary.value.slice(0, 12))
 
 const filteredSongs = computed(() => {
+  let songs = allSongs.value
+
+  const activeGenres = selectedGenres.value
+  if (activeGenres.length) {
+    const allowed = new Set(activeGenres)
+    songs = songs.filter(song => allowed.has(getSongGenreOption(song)))
+  }
+
   if (!songQuery.value.trim()) {
-    return allSongs.value
+    return songs
   }
   const query = songQuery.value.trim().toLowerCase()
-  return allSongs.value.filter(song =>
+  return songs.filter(song =>
     song.title?.toLowerCase().includes(query) || song.artist?.toLowerCase().includes(query),
   )
 })
@@ -321,6 +357,38 @@ function formatSuffixLabel(value: string) {
 function selectChord(name: string) {
   chordQuery.value = name
   handleChordSearch()
+}
+
+function toggleGenreSelection(genre: GenreOption) {
+  const next = new Set(selectedGenres.value)
+  if (next.has(genre)) {
+    next.delete(genre)
+  } else {
+    next.add(genre)
+  }
+  selectedGenres.value = Array.from(next)
+}
+
+function isGenreSelected(genre: GenreOption) {
+  return selectedGenres.value.includes(genre)
+}
+
+function clearGenreFilters() {
+  selectedGenres.value = []
+}
+
+function getSongGenreOption(song: Song): GenreOption {
+  if (song.genre) {
+    return mapGenreToOption(song.genre)
+  }
+  if (Array.isArray(song.tags)) {
+    for (const tag of song.tags) {
+      if (tag) {
+        return mapGenreToOption(tag)
+      }
+    }
+  }
+  return mapGenreToOption(undefined)
 }
 
 async function handleChordSearch() {
@@ -652,10 +720,13 @@ h1 {
 
 .song-search {
   display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .song-input {
-  width: 100%;
+  flex: 1 1 260px;
   padding: 0.75rem 1rem;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -776,6 +847,64 @@ h1 {
   cursor: not-allowed;
 }
 
+.genre-inline-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.genre-inline-label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--contrast-mid);
+}
+
+.genre-inline-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex: 1 1 auto;
+}
+
+.genre-inline-pill {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.85rem;
+  background: transparent;
+  color: #f3f4f6;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.genre-inline-pill--active {
+  background: var(--button);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.genre-inline-clear {
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.genre-inline-clear:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .chord-search {
     flex-direction: column;
@@ -788,6 +917,14 @@ h1 {
   .chord-filters {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .song-search {
+    flex-direction: column;
+  }
+
+  .genre-inline-filter {
+    width: 100%;
   }
 }
 </style>
