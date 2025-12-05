@@ -85,7 +85,7 @@
           <div class="toggle-row">
             <div>
               <p class="toggle-label">Private account</p>
-              <p class="toggle-description">Make your account private. You can still post private progress updates and learn music.</p>
+              <p class="toggle-description">Hide your account from anyone who is not already a friend.</p>
             </div>
             <label class="switch">
               <input type="checkbox" v-model="privateStatus" :disabled="isPrivateDisabled" />
@@ -196,6 +196,17 @@ function writeFlag(prefix: string, value: boolean) {
   }
 }
 
+function resolveErrorMessage(error: unknown, fallback: string) {
+  if (typeof error === 'string' && error.trim()) return error.trim()
+  if (error && typeof error === 'object') {
+    const message = (error as any)?.message
+    if (typeof message === 'string' && message.trim()) return message.trim()
+    const responseError = (error as any)?.response?.data?.error
+    if (typeof responseError === 'string' && responseError.trim()) return responseError.trim()
+  }
+  return fallback
+}
+
 const kidStatus = ref(readFlag('account:kid', false))
 const privateStatus = ref(readFlag('account:private', false))
 const kidSavedStatus = ref(kidStatus.value)
@@ -224,7 +235,11 @@ const canPersistPrivate = computed(
 )
 
 async function persistKidStatus() {
-  if (!sessionId.value || !canPersistKid.value) return
+  if (!sessionId.value) {
+    kidFeedback.value = { kind: 'error', message: 'You must be signed in to update kid status.' }
+    return
+  }
+  if (!canPersistKid.value) return
   kidSaving.value = true
   kidFeedback.value = null
   try {
@@ -235,7 +250,7 @@ async function persistKidStatus() {
     kidFeedback.value = { kind: 'success', message: 'Kid account status updated.' }
   } catch (error) {
     kidStatus.value = kidSavedStatus.value
-    const message = error instanceof Error ? error.message : 'Unable to update kid status.'
+    const message = resolveErrorMessage(error, 'Unable to update kid status.')
     kidFeedback.value = { kind: 'error', message }
   } finally {
     kidSaving.value = false
@@ -243,7 +258,14 @@ async function persistKidStatus() {
 }
 
 async function persistPrivateStatus() {
-  if (!sessionId.value || !canPersistPrivate.value) return
+  if (!sessionId.value) {
+    privateFeedback.value = {
+      kind: 'error',
+      message: 'You must be signed in to update private status.',
+    }
+    return
+  }
+  if (!canPersistPrivate.value) return
   privateSaving.value = true
   privateFeedback.value = null
   try {
@@ -254,7 +276,7 @@ async function persistPrivateStatus() {
     privateFeedback.value = { kind: 'success', message: 'Private account status updated.' }
   } catch (error) {
     privateStatus.value = privateSavedStatus.value
-    const message = error instanceof Error ? error.message : 'Unable to update private status.'
+    const message = resolveErrorMessage(error, 'Unable to update private status.')
     privateFeedback.value = { kind: 'error', message }
   } finally {
     privateSaving.value = false
@@ -468,5 +490,6 @@ input:checked + .slider:before {
   .page-header {
     flex-direction: column;
   }
+
 }
 </style>
