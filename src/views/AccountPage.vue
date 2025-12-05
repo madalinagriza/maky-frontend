@@ -85,7 +85,7 @@
           <div class="toggle-row">
             <div>
               <p class="toggle-label">Private account</p>
-              <p class="toggle-description">Hide posts from non-followers and tighten visibility.</p>
+              <p class="toggle-description">Make your account private. You can still post private progress updates and learn music.</p>
             </div>
             <label class="switch">
               <input type="checkbox" v-model="privateStatus" :disabled="isPrivateDisabled" />

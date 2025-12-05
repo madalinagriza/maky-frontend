@@ -230,7 +230,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
 ---
 ### POST /api/UserAccount/setPrivateAccountStatus
 
-**Description:** Sets the 'isPrivateAccount' status for a given user.
+**Description:** Sets the 'isPrivateAccount' status for a given user, which hides their account from anyone who is not already an approved friend.
 
 **Authentication:** Requires a valid `sessionId`. The user is automatically extracted from the session.
 
@@ -238,7 +238,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
 - The user associated with `sessionId` exists.
 
 **Effects:**
-- Sets the `isPrivateAccount` status for the authenticated user to the provided `status`; returns `true` as `success`.
+- Sets the `isPrivateAccount` status for the authenticated user to the provided `status`, keeping their profile/feed hidden from non-friends when `true`; returns `true` as `success`.
 
 **Request Body:**
 ```json
