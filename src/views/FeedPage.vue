@@ -23,10 +23,10 @@
                     class="friend-avatar"
                   />
                   <div v-else class="friend-avatar fallback">
-                    {{ (friend.displayName || friend.id).charAt(0).toUpperCase() }}
+                    {{ (friend.displayName || 'Friend').charAt(0).toUpperCase() }}
                   </div>
                   <div class="friend-details">
-                    <span class="friend-name">{{ friend.displayName || friend.id }}</span>
+                    <span class="friend-name">{{ friend.displayName || 'Friend' }}</span>
                     <!-- <span v-if="friend.displayName && friend.displayName !== friend.id" class="friend-handle">
                       {{ friend.id }}
                     </span> -->
@@ -501,9 +501,9 @@
                     class="request-avatar"
                   />
                   <div v-else class="request-avatar fallback">
-                    {{ (request.displayName || request.requester).charAt(0).toUpperCase() }}
+                    {{ (request.displayName || 'Friend').charAt(0).toUpperCase() }}
                   </div>
-                  <span class="requester-name">{{ request.displayName || request.requester }}</span>
+                  <span class="requester-name">{{ request.displayName || 'Friend' }}</span>
                 </div>
                 <div class="request-actions">
                   <button
@@ -664,7 +664,7 @@ const filteredFriends = computed(() => {
   const query = friendSearchQuery.value.trim().toLowerCase()
   if (!query) return friends.value
   return friends.value.filter(friend => {
-    const name = friend.displayName || friend.id
+    const name = friend.displayName || 'Friend'
     return name.toLowerCase().includes(query)
   })
 })
@@ -1201,33 +1201,28 @@ async function declineRequest(requester: string) {
 }
 
 async function loadFriends() {
-  console.log('loadFriends called')
   loadingFriends.value = true
   try {
     const userId = getUserId()
     const sessionId = getSessionId()
-    console.log('loadFriends userId:', userId)
     if (!userId || !sessionId) {
-      console.log('No userId, skipping loadFriends')
       friends.value = []
       return
     }
 
-    console.log('Calling getFriends API...')
     const friendIds = await getFriends({ sessionId, user: userId })
-    console.log('getFriends result:', friendIds)
     const enrichedFriends = await Promise.all(
       friendIds.map(async (friendId: string) => {
         try {
-          const profile = await getProfile({ sessionId, user: friendId })
+          const preview = await resolveProfilePreview(friendId, sessionId)
           return {
             id: friendId,
-            displayName: profile?.displayName || friendId,
-            avatarUrl: profile?.avatarUrl,
+            displayName: preview.displayName || 'Friend',
+            avatarUrl: preview.avatarUrl,
           }
-        } catch (profileError) {
-          console.error('Failed to load friend profile:', profileError)
-          return { id: friendId }
+        } catch (previewError) {
+          console.error('Failed to resolve friend preview:', previewError)
+          return { id: friendId, displayName: 'Friend' }
         }
       })
     )
@@ -1258,10 +1253,12 @@ async function loadPendingRequests() {
         .map(async request => {
           const fallbackDisplayName =
             (request as any).displayName || (request as any).requesterDisplayName || ''
-          const preview = await resolveProfilePreview(request.requester, sessionId)
+          const preview = await resolveProfilePreview(request.requester, sessionId, fallbackDisplayName)
+          const displayName = preview.displayName || 'Friend'
+
           return {
             requester: request.requester,
-            displayName: preview.displayName || fallbackDisplayName || request.requester,
+            displayName,
             avatarUrl: preview.avatarUrl,
           }
         })
@@ -1294,10 +1291,22 @@ async function performAddFriendSearch(query: string) {
   }
 }
 
-async function resolveProfilePreview(userId: string, sessionId: string): Promise<ProfilePreview> {
+async function resolveProfilePreview(
+  userId: string,
+  sessionId: string,
+  fallbackDisplayName?: string
+): Promise<ProfilePreview> {
   if (!userId) return {}
-  if (profilePreviewCache.has(userId)) {
-    return profilePreviewCache.get(userId) || {}
+
+  const cached = profilePreviewCache.get(userId)
+  if (cached) {
+    if (!cached.displayName && fallbackDisplayName?.trim()) {
+      const normalized = fallbackDisplayName.trim()
+      const nextPreview = { ...cached, displayName: normalized }
+      profilePreviewCache.set(userId, nextPreview)
+      return nextPreview
+    }
+    return cached
   }
 
   let preview: ProfilePreview = {}
@@ -1307,29 +1316,38 @@ async function resolveProfilePreview(userId: string, sessionId: string): Promise
       const profile = await getProfile({ sessionId, user: userId })
       if (profile) {
         preview = {
-          displayName: profile.displayName,
+          displayName: profile.displayName?.trim(),
           avatarUrl: profile.avatarUrl,
         }
       }
     } catch (error) {
-      console.warn(`Pending requests: profile lookup failed for ${userId}`, error)
+      console.warn(`Profile lookup failed for ${userId}`, error)
     }
+  }
+
+  if (!preview.displayName && fallbackDisplayName?.trim()) {
+    preview.displayName = fallbackDisplayName.trim()
   }
 
   if (!preview.displayName) {
     try {
       const matches = await searchProfilesByDisplayName(userId)
       const exactMatch = matches.find(result => result.user === userId)
-      if (exactMatch) {
+      if (exactMatch?.displayName) {
         preview.displayName = exactMatch.displayName
       }
     } catch (searchError) {
-      console.error(`Pending requests: display-name search failed for ${userId}`, searchError)
+      console.error(`Display-name search failed for ${userId}`, searchError)
     }
   }
 
-  profilePreviewCache.set(userId, preview)
-  return preview
+  const normalizedPreview: ProfilePreview = {
+    displayName: preview.displayName?.trim(),
+    avatarUrl: preview.avatarUrl,
+  }
+
+  profilePreviewCache.set(userId, normalizedPreview)
+  return normalizedPreview
 }
 
 async function handleReaction(post: any, type: ReactionType) {

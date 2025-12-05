@@ -1898,7 +1898,7 @@ After a user logs in, all authenticated API requests should include a `sessionId
     {
       "pendingFriendships": [
         {
-          "requester": "string"
+          "requester": "ID"
         }
       ]
     }
