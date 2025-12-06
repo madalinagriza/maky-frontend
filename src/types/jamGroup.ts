@@ -59,6 +59,10 @@ export interface GetPlayableSongsForGroupPayload {
   group: string
 }
 
+export interface PlayableSongsForGroupResponse {
+  results: Array<{ song: any }>
+}
+
 export interface SuccessResponse {
   success: boolean
 }

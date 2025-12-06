@@ -13,6 +13,7 @@ import type {
   GetCommonChordsPayload,
   GetCommonChordsResponse,
   GetPlayableSongsForGroupPayload,
+  PlayableSongsForGroupResponse,
   SuccessResponse,
   ErrorResponse,
 } from '@/types/jamGroup'
@@ -211,10 +212,23 @@ export async function getPlayableSongsForGroup(groupId: string) {
     sessionId: requireSessionId('view playable songs'),
     group: groupId,
   }
-  const { data } = await apiClient.post<Song[] | ErrorResponse>(
+  const { data } = await apiClient.post<Song[] | PlayableSongsForGroupResponse | ErrorResponse>(
     `${JAM_GROUP_BASE}/_getPlayableSongsForGroup`,
     payload
   )
-  return ensureSuccess(data)
+  const result = ensureSuccess(data)
+  
+  // Handle wrapped response format { results: [{ song: {...} }] }
+  if (result && typeof result === 'object' && 'results' in result) {
+    const wrapped = result as PlayableSongsForGroupResponse
+    return wrapped.results.map(item => item.song as Song)
+  }
+  
+  // Handle direct array format
+  if (Array.isArray(result)) {
+    return result
+  }
+  
+  return []
 }
 

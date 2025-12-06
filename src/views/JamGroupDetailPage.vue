@@ -149,6 +149,29 @@
               </div>
               <div v-else>
                 <p class="song-count">{{ playableSongs.length }} songs your group can play together</p>
+                <ul class="playable-songs-list">
+                  <li v-for="song in playableSongs" :key="song._id" class="playable-song-item">
+                    <div class="song-info">
+                      <div class="song-header">
+                        <span class="song-title">{{ song.title }}</span>
+                        <span v-if="song.genre" class="song-genre-tag">{{ song.genre }}</span>
+                      </div>
+                      <span class="song-artist">{{ song.artist }}</span>
+                      <div class="song-chords">
+                        <span class="song-chords-label">Chords:</span>
+                        <div class="song-chords-list">
+                          <span
+                            v-for="chord in song.chords"
+                            :key="chord"
+                            class="song-chord-pill"
+                          >
+                            {{ chord }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
               </div>
             </section>
 
@@ -925,6 +948,90 @@ h3 {
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.playable-songs-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0 0;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.playable-song-item {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s;
+}
+
+.playable-song-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.playable-song-item:last-child {
+  border-bottom: none;
+}
+
+.song-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.song-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.song-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--contrast-top);
+}
+
+.song-artist {
+  color: var(--contrast-bottom);
+  font-size: 0.9rem;
+}
+
+.song-genre-tag {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.song-chords {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.song-chords-label {
+  color: var(--contrast-bottom);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.song-chords-list {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.song-chord-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--contrast-mid);
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 @media (max-width: 1024px) {

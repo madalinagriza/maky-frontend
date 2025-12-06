@@ -174,12 +174,11 @@ import { resolveChordName } from '@/services/chordService'
 import { searchByTitleOrArtist } from '@/services/songService'
 import { getSessionId, getUserId } from '@/utils/sessionStorage'
 import { useUserProfile } from '@/composables/useUserProfile'
+import { GENRE_OPTIONS } from '@/constants/genres'
 import type { Song } from '@/types/song'
 import type { KnownChord } from '@/types/chordLibrary'
 
-const availableGenres = [
-  'Rock', 'Pop', 'Country', 'Jazz', 'Blues', 'Folk', 'Classical', 'Metal', 'R&B', 'Reggae'
-]
+const availableGenres = [...GENRE_OPTIONS]
 
 const profile = reactive({
   displayName: '',
