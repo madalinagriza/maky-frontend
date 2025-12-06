@@ -85,6 +85,11 @@
               :key="entry.song._id"
               class="song-item"
             >
+              <SongPreview
+                :preview-url="entry.song.previewUrl"
+                :album-art-url="entry.song.albumArtUrl"
+                :title="entry.song.title"
+              />
               <div class="song-info">
                 <span class="song-title">{{ entry.song.title }}</span>
                 <span class="song-artist">{{ entry.song.artist }}</span>
@@ -170,6 +175,11 @@
           <div v-else class="song-list-wrapper">
             <ul class="song-list">
               <li v-for="song in paginatedPlayableSongs" :key="song._id" class="song-item">
+                <SongPreview
+                  :preview-url="song.previewUrl"
+                  :album-art-url="song.albumArtUrl"
+                  :title="song.title"
+                />
                 <div class="song-info">
                   <span class="song-title">{{ song.title }}</span>
                   <span class="song-artist">{{ song.artist }}</span>
@@ -233,6 +243,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import Layout from '@/components/Layout.vue'
 import ChordDiagram from '@/components/ChordDiagram.vue'
+import SongPreview from '@/components/SongPreview.vue'
 import { getPlayableSongs, getSongCatalog } from '@/services/songService'
 import {
   getSongsInProgress,

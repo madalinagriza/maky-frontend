@@ -9,6 +9,8 @@ export interface Song {
   difficulty?: number
   tags?: string[]
   source?: string
+  previewUrl?: string
+  albumArtUrl?: string
 }
 
 export interface GetPlayableSongsPayload {
