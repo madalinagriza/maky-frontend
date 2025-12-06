@@ -170,6 +170,7 @@ import {
   updateChordMastery as updateChordMasteryAPI,
   removeChordFromInventory,
 } from '@/services/chordLibraryService'
+import { resolveChordName } from '@/services/chordService'
 import { searchByTitleOrArtist } from '@/services/songService'
 import { getSessionId, getUserId } from '@/utils/sessionStorage'
 import { useUserProfile } from '@/composables/useUserProfile'
@@ -342,9 +343,15 @@ async function addChord() {
     const sessionId = getSessionId()
     if (!sessionId) return
 
+    const canonicalChordName = await resolveChordName(newChordName.value)
+    if (!canonicalChordName) {
+      alert('No chord found with that name. Please double-check your spelling.')
+      return
+    }
+
     await addChordToInventory({
       sessionId,
-      chord: newChordName.value.trim(),
+      chord: canonicalChordName,
       mastery: newChordMastery.value,
     })
 

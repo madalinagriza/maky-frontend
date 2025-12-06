@@ -10,8 +10,9 @@ import type {
 } from '@/types/song'
 
 const SONG_BASE = '/Song'
-const SONG_CATALOG_QUERIES = ['la', 'er', 'an', 'ti', 'on', 'ch', 'st', 'ra']
-const MAX_CATALOG_SIZE = 120
+const SONG_CATALOG_QUERIES = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  .split('')
+  .concat(['the', 'ing', 'ion', 'ch', 'st'])
 let cachedSongCatalog: Song[] | null = null
 
 function ensureSuccess<T>(payload: T | ErrorResponse): T {
@@ -92,9 +93,6 @@ export async function getSongCatalog(options: { refresh?: boolean } = {}) {
       console.warn(`Song search failed for query "${query}":`, error)
     }
 
-    if (songMap.size >= MAX_CATALOG_SIZE) {
-      break
-    }
   }
 
   cachedSongCatalog = Array.from(songMap.values())

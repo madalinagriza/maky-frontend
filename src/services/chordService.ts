@@ -7,6 +7,8 @@ import type {
   AvailableChordDiagramsResponse,
   RawChordDiagramResponse,
   ChordVocabulary,
+  ChordSearchResponse,
+  ChordSearchEntry,
 } from '@/types/chord'
 import type { ChordDiagram } from '@/types/recommendation'
 
@@ -46,6 +48,34 @@ function normalizeChordResponse(payload: GetAllChordsResponse): Chord[] {
   return []
 }
 
+function extractChord(entry: ChordSearchEntry | null | undefined): Chord | undefined {
+  if (!entry) {
+    return undefined
+  }
+
+  if ('name' in entry && 'notes' in entry) {
+    return entry as Chord
+  }
+
+  if ('chord' in entry && entry.chord) {
+    return entry.chord as Chord
+  }
+
+  return undefined
+}
+
+function normalizeChordSearchResponse(payload: ChordSearchResponse): Chord[] {
+  if (Array.isArray(payload)) {
+    return payload.map(extractChord).filter(Boolean) as Chord[]
+  }
+
+  if (payload && typeof payload === 'object' && 'results' in payload && Array.isArray(payload.results)) {
+    return payload.results.map(extractChord).filter(Boolean) as Chord[]
+  }
+
+  return []
+}
+
 let cachedChords: Chord[] | null = null
 let cachedVocabulary: ChordVocabulary | null = null
 
@@ -64,13 +94,45 @@ export async function getAllChords(): Promise<Chord[]> {
 }
 
 export async function searchChordsByName(query: string): Promise<Chord[]> {
-  const normalizedQuery = query.trim().toLowerCase()
-  if (!normalizedQuery) {
+  const trimmedQuery = query.trim()
+  if (!trimmedQuery) {
     return []
   }
 
-  const chords = await getAllChords()
-  return chords.filter(chord => chord.name.toLowerCase().includes(normalizedQuery))
+  try {
+    const { data } = await apiClient.post<ChordSearchResponse | ErrorResponse>(
+      `${CHORD_BASE}/_searchByName`,
+      { query: trimmedQuery },
+    )
+    const payload = ensureSuccess(data)
+    const matches = normalizeChordSearchResponse(payload)
+    if (matches.length) {
+      return matches
+    }
+  } catch (error) {
+    console.warn('Chord search fallback to cached list due to error:', error)
+  }
+
+  const localChords = await getAllChords()
+  const normalizedQuery = trimmedQuery.toLowerCase()
+  return localChords.filter(chord => chord.name.toLowerCase().includes(normalizedQuery))
+}
+
+export async function resolveChordName(chordName: string): Promise<string | null> {
+  const trimmedName = chordName?.trim()
+  if (!trimmedName) {
+    return null
+  }
+
+  const matches = await searchChordsByName(trimmedName)
+  if (!matches.length) {
+    return null
+  }
+
+  const normalized = trimmedName.toLowerCase()
+  const exactMatch = matches.find(chord => chord.name.toLowerCase() === normalized)
+  const fallback = exactMatch ?? matches[0]
+  return fallback ? fallback.name : null
 }
 
 function normalizeStringArray(value: unknown): string[] {

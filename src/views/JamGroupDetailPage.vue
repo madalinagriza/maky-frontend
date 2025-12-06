@@ -106,9 +106,19 @@
                   <h3>🎸 Active Jam Session</h3>
                   <p>{{ activeSession.participants.length }} participants jamming now</p>
                 </div>
-                <button @click="joinActiveSession" class="join-session-btn">
-                  Join Session
-                </button>
+                <div class="active-banner-actions">
+                  <button @click="joinActiveSession" class="join-session-btn">
+                    Join Session
+                  </button>
+                  <button
+                    v-if="canEndActiveSession"
+                    @click="confirmEndActiveSession"
+                    class="end-session-btn"
+                    :disabled="endingActiveSession"
+                  >
+                    {{ endingActiveSession ? 'Ending...' : 'End Session' }}
+                  </button>
+                </div>
               </div>
             </section>
 
@@ -194,6 +204,7 @@ import {
   getJamSessionsForGroup,
   getActiveSessionForGroup,
   startJamSession,
+  endJamSession,
 } from '@/services/jamSessionService'
 import { getFriends } from '@/services/friendshipService'
 import { getProfile } from '@/services/userProfileService'
@@ -221,6 +232,7 @@ const loadingPlayableSongs = ref(false)
 const loadingFriends = ref(false)
 
 const creatingSession = ref(false)
+const endingActiveSession = ref(false)
 const removingMember = ref<string | null>(null)
 const leavingGroup = ref(false)
 const disbanding = ref(false)
@@ -255,6 +267,12 @@ const availableFriends = computed(() => {
   if (!group.value) return []
   const memberSet = new Set(group.value.members)
   return friends.value.filter(friend => !memberSet.has(friend.id))
+})
+
+const canEndActiveSession = computed(() => {
+  if (!activeSession.value) return false
+  const isParticipant = activeSession.value.participants.includes(currentUsername.value)
+  return isParticipant || isCreator.value
 })
 
 async function loadGroupDetails() {
@@ -405,6 +423,20 @@ async function createNewSession() {
 async function joinActiveSession() {
   if (activeSession.value) {
     router.push(`/jam/${groupId.value}/session/${activeSession.value._id}`)
+  }
+}
+
+async function confirmEndActiveSession() {
+  if (!activeSession.value || endingActiveSession.value) return
+  if (!confirm('End the active jam session for everyone?')) return
+  endingActiveSession.value = true
+  try {
+    await endJamSession(activeSession.value._id)
+    await Promise.all([loadActiveSession(), loadSessions()])
+  } catch (err) {
+    alert(err instanceof Error ? err.message : 'Failed to end session')
+  } finally {
+    endingActiveSession.value = false
   }
 }
 
@@ -739,6 +771,13 @@ h3 {
   padding: 1.5rem;
 }
 
+.active-banner-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .active-banner h3 {
   margin: 0 0 0.5rem 0;
 }
@@ -759,6 +798,21 @@ h3 {
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 1rem;
+}
+
+.end-session-btn {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.end-session-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.3);
 }
 
 .create-session-btn {

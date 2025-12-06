@@ -246,6 +246,7 @@ import {
   updateChordMastery as updateChordMasteryAPI,
   removeChordFromInventory,
 } from '@/services/chordLibraryService'
+import { resolveChordName } from '@/services/chordService'
 import { getSessionId, getUserId } from '@/utils/sessionStorage'
 import { getProfile } from '@/services/userProfileService'
 import type { Song } from '@/types/song'
@@ -642,9 +643,15 @@ async function startLearningChord(chord: string) {
     const sessionId = getSessionId()
     if (!sessionId) return
 
+    const canonicalChordName = await resolveChordName(chord)
+    if (!canonicalChordName) {
+      alert('Unable to find that chord right now. Please try a different name.')
+      return
+    }
+
     await addChordToInventory({
       sessionId,
-      chord,
+      chord: canonicalChordName,
       mastery: 'in progress',
     })
     // Reload data

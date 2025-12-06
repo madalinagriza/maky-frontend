@@ -154,7 +154,11 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Layout from '@/components/Layout.vue'
 import { useAuth } from '@/composables/useAuth'
-import { getCommonChordsForGroup, getPlayableSongsForGroup } from '@/services/jamGroupService'
+import {
+  getCommonChordsForGroup,
+  getPlayableSongsForGroup,
+  getJamGroupById,
+} from '@/services/jamGroupService'
 import {
   getJamSessionById,
   endJamSession,
@@ -162,13 +166,15 @@ import {
   updateSharedSongStatus,
 } from '@/services/jamSessionService'
 import type { JamSession } from '@/types/jamSession'
+import type { JamGroup } from '@/types/jamGroup'
 import type { Song } from '@/types/song'
 
 const router = useRouter()
 const route = useRoute()
-const { username } = useAuth()
+const { username, userId } = useAuth()
 
 const session = ref<JamSession | null>(null)
+const group = ref<JamGroup | null>(null)
 const commonChords = ref<string[]>([])
 const playableSongs = ref<Song[]>([])
 const currentRecommendationIndex = ref(0)
@@ -183,8 +189,22 @@ const sharingSong = ref(false)
 const groupId = computed(() => route.params.groupId as string)
 const sessionId = computed(() => route.params.sessionId as string)
 const currentUsername = computed(() => username.value || '')
+const currentUserId = computed(() => userId.value || '')
+const isSessionParticipant = computed(() => {
+  if (!session.value) return false
+  const identifiers = [currentUserId.value, currentUsername.value].filter(Boolean)
+  return identifiers.some(id => session.value?.participants.includes(id))
+})
+
+const isGroupCreator = computed(() => {
+  if (!group.value) return false
+  const identifiers = [currentUserId.value, currentUsername.value].filter(Boolean)
+  return identifiers.includes(group.value.creator)
+})
+
 const canEndSession = computed(() => {
-  return session.value?.participants.includes(currentUsername.value)
+  if (!session.value) return false
+  return isSessionParticipant.value || isGroupCreator.value
 })
 
 const currentRecommendation = computed(() => {
@@ -230,6 +250,14 @@ async function loadPlayableSongs() {
     console.error('Error loading playable songs:', err)
   } finally {
     loadingPlayableSongs.value = false
+  }
+}
+
+async function loadGroupDetails() {
+  try {
+    group.value = await getJamGroupById(groupId.value)
+  } catch (err) {
+    console.error('Error loading group details:', err)
   }
 }
 
@@ -283,6 +311,7 @@ function getSongTitle(songId: string): string {
 }
 
 onMounted(() => {
+  loadGroupDetails()
   loadSession()
 })
 </script>

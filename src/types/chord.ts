@@ -31,6 +31,14 @@ export interface ChordVocabulary {
   totalCount: number
 }
 
+export type ChordSearchEntry = Chord | { chord?: Chord }
+
+export type ChordSearchResponse =
+  | ChordSearchEntry[]
+  | {
+      results: ChordSearchEntry[]
+    }
+
 export type AvailableChordDiagramsResponse =
   | string[]
   | {
