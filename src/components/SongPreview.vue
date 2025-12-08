@@ -91,30 +91,31 @@ onBeforeUnmount(() => {
 .song-preview {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 20px;
 }
 
 .album-art {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
+  width: 120px;
+  height: 120px;
+  border-radius: 6px;
   object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .album-art-placeholder {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
+  width: 120px;
+  height: 120px;
+  border-radius: 6px;
   background: #2d2d2d;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 24px;
 }
 
 .preview-btn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: none;
   background: #818cf8;
@@ -123,8 +124,9 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 16px;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .preview-btn:hover {
@@ -137,13 +139,14 @@ onBeforeUnmount(() => {
 }
 
 .no-preview {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.4;
-  font-size: 16px;
+  opacity: 0.8;
+  font-size: 18px;
+  flex-shrink: 0;
 }
 
 audio {
