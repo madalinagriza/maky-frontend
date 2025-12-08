@@ -79,9 +79,52 @@
           <div v-else-if="practiceSongs.length === 0" class="empty-state">
             You haven't started learning any songs yet.
           </div>
-          <ul v-else class="song-list">
+          <div v-else>
+            <div class="search-section">
+              <input
+                v-model="practiceSearchQuery"
+                type="text"
+                placeholder="Search your songs..."
+                class="search-input"
+              />
+            </div>
+            <div class="filter-section practice-filter">
+              <span class="filter-label">Show only:</span>
+              <label class="filter-option">
+                <input type="checkbox" v-model="showOnlyMasteredPracticeSongs" />
+                <span>All chords mastered</span>
+              </label>
+            </div>
+            <div class="genre-inline-filter" v-if="practiceGenreOptions.length">
+              <span class="genre-inline-label">Sort By</span>
+              <div class="genre-inline-options">
+                <button
+                  v-for="genre in practiceGenreOptions"
+                  :key="`practice-genre-${genre}`"
+                  type="button"
+                  class="genre-inline-pill"
+                  :class="{ 'genre-inline-pill--active': isPracticeGenreSelected(genre) }"
+                  @click="togglePracticeGenre(genre)"
+                  :aria-pressed="isPracticeGenreSelected(genre)"
+                >
+                  {{ genre }}
+                </button>
+              </div>
+              <button
+                type="button"
+                class="genre-inline-clear"
+                @click="clearPracticeGenreFilters"
+                :disabled="!selectedPracticeGenres.length"
+              >
+                Clear
+              </button>
+            </div>
+            <div v-if="filteredPracticeSongs.length === 0" class="empty-state">
+              No songs match your search.
+            </div>
+            <ul v-else class="song-list">
             <li
-              v-for="entry in practiceSongs"
+              v-for="entry in filteredPracticeSongs"
               :key="entry.song._id"
               class="song-item"
             >
@@ -138,7 +181,8 @@
                 </button>
               </div>
             </li>
-          </ul>
+            </ul>
+          </div>
         </section>
 
         <section id="section-learn-song" class="learn-section">
@@ -267,13 +311,14 @@ import {
 } from '@/services/chordLibraryService'
 import { getSessionId, getUserId } from '@/utils/sessionStorage'
 import { getProfile } from '@/services/userProfileService'
-import { mapGenreToOption, type GenreOption } from '@/constants/genres'
+import { GENRE_OPTIONS, mapGenreToOption, type GenreOption } from '@/constants/genres'
 import type { Song } from '@/types/song'
 import type { SongProgress } from '@/types/songLibrary'
 import type { KnownChord } from '@/types/chordLibrary'
 import type { ChordDiagram as ChordDiagramType } from '@/types/recommendation'
 
 const searchQuery = ref('')
+const practiceSearchQuery = ref('')
 const playableSongs = ref<Song[]>([])
 const recommendedChord = ref<string | null>(null)
 const recommendedChordDiagram = ref<ChordDiagramType | null>(null)
@@ -294,6 +339,9 @@ const showOnlyMasteredSongs = ref(false)
 const showOnlyPreferredGenres = ref(false)
 const SONGS_PER_PAGE = 10
 const currentSongPage = ref(1)
+const practiceGenreOptions = GENRE_OPTIONS
+const selectedPracticeGenres = ref<GenreOption[]>([])
+const showOnlyMasteredPracticeSongs = ref(false)
 const chordMasteryLookup = computed<Record<string, ChordMasteryLevel>>(() => {
   const lookup: Record<string, ChordMasteryLevel> = {}
   knownChords.value.forEach(entry => {
@@ -339,6 +387,28 @@ const practiceSongIds = computed(() =>
       .filter((id): id is string => Boolean(id))
   )
 )
+
+const filteredPracticeSongs = computed(() => {
+  let songs = practiceSongs.value
+
+  if (selectedPracticeGenres.value.length) {
+    const allowedGenres = new Set(selectedPracticeGenres.value)
+    songs = songs.filter(entry => allowedGenres.has(resolveSongGenreOption(entry.song)))
+  }
+
+  if (showOnlyMasteredPracticeSongs.value) {
+    songs = songs.filter(entry => areAllChordsMastered(entry.song))
+  }
+
+  const query = practiceSearchQuery.value.trim().toLowerCase()
+  if (!query) return songs
+
+  return songs.filter(entry => {
+    const title = entry.song?.title?.toLowerCase() ?? ''
+    const artist = entry.song?.artist?.toLowerCase() ?? ''
+    return title.includes(query) || artist.includes(query)
+  })
+})
 
 const availablePlayableSongs = computed(() =>
   playableSongs.value.filter(song => !practiceSongIds.value.has(song._id))
@@ -505,6 +575,24 @@ function matchesPreferredGenre(song: Song) {
   if (songGenres.length === 0) return false
 
   return songGenres.some(genre => preferredGenreSet.value.has(genre))
+}
+
+function togglePracticeGenre(genre: GenreOption) {
+  const next = new Set(selectedPracticeGenres.value)
+  if (next.has(genre)) {
+    next.delete(genre)
+  } else {
+    next.add(genre)
+  }
+  selectedPracticeGenres.value = Array.from(next)
+}
+
+function isPracticeGenreSelected(genre: GenreOption) {
+  return selectedPracticeGenres.value.includes(genre)
+}
+
+function clearPracticeGenreFilters() {
+  selectedPracticeGenres.value = []
 }
 
 function goToSongPage(page: number) {
@@ -836,6 +924,63 @@ h1 {
   margin-bottom: 1rem;
 }
 
+.genre-inline-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.genre-inline-label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--contrast-mid);
+}
+
+.genre-inline-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex: 1 1 auto;
+}
+
+.genre-inline-pill {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.85rem;
+  background: transparent;
+  color: #f3f4f6;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.genre-inline-pill--active {
+  background: var(--button);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.genre-inline-clear {
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.genre-inline-clear:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .filter-section {
   display: flex;
   flex-wrap: wrap;
@@ -844,6 +989,10 @@ h1 {
   margin-bottom: 1.25rem;
   font-size: 0.9rem;
   color: #cbd5f5;
+}
+
+.practice-filter {
+  margin-top: 0.5rem;
 }
 
 .filter-label {
