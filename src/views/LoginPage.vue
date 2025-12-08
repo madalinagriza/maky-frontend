@@ -24,13 +24,24 @@
 
         <label>
           <span>Password</span>
-          <input
-            v-model="loginForm.password"
-            type="password"
-            name="current-password"
-            autocomplete="current-password"
-            required
-          />
+          <div class="password-field">
+            <input
+              v-model="loginForm.password"
+              :type="showPassword ? 'text' : 'password'"
+              name="current-password"
+              autocomplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              @click="togglePasswordVisibility"
+              :aria-pressed="showPassword"
+              :aria-label="showPassword ? 'Hide password' : 'Show password'"
+            >
+              <span aria-hidden="true">{{ showPassword ? 'Hide' : 'Show' }}</span>
+            </button>
+          </div>
         </label>
 
         <button type="submit" :disabled="!canSubmitLogin || loading">
@@ -71,6 +82,7 @@ const loginForm = reactive({
 
 const loading = ref(false)
 const feedback = ref<{ kind: 'success' | 'error'; message: string } | null>(null)
+const showPassword = ref(false)
 
 const canSubmitLogin = computed(() => {
   return loginForm.username.trim().length >= 3 && loginForm.password.trim() !== ''
@@ -142,6 +154,10 @@ async function hydrateProfile({
   } catch (error) {
     setProfile({ displayName: safeFallback, avatarUrl: null })
   }
+}
+
+function togglePasswordVisibility() {
+  showPassword.value = !showPassword.value
 }
 </script>
 
@@ -216,6 +232,33 @@ input[type='password'] {
   background: var(--main-top);
   color: #f9fafb;
   font-size: 1rem;
+}
+
+.password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 3.25rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.35rem;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  border-radius: 0.5rem;
 }
 
 input:focus {

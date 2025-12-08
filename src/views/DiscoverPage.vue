@@ -196,6 +196,16 @@
                   </div>
                 </div>
               </div>
+              <div class="song-card-actions">
+                <button
+                  type="button"
+                  class="song-learn-btn"
+                  @click="handleStartLearningSong(song._id)"
+                  :disabled="learningSongId === song._id"
+                >
+                  {{ learningSongId === song._id ? 'Adding...' : 'Start Learning' }}
+                </button>
+              </div>
             </li>
           </ul>
 
@@ -230,6 +240,8 @@ import Layout from '@/components/Layout.vue'
 import ChordDiagram from '@/components/ChordDiagram.vue'
 import { getChordVocabulary, getChordDiagramByName } from '@/services/chordService'
 import { getSongCatalog } from '@/services/songService'
+import { startLearningSong as startLearningSongAPI } from '@/services/songLibraryService'
+import { getSessionId } from '@/utils/sessionStorage'
 import { GENRE_OPTIONS, mapGenreToOption, type GenreOption } from '@/constants/genres'
 import type { ChordDiagram as ChordDiagramType } from '@/types/recommendation'
 import type { Song } from '@/types/song'
@@ -258,6 +270,7 @@ const songQuery = ref('')
 const currentSongPage = ref(1)
 const availableGenres = GENRE_OPTIONS
 const selectedGenres = ref<GenreOption[]>([])
+const learningSongId = ref<string | null>(null)
 
 const normalizedChordQuery = computed(() => chordQuery.value.trim().toLowerCase())
 const canSearchChord = computed(() => Boolean(normalizedChordQuery.value))
@@ -477,6 +490,35 @@ function goToPreviousSongPage() {
 function goToNextSongPage() {
   if (canGoToNextSongPage.value) {
     currentSongPage.value += 1
+  }
+}
+
+async function handleStartLearningSong(songId: string) {
+  const sessionId = getSessionId()
+  if (!sessionId) {
+    alert('Please log in to start learning songs.')
+    return
+  }
+
+  if (!songId) {
+    return
+  }
+
+  learningSongId.value = songId
+  try {
+    await startLearningSongAPI({
+      sessionId,
+      song: songId,
+      mastery: 'in progress',
+    })
+    alert('Song added to your learning list!')
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to add this song right now.'
+    alert(message)
+  } finally {
+    if (learningSongId.value === songId) {
+      learningSongId.value = null
+    }
   }
 }
 
@@ -772,6 +814,32 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.song-card-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.song-learn-btn {
+  border: none;
+  border-radius: 0.65rem;
+  padding: 0.5rem 1.1rem;
+  background: var(--button);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.song-learn-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.song-learn-btn:not(:disabled):hover {
+  transform: translateY(-1px);
 }
 
 .song-artist {
