@@ -129,6 +129,13 @@
                       : 'Update'
                   }}
                 </button>
+                <button
+                  class="remove-btn"
+                  @click="removePracticeSong(entry.song._id)"
+                  :disabled="removingSongId === entry.song._id"
+                >
+                  {{ removingSongId === entry.song._id ? 'Removing...' : 'Remove' }}
+                </button>
               </div>
             </li>
           </ul>
@@ -249,6 +256,7 @@ import {
   getSongsInProgress,
   startLearningSong as startLearningSongAPI,
   updateSongMastery as updateSongMasteryAPI,
+  stopLearningSong as stopLearningSongAPI,
 } from '@/services/songLibraryService'
 import { requestChordRecommendation, requestSongUnlockRecommendation } from '@/services/recommendationService'
 import {
@@ -276,6 +284,7 @@ const practiceSongs = ref<SongProgress[]>([])
 const loadingPracticeSongs = ref(false)
 const songMasterySelections = ref<Record<string, SongMasteryLevel>>({})
 const updatingSongMastery = ref<string | null>(null)
+const removingSongId = ref<string | null>(null)
 const knownChords = ref<KnownChord[]>([])
 const loadingKnownChords = ref(false)
 const chordMasterySelections = ref<Record<string, ChordMasteryLevel>>({})
@@ -715,6 +724,25 @@ async function updatePracticeSongMastery(songId: string) {
   } finally {
     if (updatingSongMastery.value === songId) {
       updatingSongMastery.value = null
+    }
+  }
+}
+
+async function removePracticeSong(songId: string) {
+  if (!songId || removingSongId.value) return
+
+  try {
+    const sessionId = getSessionId()
+    if (!sessionId) return
+
+    removingSongId.value = songId
+    await stopLearningSongAPI({ sessionId, song: songId })
+    await loadPracticeSongs(sessionId)
+  } catch (error) {
+    console.error('Failed to remove practice song:', error)
+  } finally {
+    if (removingSongId.value === songId) {
+      removingSongId.value = null
     }
   }
 }

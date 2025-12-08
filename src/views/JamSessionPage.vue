@@ -51,13 +51,21 @@
           <section class="recommendations-section">
             <div class="section-header">
               <h2>Song Recommendations</h2>
-              <button
-                v-if="playableSongs.length > 1"
-                @click="nextRecommendation"
-                class="next-btn"
-              >
-                Next Song →
-              </button>
+              <div class="recommendation-nav" v-if="playableSongs.length > 1">
+                <button
+                  v-if="currentRecommendationIndex > 0"
+                  @click="previousRecommendation"
+                  class="next-btn"
+                >
+                  ← Previous
+                </button>
+                <button
+                  @click="nextRecommendation"
+                  class="next-btn"
+                >
+                  Next →
+                </button>
+              </div>
             </div>
 
             <div v-if="loadingPlayableSongs" class="loading-small">Loading recommendations...</div>
@@ -114,7 +122,7 @@
                 <div class="shared-song-info">
                   <div>
                     <span class="shared-song-title">{{ getSongTitle(sharedSong.song) }}</span>
-                    <span class="shared-by">shared by {{ sharedSong.participant }}</span>
+                    <span class="shared-by">shared by {{ getParticipantDisplayName(sharedSong.participant) }}</span>
                   </div>
                   <span :class="['song-status', sharedSong.currentStatus.toLowerCase().replace(' ', '-')]">
                     {{ sharedSong.currentStatus }}
@@ -165,6 +173,8 @@ import {
   shareSongInSession,
   updateSharedSongStatus,
 } from '@/services/jamSessionService'
+import { getProfile } from '@/services/userProfileService'
+import { getSessionId } from '@/utils/sessionStorage'
 import type { JamSession } from '@/types/jamSession'
 import type { JamGroup } from '@/types/jamGroup'
 import type { Song } from '@/types/song'
@@ -178,6 +188,7 @@ const group = ref<JamGroup | null>(null)
 const commonChords = ref<string[]>([])
 const playableSongs = ref<Song[]>([])
 const currentRecommendationIndex = ref(0)
+const participantDisplayNames = ref<Record<string, string>>({})
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -212,6 +223,48 @@ const currentRecommendation = computed(() => {
   return playableSongs.value[currentRecommendationIndex.value]
 })
 
+function getParticipantDisplayName(userId: string) {
+  return participantDisplayNames.value[userId] || userId
+}
+
+async function hydrateParticipantDisplayNames(jamSession: JamSession | null) {
+  if (!jamSession) return
+
+  const ids = new Set<string>()
+  const sharedSongs = jamSession.sharedSongs || []
+  sharedSongs.forEach(song => {
+    if (song?.participant) ids.add(song.participant)
+  })
+  const participants = jamSession.participants || []
+  participants.forEach(participant => {
+    if (participant) ids.add(participant)
+  })
+
+  const missing = Array.from(ids).filter(id => id && !participantDisplayNames.value[id])
+  if (!missing.length) return
+
+  const sessionToken = getSessionId()
+  const nextMap = { ...participantDisplayNames.value }
+
+  await Promise.all(
+    missing.map(async userId => {
+      try {
+        const payload = sessionToken
+          ? { sessionId: sessionToken, user: userId }
+          : { user: userId }
+        const profile = await getProfile(payload)
+        const displayName = profile?.displayName?.trim()
+        nextMap[userId] = displayName || userId
+      } catch (error) {
+        console.warn('Failed to resolve participant display name', userId, error)
+        nextMap[userId] = userId
+      }
+    })
+  )
+
+  participantDisplayNames.value = nextMap
+}
+
 async function loadSession() {
   loading.value = true
   error.value = null
@@ -221,7 +274,11 @@ async function loadSession() {
       error.value = 'Session not found'
       return
     }
-    await Promise.all([loadCommonChords(), loadPlayableSongs()])
+    await Promise.all([
+      loadCommonChords(),
+      loadPlayableSongs(),
+      hydrateParticipantDisplayNames(session.value),
+    ])
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load session'
     console.error('Error loading session:', err)
@@ -264,6 +321,10 @@ async function loadGroupDetails() {
 function nextRecommendation() {
   currentRecommendationIndex.value =
     (currentRecommendationIndex.value + 1) % playableSongs.value.length
+}
+
+function previousRecommendation() {
+  currentRecommendationIndex.value = Math.max(0, currentRecommendationIndex.value - 1)
 }
 
 async function practiceThisSong() {
@@ -460,6 +521,12 @@ h2 {
 
 .section-header h2 {
   margin: 0;
+}
+
+.recommendation-nav {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .next-btn {
