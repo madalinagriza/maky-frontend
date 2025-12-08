@@ -118,7 +118,7 @@ onBeforeUnmount(() => {
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: #818cf8;
+  background: #D94634;
   color: white;
   cursor: pointer;
   display: flex;
@@ -130,12 +130,12 @@ onBeforeUnmount(() => {
 }
 
 .preview-btn:hover {
-  background: #6366f1;
+  background: #F8717133;
   transform: scale(1.1);
 }
 
 .preview-btn.playing {
-  background: #10b981;
+  background: #FAD386;
 }
 
 .no-preview {
