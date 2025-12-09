@@ -1106,7 +1106,59 @@ After a user logs in, all authenticated API requests should include a `sessionId
 }
 ```
 ---
+---
 
+### POST /api/Post/_getAllPersonalPosts
+
+**Description:** Retrieves every post (both `PUBLIC` and `PRIVATE`) for the authenticated user. The `user` parameter indicates whose posts are being requested, but the session must belong to that same user before any data is returned.
+
+**Authentication:** Requires a valid `sessionId`.
+
+**Requirements:**
+- The `sessionId` belongs to the same user identified by `user`.
+
+**Effects:**
+- Returns all posts authored by the authenticated user, ordered by creation date (newest first), wrapped in the `{ "results": [...], "error": string | null }` envelope so authentication failures can be surfaced consistently.
+
+**Request Body:**
+```json
+{
+  "sessionId": "string",
+  "user": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+{
+  "results": [
+    {
+      "post": {
+        "_id": "string",
+        "author": "string",
+        "content": "string",
+        "items": ["string"],
+        "postType": "string",
+        "visibility": "string",
+        "createdAt": "string",
+        "editedAt": "string"
+      }
+    }
+  ],
+  "error": null
+}
+```
+
+**Error Response Body:**
+```json
+{
+  "results": [],
+  "error": "string"
+}
+```
+---
+
+---
 ### POST /api/Post/_getPublicPostsOfUsers
 
 **Description:** Retrieves public posts from a supplied list of users. A `sessionId` is required so that future logic can verify follower or friend relationships for the requesting user.
