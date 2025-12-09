@@ -3,8 +3,11 @@
     <div class="discover-container">
       <header class="discover-header">
         <div>
-          <p class="eyebrow">Explore</p>
           <h1>Discover</h1>
+          <p class="discover-lead">
+            Explore new chords and browse through all songs. Stack crisp diagrams, spotlight unexpected
+            artists, and lock in your next tune.
+          </p>
         </div>
       </header>
 
@@ -114,6 +117,13 @@
                   <ChordDiagram :diagram="diagram" :width="150" />
                 </div>
               </div>
+              <details class="diagram-explainer">
+                <summary>Explain Diagram</summary>
+                <p>
+                  The horizontal lines show the guitar's strings, starting from the thickest at the top to the thinnest at the bottom.
+                  Place your numbered fingers on the strings exactly where the dots appear, and strum the strings that are shown.
+                </p>
+              </details>
             </div>
             <div v-else-if="selectedChord && !chordSupportsDiagram(selectedChord)">
               <p class="chord-status">
@@ -544,6 +554,13 @@ onMounted(() => {
   gap: 2rem;
 }
 
+.discover-lead {
+  margin: 0.75rem 0 0;
+  color: var(--contrast-mid);
+  max-width: none;
+  font-size: 1rem;
+}
+
 
 .eyebrow {
   font-size: 0.85rem;
@@ -754,6 +771,26 @@ h1 {
   border-radius: 0.75rem;
   padding: 1rem;
   text-align: center;
+}
+
+.diagram-explainer {
+  margin-top: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--contrast-mid);
+}
+
+.diagram-explainer summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--contrast-top);
+}
+
+.diagram-explainer p {
+  margin: 0.5rem 0 0;
+  line-height: 1.5;
 }
 
 .song-section {
