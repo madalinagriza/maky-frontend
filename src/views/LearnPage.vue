@@ -302,7 +302,7 @@ import Layout from '@/components/Layout.vue'
 import ChordDiagram from '@/components/ChordDiagram.vue'
 import SongPreview from '@/components/SongPreview.vue'
 import ChordTooltip from '@/components/ChordTooltip.vue'
-import { getPlayableSongs } from '@/services/songService'
+import { getPlayableSongs, getSongCatalog } from '@/services/songService'
 import {
   getSongsInProgress,
   startLearningSong as startLearningSongAPI,
@@ -698,10 +698,16 @@ async function loadData() {
       .filter(isValidSong)
 
     // 2. Build a broader song catalog for recommendations (fallback to playable songs)
-    // Optimization: Backend now handles song catalog, so we don't need to fetch it here.
-    // const catalogSongs = await getSongCatalog()
-    
-    await populateChordRecommendation({ knownChords: knownChordNames })
+    const catalogSongs = await getSongCatalog()
+    const recommendationSource = catalogSongs.length > 0 ? catalogSongs : playableSongs.value
+
+    if (recommendationSource.length === 0) {
+      recommendedChord.value = null
+      unlockedSongs.value = []
+      return
+    }
+
+    await populateChordRecommendation({ knownChords: knownChordNames, allSongs: recommendationSource })
 
   } catch (error) {
     console.error('Failed to load data:', error)
@@ -713,38 +719,59 @@ async function loadData() {
 
 async function populateChordRecommendation({
   knownChords,
+  allSongs,
 }: {
   knownChords: string[]
+  allSongs: Song[]
 }) {
+  console.log('[LearnPage] populateChordRecommendation called', {
+    knownChordsCount: knownChords.length,
+    allSongsCount: allSongs.length,
+    knownChords
+  })
+  
   try {
+    console.log('[LearnPage] Calling requestChordRecommendation...')
     const recResponse = await requestChordRecommendation({
       knownChords,
+      allSongs,
     })
+    console.log('[LearnPage] requestChordRecommendation completed:', recResponse)
+    
     const chordCandidate = recResponse.recommendedChord?.trim()
     recommendedChord.value = chordCandidate || null
     // Store the first diagram voicing if available
     recommendedChordDiagram.value = recResponse.diagram?.[0] ?? null
+    
+    console.log('[LearnPage] Set recommendedChord:', chordCandidate)
   } catch (error) {
-    console.error('Failed to fetch chord recommendation:', error)
+    console.error('[LearnPage] Failed to fetch chord recommendation:', error)
     recommendedChord.value = null
     recommendedChordDiagram.value = null
   }
 
   if (!recommendedChord.value) {
+    console.log('[LearnPage] No recommended chord, skipping unlock recommendation')
     unlockedSongs.value = []
     return
   }
 
   try {
+    console.log('[LearnPage] Calling requestSongUnlockRecommendation for:', recommendedChord.value)
     const unlockResponse = await requestSongUnlockRecommendation({
       knownChords,
       potentialChord: recommendedChord.value,
+      allSongs,
     })
+    console.log('[LearnPage] requestSongUnlockRecommendation completed:', unlockResponse)
+    
     unlockedSongs.value = Array.isArray(unlockResponse.unlockedSongs)
       ? unlockResponse.unlockedSongs
       : []
+    
+    console.log('[LearnPage] Set unlockedSongs count:', unlockedSongs.value.length)
   } catch (error) {
-    console.error('Failed to fetch unlock recommendations:', error)
+    console.error('[LearnPage] Failed to fetch unlock recommendations:', error)
     unlockedSongs.value = []
   }
 }
