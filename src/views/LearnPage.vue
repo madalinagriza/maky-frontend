@@ -719,37 +719,54 @@ async function populateChordRecommendation({
   knownChords: string[]
   allSongs: Song[]
 }) {
+  console.log('[LearnPage] populateChordRecommendation called', {
+    knownChordsCount: knownChords.length,
+    allSongsCount: allSongs.length,
+    knownChords
+  })
+  
   try {
+    console.log('[LearnPage] Calling requestChordRecommendation...')
     const recResponse = await requestChordRecommendation({
       knownChords,
       allSongs,
     })
+    console.log('[LearnPage] requestChordRecommendation completed:', recResponse)
+    
     const chordCandidate = recResponse.recommendedChord?.trim()
     recommendedChord.value = chordCandidate || null
     // Store the first diagram voicing if available
     recommendedChordDiagram.value = recResponse.diagram?.[0] ?? null
+    
+    console.log('[LearnPage] Set recommendedChord:', chordCandidate)
   } catch (error) {
-    console.error('Failed to fetch chord recommendation:', error)
+    console.error('[LearnPage] Failed to fetch chord recommendation:', error)
     recommendedChord.value = null
     recommendedChordDiagram.value = null
   }
 
   if (!recommendedChord.value) {
+    console.log('[LearnPage] No recommended chord, skipping unlock recommendation')
     unlockedSongs.value = []
     return
   }
 
   try {
+    console.log('[LearnPage] Calling requestSongUnlockRecommendation for:', recommendedChord.value)
     const unlockResponse = await requestSongUnlockRecommendation({
       knownChords,
       potentialChord: recommendedChord.value,
       allSongs,
     })
+    console.log('[LearnPage] requestSongUnlockRecommendation completed:', unlockResponse)
+    
     unlockedSongs.value = Array.isArray(unlockResponse.unlockedSongs)
       ? unlockResponse.unlockedSongs
       : []
+    
+    console.log('[LearnPage] Set unlockedSongs count:', unlockedSongs.value.length)
   } catch (error) {
-    console.error('Failed to fetch unlock recommendations:', error)
+    console.error('[LearnPage] Failed to fetch unlock recommendations:', error)
     unlockedSongs.value = []
   }
 }
