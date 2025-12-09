@@ -24,7 +24,6 @@ export interface CalculateRecommendationResponse {
 
 export interface RequestChordRecommendationPayload {
   knownChords: string[]
-  allSongs: Song[]
 }
 
 export interface RequestChordRecommendationResponse {
@@ -39,7 +38,6 @@ export type RawRequestChordRecommendationResponse =
 export interface RequestSongUnlockRecommendationPayload {
   knownChords: string[]
   potentialChord: string
-  allSongs: Song[]
 }
 
 export interface RequestSongUnlockRecommendationResponse {
