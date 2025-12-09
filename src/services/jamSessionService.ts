@@ -9,7 +9,7 @@ import type {
   JoinSessionPayload,
   EndJamSessionPayload,
   ShareSongInSessionPayload,
-  UpdateSharedSongStatusPayload,
+  UpdateSongLogFrequencyPayload,
   GetJamSessionsForGroupPayload,
   GetJamSessionByIdPayload,
   GetActiveSessionForGroupPayload,
@@ -191,16 +191,12 @@ export async function endJamSession(sessionId: string) {
   return ensureSuccess(data)
 }
 
-export async function shareSongInSession(
-  sessionId: string,
-  songId: string,
-  currentStatus: string
-) {
+export async function shareSongInSession(sessionId: string, songId: string, frequency: number) {
   const payload: ShareSongInSessionPayload = {
     sessionId: '',
     session: sessionId,
     song: songId,
-    currentStatus,
+    frequency,
   }
   const { data } = await apiClient.post<SuccessResponse | ErrorResponse>(
     `${JAM_SESSION_BASE}/shareSongInSession`,
@@ -209,19 +205,19 @@ export async function shareSongInSession(
   return ensureSuccess(data)
 }
 
-export async function updateSharedSongStatus(
+export async function updateSongLogFrequency(
   sessionId: string,
   songId: string,
-  newStatus: string
+  newFrequency: number
 ) {
-  const payload: UpdateSharedSongStatusPayload = {
+  const payload: UpdateSongLogFrequencyPayload = {
     sessionId: '',
     session: sessionId,
     song: songId,
-    newStatus,
+    newFrequency,
   }
   const { data } = await apiClient.post<SuccessResponse | ErrorResponse>(
-    `${JAM_SESSION_BASE}/updateSharedSongStatus`,
+    `${JAM_SESSION_BASE}/updateSongLogFrequency`,
     payload
   )
   return ensureSuccess(data)

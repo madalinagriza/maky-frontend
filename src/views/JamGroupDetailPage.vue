@@ -33,7 +33,7 @@
                 <h2>Members ({{ group.members.length }})</h2>
               </div>
               <ul class="members-list">
-                <li v-for="member in membersWithProfiles" :key="member.id" class="member-item">
+                <li v-for="member in membersWithProfiles" :key="member.key" class="member-item">
                   <div class="member-info">
                     <div class="member-avatar">{{ member.initials }}</div>
                     <span class="member-name">{{ member.displayName }}</span>
@@ -48,8 +48,8 @@
                     {{ removingMember === member.id ? 'Removing...' : 'Remove' }}
                   </button>
                   <button
-                    v-else-if="member.id === currentUsername && !isCreator"
-                    @click="confirmLeaveGroup"
+                    v-else-if="member.id === currentMemberIdentifier && !isCreator"
+                    @click="confirmLeaveGroup(member.id)"
                     class="leave-btn"
                     :disabled="leavingGroup"
                   >
@@ -85,6 +85,17 @@
                 </button>
               </div>
               <div v-if="addFriendError" class="error-small">{{ addFriendError }}</div>
+            </section>
+
+            <section v-if="!isCreator && currentMemberIdentifier" class="leave-group-section">
+              <h3>Leave Jam Group</h3>
+              <p class="leave-group-text">
+                Leaving removes you from future sessions and member lists. You can rejoin if
+                the creator invites you again.
+              </p>
+              <button @click="confirmLeaveGroup()" class="leave-group-btn" :disabled="leavingGroup">
+                {{ leavingGroup ? 'Leaving...' : 'Leave Group' }}
+              </button>
             </section>
 
             <section v-if="isCreator" class="danger-zone">
@@ -231,7 +242,8 @@ import {
 } from '@/services/jamSessionService'
 import { getFriends } from '@/services/friendshipService'
 import { getProfile } from '@/services/userProfileService'
-import type { JamGroup } from '@/types/jamGroup'
+import { getSessionId as getStoredSessionId } from '@/utils/sessionStorage'
+import type { JamGroup, JamGroupMember } from '@/types/jamGroup'
 import type { JamSession } from '@/types/jamSession'
 import type { Song } from '@/types/song'
 
@@ -246,6 +258,38 @@ const commonChords = ref<string[]>([])
 const playableSongs = ref<Song[]>([])
 const friends = ref<Array<{ id: string; displayName: string }>>([])
 const userProfiles = ref<Record<string, { displayName: string; avatarUrl?: string | null }>>({})
+
+type GroupMemberEntry = string | JamGroupMember | null | undefined
+
+function truncateIdentifier(value: string, visibleChars = 6) {
+  if (!value) return ''
+  return value.length <= visibleChars ? value : value.slice(0, visibleChars)
+}
+
+function extractMemberMeta(member: GroupMemberEntry) {
+  if (!member) {
+    return { id: '', displayName: '', avatarUrl: null as string | null }
+  }
+  if (typeof member === 'string') {
+    return { id: member, displayName: '', avatarUrl: null as string | null }
+  }
+  const id = member.user || member.username || member.id || member._id || ''
+  const displayName = member.displayName?.trim() || ''
+  const avatarUrl = member.avatarUrl ?? (typeof member.avatar === 'string' ? member.avatar : null) ?? null
+  return { id, displayName, avatarUrl }
+}
+
+function fallbackMemberLabel(index: number, id?: string) {
+  if (id) return truncateIdentifier(id)
+  return `Member ${index + 1}`
+}
+
+function normalizeMemberIds(members: Array<string | JamGroupMember> | null | undefined): string[] {
+  if (!Array.isArray(members)) return []
+  return members
+    .map(member => extractMemberMeta(member).id)
+    .filter((id): id is string => Boolean(id))
+}
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -266,29 +310,46 @@ const addFriendError = ref<string | null>(null)
 const groupId = computed(() => route.params.groupId as string)
 const currentUsername = computed(() => username.value || '')
 const currentUserId = computed(() => userId.value || '')
+const normalizedMemberIds = computed(() => normalizeMemberIds(group.value?.members ?? []))
+const currentMemberIdentifier = computed(() => {
+  const fallback = currentUserId.value || currentUsername.value || ''
+  const memberIds = normalizedMemberIds.value
+  if (currentUserId.value && memberIds.includes(currentUserId.value)) {
+    return currentUserId.value
+  }
+  if (currentUsername.value && memberIds.includes(currentUsername.value)) {
+    return currentUsername.value
+  }
+  return fallback
+})
 const isCreator = computed(() => group.value?.creator === currentUsername.value)
 const isPrivateOrKid = computed(() => kidOrPrivateStatus.value === true)
 const creatorDisplayName = computed(() => {
   if (!group.value?.creator) return 'Unknown'
-  return userProfiles.value[group.value.creator]?.displayName || group.value.creator
+  return (
+    userProfiles.value[group.value.creator]?.displayName || truncateIdentifier(group.value.creator)
+  )
 })
 const membersWithProfiles = computed(() => {
   if (!group.value) return []
-  return group.value.members.map(memberId => {
-    const profile = userProfiles.value[memberId]
-    const fallbackName = profile?.displayName?.trim() || memberId || 'Member'
-    return {
-      id: memberId,
-      displayName: fallbackName,
-      initials: fallbackName.charAt(0)?.toUpperCase() || memberId.charAt(0)?.toUpperCase() || '?',
-      isCreator: memberId === group.value!.creator,
-    }
-  })
+  return group.value.members.map((memberEntry, index) => {
+    const { id, displayName: inlineDisplayName } = extractMemberMeta(memberEntry)
+      const profile = id ? userProfiles.value[id] : undefined
+    const fallbackLabel = fallbackMemberLabel(index, id)
+    const name = inlineDisplayName || profile?.displayName?.trim() || fallbackLabel
+    const initialsSource = name || fallbackLabel
+      return {
+        id,
+        key: id || `member-${index}`,
+        displayName: name,
+        initials: initialsSource.charAt(0)?.toUpperCase() || '?',
+        isCreator: Boolean(id && group.value && id === group.value.creator),
+      }
+    })
 })
 
 const availableFriends = computed(() => {
-  if (!group.value) return []
-  const memberSet = new Set(group.value.members)
+  const memberSet = new Set(normalizedMemberIds.value)
   return friends.value.filter(friend => !memberSet.has(friend.id))
 })
 
@@ -308,7 +369,23 @@ async function loadGroupDetails() {
       error.value = 'Group not found'
       return
     }
-    const membersToFetch = [...group.value.members, group.value.creator].filter(Boolean)
+    const seededProfiles: Record<string, { displayName: string; avatarUrl?: string | null }> = {}
+    group.value.members.forEach(memberEntry => {
+      const { id, displayName, avatarUrl } = extractMemberMeta(memberEntry)
+      if (!id || !displayName) return
+      seededProfiles[id] = {
+        displayName,
+        avatarUrl,
+      }
+    })
+    if (Object.keys(seededProfiles).length) {
+      userProfiles.value = {
+        ...userProfiles.value,
+        ...seededProfiles,
+      }
+    }
+    const memberIds = normalizeMemberIds(group.value.members)
+    const membersToFetch = [...memberIds, group.value.creator].filter(Boolean)
     await Promise.all([
       loadSessions(),
       loadActiveSession(),
@@ -384,7 +461,7 @@ async function loadFriends() {
     }
     friends.value = friendIds.map(friendId => ({
       id: friendId,
-      displayName: userProfiles.value[friendId]?.displayName || friendId,
+      displayName: userProfiles.value[friendId]?.displayName || truncateIdentifier(friendId),
     }))
   } catch (err) {
     console.error('Error loading friends:', err)
@@ -395,12 +472,19 @@ async function loadFriends() {
 }
 
 async function loadMemberProfiles(memberIds: string[]) {
-  const activeSessionId = sessionId.value
-  if (!activeSessionId || !memberIds.length) return
+  if (!memberIds.length) return
 
+  const activeSessionId = sessionId.value || getStoredSessionId()
+  if (!activeSessionId) {
+    console.warn('Cannot load member profiles without a session id')
+    return
+  }
   const uniqueIds = Array.from(new Set(memberIds.filter(Boolean)))
+  const idsToFetch = uniqueIds.filter(id => !(id in userProfiles.value))
+  if (!idsToFetch.length) return
+
   const results = await Promise.all(
-    uniqueIds.map(async id => {
+    idsToFetch.map(async id => {
       try {
         const profile = await getProfile({ sessionId: activeSessionId, user: id })
         return { id, profile }
@@ -468,7 +552,12 @@ function viewSession(sessionId: string) {
 }
 
 async function confirmRemoveMember(member: string) {
-  if (!confirm(`Remove ${member} from this group?`)) return
+  if (!member) {
+    alert('Unable to remove this member because their account identifier is missing.')
+    return
+  }
+  const label = userProfiles.value[member]?.displayName || truncateIdentifier(member)
+  if (!confirm(`Remove ${label} from this group?`)) return
   removingMember.value = member
   try {
     await removeUserFromGroup(groupId.value, member)
@@ -480,11 +569,16 @@ async function confirmRemoveMember(member: string) {
   }
 }
 
-async function confirmLeaveGroup() {
+async function confirmLeaveGroup(memberId?: string) {
+  const identifier = memberId || currentMemberIdentifier.value
+  if (!identifier) {
+    alert('Unable to determine which account to remove from this group.')
+    return
+  }
   if (!confirm('Are you sure you want to leave this group?')) return
   leavingGroup.value = true
   try {
-    await removeUserFromGroup(groupId.value, currentUsername.value)
+    await removeUserFromGroup(groupId.value, identifier)
     router.push('/jam')
   } catch (err) {
     alert(err instanceof Error ? err.message : 'Failed to leave group')
@@ -611,6 +705,7 @@ onMounted(() => {
 
 .info-section,
 .members-section,
+.leave-group-section,
 .add-friend-section,
 .danger-zone,
 .active-session-section,
@@ -757,6 +852,27 @@ h3 {
 .add-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.leave-group-text {
+  color: var(--contrast-mid);
+  margin-bottom: 1rem;
+}
+
+.leave-group-btn {
+  width: 100%;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.leave-group-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.3);
 }
 
 .danger-zone {

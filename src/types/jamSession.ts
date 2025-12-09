@@ -1,9 +1,9 @@
 export type JamSessionStatus = 'ACTIVE' | 'COMPLETED' | 'SCHEDULED'
 
-export interface SharedSong {
+export interface SongLogEntry {
   song: string
   participant: string
-  currentStatus: string
+  frequency: number
 }
 
 export interface JamSession {
@@ -12,7 +12,7 @@ export interface JamSession {
   startTime: string
   endTime?: string
   participants: string[]
-  sharedSongs: SharedSong[]
+  songsLog: SongLogEntry[]
   status: JamSessionStatus
 }
 
@@ -45,14 +45,14 @@ export interface ShareSongInSessionPayload {
   sessionId: string
   session: string
   song: string
-  currentStatus: string
+  frequency: number
 }
 
-export interface UpdateSharedSongStatusPayload {
+export interface UpdateSongLogFrequencyPayload {
   sessionId: string
   session: string
   song: string
-  newStatus: string
+  newFrequency: number
 }
 
 export interface GetJamSessionsForGroupPayload {

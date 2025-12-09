@@ -642,7 +642,12 @@ async function loadPracticeSongs(sessionId: string) {
 async function loadPreferredGenres(sessionId: string) {
   try {
     const userId = getUserId()
-    const profile = userId ? await getProfile({ user: userId }) : await getProfile({ sessionId })
+    if (!userId) {
+      console.warn('Unable to load preferred genres: missing user id')
+      preferredGenres.value = []
+      return
+    }
+    const profile = await getProfile({ sessionId, user: userId })
     const genres = Array.isArray(profile?.genrePreferences) ? profile?.genrePreferences : []
     preferredGenres.value = (genres ?? []).filter(isNonEmptyString)
   } catch (error) {

@@ -54,13 +54,13 @@
               <div class="recommendation-nav" v-if="playableSongs.length > 1">
                 <button
                   v-if="currentRecommendationIndex > 0"
-                  @click="previousRecommendation"
+                  @click="previousRecommendation()"
                   class="next-btn"
                 >
                   ← Previous
                 </button>
                 <button
-                  @click="nextRecommendation"
+                  @click="nextRecommendation()"
                   class="next-btn"
                 >
                   Next →
@@ -72,7 +72,11 @@
             <div v-else-if="playableSongs.length === 0" class="empty-small">
               No song recommendations available. Learn more chords as a group!
             </div>
-            <div v-else-if="currentRecommendation" class="recommendation-card">
+            <div
+              v-else-if="currentRecommendation"
+              class="recommendation-card"
+              ref="recommendationCardRef"
+            >
               <div class="rec-header">
                 <div>
                   <h3>{{ currentRecommendation.title }}</h3>
@@ -113,39 +117,46 @@
 
           <!-- Shared Songs Section -->
           <section class="shared-songs-section">
-            <h2>Shared Songs</h2>
-            <div v-if="session.sharedSongs.length === 0" class="empty-small">
-              No songs shared yet. Practice a song to get started!
+            <h2>Songs Log</h2>
+            <div v-if="session.songsLog.length === 0" class="empty-small">
+              No songs logged yet. Practice a song to get started!
             </div>
             <ul v-else class="shared-songs-list">
-              <li v-for="(sharedSong, index) in session.sharedSongs" :key="index" class="shared-song-item">
+              <li
+                v-for="(logEntry, index) in session.songsLog"
+                :key="`${logEntry.song}-${logEntry.participant}-${index}`"
+                class="shared-song-item"
+              >
                 <div class="shared-song-info">
                   <div>
-                    <span class="shared-song-title">{{ getSongTitle(sharedSong.song) }}</span>
-                    <span class="shared-by">shared by {{ getParticipantDisplayName(sharedSong.participant) }}</span>
+                    <span class="shared-song-title">{{ getSongTitle(logEntry.song) }}</span>
                   </div>
-                  <span :class="['song-status', sharedSong.currentStatus.toLowerCase().replace(' ', '-')]">
-                    {{ sharedSong.currentStatus }}
-                  </span>
+                  <div class="frequency-chip">
+                    <span class="frequency-label">Frequency</span>
+                    <span class="frequency-value">{{ logEntry.frequency }}</span>
+                    <span class="frequency-unit">times</span>
+                  </div>
                 </div>
-                <div v-if="sharedSong.participant === currentUsername && session.status === 'ACTIVE'" class="status-buttons">
+                <div
+                  v-if="session.status === 'ACTIVE' && isOwnLogEntry(logEntry)"
+                  class="frequency-controls"
+                >
                   <button
-                    @click="updateSongStatus(sharedSong.song, 'practicing')"
-                    :class="['status-btn', sharedSong.currentStatus === 'practicing' ? 'active' : '']"
+                    class="frequency-btn"
+                    @click="changeFrequency(logEntry.song, logEntry.frequency - 1)"
+                    :disabled="logEntry.frequency <= 0 || updatingFrequencyFor === logEntry.song"
+                    aria-label="Decrease frequency"
                   >
-                    Practicing
+                    -
                   </button>
+                  <span class="frequency-readout">{{ logEntry.frequency }} times</span>
                   <button
-                    @click="updateSongStatus(sharedSong.song, 'mastered')"
-                    :class="['status-btn', sharedSong.currentStatus === 'mastered' ? 'active' : '']"
+                    class="frequency-btn"
+                    @click="changeFrequency(logEntry.song, logEntry.frequency + 1)"
+                    :disabled="updatingFrequencyFor === logEntry.song"
+                    aria-label="Increase frequency"
                   >
-                    Mastered
-                  </button>
-                  <button
-                    @click="updateSongStatus(sharedSong.song, 'need help')"
-                    :class="['status-btn', sharedSong.currentStatus === 'need help' ? 'active' : '']"
-                  >
-                    Need Help
+                    +
                   </button>
                 </div>
               </li>
@@ -158,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Layout from '@/components/Layout.vue'
 import { useAuth } from '@/composables/useAuth'
@@ -171,11 +182,9 @@ import {
   getJamSessionById,
   endJamSession,
   shareSongInSession,
-  updateSharedSongStatus,
+  updateSongLogFrequency,
 } from '@/services/jamSessionService'
-import { getProfile } from '@/services/userProfileService'
-import { getSessionId } from '@/utils/sessionStorage'
-import type { JamSession } from '@/types/jamSession'
+import type { JamSession, SongLogEntry } from '@/types/jamSession'
 import type { JamGroup } from '@/types/jamGroup'
 import type { Song } from '@/types/song'
 
@@ -188,7 +197,7 @@ const group = ref<JamGroup | null>(null)
 const commonChords = ref<string[]>([])
 const playableSongs = ref<Song[]>([])
 const currentRecommendationIndex = ref(0)
-const participantDisplayNames = ref<Record<string, string>>({})
+const recommendationCardRef = ref<HTMLElement | null>(null)
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -196,6 +205,7 @@ const loadingCommonChords = ref(false)
 const loadingPlayableSongs = ref(false)
 const endingSession = ref(false)
 const sharingSong = ref(false)
+const updatingFrequencyFor = ref<string | null>(null)
 
 const groupId = computed(() => route.params.groupId as string)
 const sessionId = computed(() => route.params.sessionId as string)
@@ -223,46 +233,9 @@ const currentRecommendation = computed(() => {
   return playableSongs.value[currentRecommendationIndex.value]
 })
 
-function getParticipantDisplayName(userId: string) {
-  return participantDisplayNames.value[userId] || userId
-}
-
-async function hydrateParticipantDisplayNames(jamSession: JamSession | null) {
-  if (!jamSession) return
-
-  const ids = new Set<string>()
-  const sharedSongs = jamSession.sharedSongs || []
-  sharedSongs.forEach(song => {
-    if (song?.participant) ids.add(song.participant)
-  })
-  const participants = jamSession.participants || []
-  participants.forEach(participant => {
-    if (participant) ids.add(participant)
-  })
-
-  const missing = Array.from(ids).filter(id => id && !participantDisplayNames.value[id])
-  if (!missing.length) return
-
-  const sessionToken = getSessionId()
-  const nextMap = { ...participantDisplayNames.value }
-
-  await Promise.all(
-    missing.map(async userId => {
-      try {
-        const payload = sessionToken
-          ? { sessionId: sessionToken, user: userId }
-          : { user: userId }
-        const profile = await getProfile(payload)
-        const displayName = profile?.displayName?.trim()
-        nextMap[userId] = displayName || userId
-      } catch (error) {
-        console.warn('Failed to resolve participant display name', userId, error)
-        nextMap[userId] = userId
-      }
-    })
-  )
-
-  participantDisplayNames.value = nextMap
+function isOwnLogEntry(entry: SongLogEntry) {
+  const identifiers = [currentUsername.value, currentUserId.value].filter(Boolean)
+  return identifiers.includes(entry.participant)
 }
 
 async function loadSession() {
@@ -274,11 +247,7 @@ async function loadSession() {
       error.value = 'Session not found'
       return
     }
-    await Promise.all([
-      loadCommonChords(),
-      loadPlayableSongs(),
-      hydrateParticipantDisplayNames(session.value),
-    ])
+    await Promise.all([loadCommonChords(), loadPlayableSongs()])
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load session'
     console.error('Error loading session:', err)
@@ -318,12 +287,23 @@ async function loadGroupDetails() {
   }
 }
 
-function nextRecommendation() {
+function scrollRecommendationIntoView() {
+  nextTick(() => {
+    recommendationCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+}
+
+function nextRecommendation(scrollAfterAdvance = false) {
+  if (!playableSongs.value.length) return
   currentRecommendationIndex.value =
     (currentRecommendationIndex.value + 1) % playableSongs.value.length
+  if (scrollAfterAdvance) {
+    scrollRecommendationIntoView()
+  }
 }
 
 function previousRecommendation() {
+  if (!playableSongs.value.length) return
   currentRecommendationIndex.value = Math.max(0, currentRecommendationIndex.value - 1)
 }
 
@@ -331,8 +311,13 @@ async function practiceThisSong() {
   if (!currentRecommendation.value || sharingSong.value) return
   sharingSong.value = true
   try {
-    await shareSongInSession(sessionId.value, currentRecommendation.value._id, 'practicing')
+    await shareSongInSession(sessionId.value, currentRecommendation.value._id, 1)
     await loadSession()
+    if (playableSongs.value.length > 1) {
+      nextRecommendation(true)
+    } else {
+      scrollRecommendationIntoView()
+    }
   } catch (err) {
     alert(err instanceof Error ? err.message : 'Failed to share song')
   } finally {
@@ -340,12 +325,16 @@ async function practiceThisSong() {
   }
 }
 
-async function updateSongStatus(songId: string, newStatus: string) {
+async function changeFrequency(songId: string, nextFrequency: number) {
+  if (nextFrequency < 0) return
+  updatingFrequencyFor.value = songId
   try {
-    await updateSharedSongStatus(sessionId.value, songId, newStatus)
+    await updateSongLogFrequency(sessionId.value, songId, nextFrequency)
     await loadSession()
   } catch (err) {
-    alert(err instanceof Error ? err.message : 'Failed to update status')
+    alert(err instanceof Error ? err.message : 'Failed to update frequency')
+  } finally {
+    updatingFrequencyFor.value = null
   }
 }
 
@@ -695,56 +684,63 @@ h2 {
   font-size: 0.85rem;
 }
 
-.song-status {
-  padding: 0.3rem 0.7rem;
-  border-radius: 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.song-status.practicing {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fcd34d;
-}
-
-.song-status.mastered {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
-}
-
-.song-status.need-help {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-}
-
-.status-buttons {
+.frequency-chip {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  min-width: 110px;
+}
+
+.frequency-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--contrast-bottom);
+}
+
+.frequency-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--contrast-top);
+  line-height: 1.2;
+}
+
+.frequency-unit {
+  font-size: 0.8rem;
+  color: var(--contrast-bottom);
+}
+
+.frequency-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
 
-.status-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--contrast-mid);
-  padding: 0.5rem 1rem;
+.frequency-btn {
+  width: 2.2rem;
+  height: 2.2rem;
   border-radius: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--contrast-top);
+  font-size: 1.25rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.status-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+.frequency-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
-.status-btn.active {
-  background: var(--button);
-  color: var(--btn-text);
-  border-color: var(--accent);
+.frequency-readout {
+  font-size: 0.95rem;
+  color: var(--contrast-mid);
+  font-weight: 500;
 }
 
 .loading-small,

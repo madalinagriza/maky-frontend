@@ -1,16 +1,20 @@
+export interface JamGroupMember {
+  user?: string
+  username?: string
+  id?: string
+  _id?: string
+  displayName?: string
+  avatarUrl?: string | null
+  avatar?: string | null
+}
+
 export interface JamGroup {
   _id: string
   name: string
   description: string
   creator: string
-  members: string[]
+  members: Array<string | JamGroupMember>
   createdAt: string
-}
-
-export interface JamGroupMember {
-  username: string
-  displayName?: string
-  avatarUrl?: string
 }
 
 export interface CreateJamGroupPayload {

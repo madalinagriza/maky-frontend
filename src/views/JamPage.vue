@@ -63,6 +63,14 @@ const showCreateModal = ref(false)
 const currentUsername = computed(() => username.value || '')
 const currentUserId = computed(() => userId.value || '')
 
+function groupIncludesUser(group: JamGroup, memberId: string) {
+  if (!memberId || !Array.isArray(group.members)) return false
+  return group.members.some(member => {
+    if (typeof member === 'string') return member === memberId
+    return member.username === memberId
+  })
+}
+
 async function loadJamGroups() {
   loading.value = true
   error.value = null
@@ -72,7 +80,7 @@ async function loadJamGroups() {
     const activeUserId = currentUserId.value
     jamGroups.value = !activeUserId
       ? groups
-      : groups.filter(group => Array.isArray(group.members) && group.members.includes(activeUserId))
+      : groups.filter(group => groupIncludesUser(group, activeUserId))
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load jam groups'
     console.error('Error loading jam groups:', err)
