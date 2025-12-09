@@ -702,7 +702,7 @@ async function loadData() {
       return
     }
 
-    await populateChordRecommendation({ knownChords: knownChordNames })
+    await populateChordRecommendation({ knownChords: knownChordNames, allSongs: recommendationSource })
 
   } catch (error) {
     console.error('Failed to load data:', error)
@@ -714,12 +714,15 @@ async function loadData() {
 
 async function populateChordRecommendation({
   knownChords,
+  allSongs,
 }: {
   knownChords: string[]
+  allSongs: Song[]
 }) {
   try {
     const recResponse = await requestChordRecommendation({
       knownChords,
+      allSongs,
     })
     const chordCandidate = recResponse.recommendedChord?.trim()
     recommendedChord.value = chordCandidate || null
@@ -740,6 +743,7 @@ async function populateChordRecommendation({
     const unlockResponse = await requestSongUnlockRecommendation({
       knownChords,
       potentialChord: recommendedChord.value,
+      allSongs,
     })
     unlockedSongs.value = Array.isArray(unlockResponse.unlockedSongs)
       ? unlockResponse.unlockedSongs
