@@ -32,6 +32,13 @@
             </div>
           </div>
           <div v-else class="empty-state">No chord recommendations available.</div>
+          <details v-if="recommendedChord && recommendedChordDiagram" class="diagram-explainer">
+            <summary>Explain Diagram</summary>
+            <p>
+              The horizontal lines show the guitar's strings, starting from the thickest at the top to the thinnest at the bottom.
+              Place your numbered fingers on the strings exactly where the dots appear, and strum the strings that are shown.
+            </p>
+          </details>
         </section>
 
         <section id="section-master-chords" class="learn-section">
@@ -1084,6 +1091,26 @@ h1 {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
   padding: 1.5rem;
+}
+
+.diagram-explainer {
+  margin: 0 0 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.85rem;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--contrast-mid);
+}
+
+.diagram-explainer summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--contrast-top);
+}
+
+.diagram-explainer p {
+  margin: 0.5rem 0 0;
+  line-height: 1.5;
 }
 
 h2 {

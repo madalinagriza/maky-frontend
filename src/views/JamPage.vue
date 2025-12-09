@@ -3,8 +3,10 @@
     <div class="jam-container">
       <header class="jam-header">
         <div>
-          <p class="eyebrow">Collaborate</p>
           <h1>My Jam Groups</h1>
+          <p class="jam-lead">
+            Jam it up with your friends. See which chords your friends can play and practice songs together.
+          </p>
         </div>
         <button @click="showCreateModal = true" class="create-group-btn">
           + Create New Group
@@ -122,6 +124,12 @@ onMounted(() => {
   letter-spacing: 0.1em;
   color: var(--contrast-bottom);
   margin: 0 0 0.5rem 0;
+}
+
+.jam-lead {
+  margin: 0.25rem 0 0;
+  color: var(--contrast-mid);
+  font-size: 1rem;
 }
 
 h1 {

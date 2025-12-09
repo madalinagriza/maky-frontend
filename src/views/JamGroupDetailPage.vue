@@ -137,6 +137,9 @@
               <button @click="createNewSession" class="create-session-btn" :disabled="creatingSession">
                 {{ creatingSession ? 'Starting...' : '+ Start New Jam Session' }}
               </button>
+              <p class="session-helper-text">
+                Practice and log songs with your friends. Build a shared guitar learning log.
+              </p>
             </section>
 
             <section class="common-chords-section">
@@ -957,6 +960,12 @@ h3 {
 .create-session-btn {
   width: 100%;
   padding: 1rem;
+}
+
+.session-helper-text {
+  margin: 0.75rem 0 0;
+  color: var(--contrast-mid);
+  font-size: 0.95rem;
 }
 
 .join-session-btn:hover:not(:disabled),

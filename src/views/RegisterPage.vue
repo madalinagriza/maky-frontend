@@ -35,10 +35,19 @@
           <span>Kid account?</span>
         </label>
 
-        <label class="checkbox">
-          <input v-model="registerForm.isPrivateAccount" type="checkbox" />
-          <span>Private account?</span>
-        </label>
+        <div class="checkbox-stack">
+          <label class="checkbox">
+            <input v-model="registerForm.isPrivateAccount" type="checkbox" />
+            <span>Private account?</span>
+          </label>
+          <details class="helper-collapse">
+            <summary>Do I want a private account?</summary>
+            <p class="helper-text">
+              Private accounts hide your social features (feed posts, friend discovery, recommendations)
+              so you can learn in peace.
+            </p>
+          </details>
+        </div>
 
         <button type="submit" :disabled="!canSubmitRegister || loading">
           {{ loading ? 'Creating account...' : 'Create account' }}
@@ -180,15 +189,21 @@ label {
   color: #e5e7eb;
 }
 
+.checkbox-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
 input[type='text'],
 input[type='email'],
 input[type='password'] {
   border-radius: 0.65rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.75rem 0.9rem;
+  padding: 0.6rem 0.85rem;
   background: var(--main-top);
   color: #f9fafb;
-  font-size: 1rem;
+  font-size: 0.92rem;
 }
 
 input:focus {
@@ -201,6 +216,29 @@ input:focus {
   align-items: center;
   gap: 0.5rem;
   user-select: none;
+}
+
+.helper-text {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin: 0;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.helper-collapse {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(255, 255, 255, 0.02);
+  color: #f3f4f6;
+}
+
+.helper-collapse summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #f9fafb;
+  margin-bottom: 0.35rem;
 }
 
 button[type='submit'] {
