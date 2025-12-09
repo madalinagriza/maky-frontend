@@ -302,7 +302,7 @@ import Layout from '@/components/Layout.vue'
 import ChordDiagram from '@/components/ChordDiagram.vue'
 import SongPreview from '@/components/SongPreview.vue'
 import ChordTooltip from '@/components/ChordTooltip.vue'
-import { getPlayableSongs, getSongCatalog } from '@/services/songService'
+import { getPlayableSongs } from '@/services/songService'
 import {
   getSongsInProgress,
   startLearningSong as startLearningSongAPI,
@@ -693,15 +693,9 @@ async function loadData() {
       .filter(isValidSong)
 
     // 2. Build a broader song catalog for recommendations (fallback to playable songs)
-    const catalogSongs = await getSongCatalog()
-    const recommendationSource = catalogSongs.length > 0 ? catalogSongs : playableSongs.value
-
-    if (recommendationSource.length === 0) {
-      recommendedChord.value = null
-      unlockedSongs.value = []
-      return
-    }
-
+    // Optimization: Backend now handles song catalog, so we don't need to fetch it here.
+    // const catalogSongs = await getSongCatalog()
+    
     await populateChordRecommendation({ knownChords: knownChordNames })
 
   } catch (error) {
