@@ -43,7 +43,9 @@
           <div v-else class="chord-list">
             <div v-for="entry in knownChords" :key="entry.chord" class="chord-item">
               <div class="chord-info">
-                <span class="chord-name">{{ entry.chord }}</span>
+                <ChordTooltip :chord-name="entry.chord">
+                  <span class="chord-name">{{ entry.chord }}</span>
+                </ChordTooltip>
                 <select
                   v-model="chordMasterySelections[entry.chord]"
                   class="mastery-select"
@@ -141,13 +143,15 @@
                   <span class="song-chords-label">Chords:</span>
                   <div class="song-chords-list">
                     <template v-if="entry.song.chords?.length">
-                      <span
+                      <ChordTooltip
                         v-for="chord in entry.song.chords"
                         :key="chord"
-                        :class="['song-chord-pill', getChordMasteryClass(chord)]"
+                        :chord-name="chord"
                       >
-                        {{ chord }}
-                      </span>
+                        <span :class="['song-chord-pill', getChordMasteryClass(chord)]">
+                          {{ chord }}
+                        </span>
+                      </ChordTooltip>
                     </template>
                     <span v-else class="song-chords-unavailable">Unavailable</span>
                   </div>
@@ -239,13 +243,15 @@
                     <span class="song-chords-label">Chords:</span>
                     <div class="song-chords-list">
                       <template v-if="song.chords?.length">
-                        <span
+                        <ChordTooltip
                           v-for="chord in song.chords"
                           :key="song._id + chord"
-                          :class="['song-chord-pill', getChordMasteryClass(chord)]"
+                          :chord-name="chord"
                         >
-                          {{ chord }}
-                        </span>
+                          <span :class="['song-chord-pill', getChordMasteryClass(chord)]">
+                            {{ chord }}
+                          </span>
+                        </ChordTooltip>
                       </template>
                       <span v-else class="song-chords-unavailable">Unavailable</span>
                     </div>
@@ -295,6 +301,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import Layout from '@/components/Layout.vue'
 import ChordDiagram from '@/components/ChordDiagram.vue'
 import SongPreview from '@/components/SongPreview.vue'
+import ChordTooltip from '@/components/ChordTooltip.vue'
 import { getPlayableSongs, getSongCatalog } from '@/services/songService'
 import {
   getSongsInProgress,
@@ -1151,6 +1158,14 @@ h2 {
   background: rgba(255, 255, 255, 0.08);
   color: #f3f4f6;
   font-size: 0.8rem;
+  cursor: help;
+  transition: all 0.2s ease;
+}
+
+.song-chord-pill:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
 .song-chord-pill--mastered {
@@ -1288,6 +1303,15 @@ h2 {
   font-weight: 600;
   color: #e5e7eb;
   min-width: 60px;
+  cursor: help;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.chord-name:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #818cf8;
 }
 
 .remove-btn {
