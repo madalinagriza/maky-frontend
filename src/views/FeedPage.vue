@@ -205,6 +205,7 @@
               <div class="post-header">
                 <div class="post-meta">
                   <span class="post-author">{{ post.authorDisplayName }}</span>
+                  <span v-if="post.createdAtLabel" class="post-date">{{ post.createdAtLabel }}</span>
                 </div>
                 <div class="post-header-right">
                   <span
@@ -601,6 +602,8 @@ interface FeedPost {
   id: string
   authorId: string
   authorDisplayName: string
+  createdAt?: string
+  createdAtLabel: string
   content: string
   postType: string
   visibility?: PostVisibility
@@ -821,6 +824,8 @@ async function mapPostItem(item: any, currentUserId: string): Promise<FeedPost> 
   const authorId = item.post.author
   let authorDisplayName = authorId
   const sessionId = getSessionId()
+  const createdAt = typeof item.post.createdAt === 'string' ? item.post.createdAt : ''
+  const createdAtLabel = formatPostTimestampForDisplay(createdAt)
 
   if (sessionId) {
     try {
@@ -878,6 +883,8 @@ async function mapPostItem(item: any, currentUserId: string): Promise<FeedPost> 
     id: postId,
     authorId,
     authorDisplayName,
+    createdAt,
+    createdAtLabel,
     content: item.post.content,
     postType: item.post.postType,
     items: Array.isArray(item.post.items) ? item.post.items.filter(Boolean) : [],
@@ -1654,6 +1661,18 @@ function formatPostTypeLabel(type?: string | null) {
   return type.toUpperCase() === 'GENERAL' ? 'General' : 'Progress'
 }
 
+function formatPostTimestampForDisplay(timestamp?: string) {
+  if (!timestamp) return ''
+  const date = new Date(timestamp)
+  if (Number.isNaN(date.getTime())) return ''
+
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
 onMounted(() => {
   console.log('FeedPage mounted')
   const userId = getUserId()
@@ -2038,6 +2057,12 @@ h3 {
 .post-author {
   font-weight: 600;
   color: var(--contrast-top);
+}
+
+.post-date {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin-top: 0.15rem;
 }
 
 .post-type {
