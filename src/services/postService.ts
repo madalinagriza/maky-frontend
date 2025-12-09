@@ -20,6 +20,7 @@ import type {
   GetPublicPostsForUserPayload,
   GetPersonalPrivatePostsPayload,
   GetPersonalPublicPostsPayload,
+  GetAllPersonalPostsPayload,
   GetPublicPostsOfUsersPayload,
   GetPostsViewableToUserPayload,
   GetCommentsForPostIdPayload,
@@ -142,6 +143,18 @@ export async function getPersonalPrivatePosts(payload: GetPersonalPrivatePostsPa
 export async function getPersonalPublicPosts(payload: GetPersonalPublicPostsPayload) {
   const { data } = await apiClient.post<any>(
     `${POST_BASE}/_getPersonalPublicPosts`,
+    payload
+  )
+
+  assertNoQueryError(data)
+
+  const results = Array.isArray(data) ? data : (data.results || [])
+  return results as GetPostsForUserResponse
+}
+
+export async function getAllPersonalPosts(payload: GetAllPersonalPostsPayload) {
+  const { data } = await apiClient.post<any>(
+    `${POST_BASE}/_getAllPersonalPosts`,
     payload
   )
 
