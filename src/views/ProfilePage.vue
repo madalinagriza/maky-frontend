@@ -171,7 +171,7 @@ import {
   updateChordMastery as updateChordMasteryAPI,
   removeChordFromInventory,
 } from '@/services/chordLibraryService'
-import { searchByTitleOrArtist } from '@/services/songService'
+import { searchByTitleOrArtist, getSongCatalog } from '@/services/songService'
 import { getSessionId, getUserId } from '@/utils/sessionStorage'
 import { useUserProfile } from '@/composables/useUserProfile'
 import { GENRE_OPTIONS } from '@/constants/genres'
@@ -265,6 +265,30 @@ const targetSongDisplay = computed(() => {
   }
   return profile.targetSong || 'Unknown Song'
 })
+
+async function hydrateTargetSongDetails(songId: string) {
+  if (!songId) {
+    targetSongDetails.value = null
+    return
+  }
+
+  const cached = getCachedTargetSong(songId)
+  if (cached) {
+    targetSongDetails.value = cached
+    return
+  }
+
+  try {
+    const catalog = await getSongCatalog()
+    const match = catalog.find(song => song._id === songId)
+    if (match) {
+      targetSongDetails.value = match
+      cacheTargetSongDetails(match)
+    }
+  } catch (error) {
+    console.error('Failed to hydrate target song details:', error)
+  }
+}
 
 async function searchSongs() {
   if (songSearchQuery.value.length < 2) {
@@ -485,10 +509,9 @@ async function loadProfile() {
     profile.targetSong = existing.targetSong ?? profile.targetSong
 
     if (profile.targetSong) {
-      const cachedDetails = getCachedTargetSong(profile.targetSong)
-      if (cachedDetails) {
-        targetSongDetails.value = cachedDetails
-      }
+      await hydrateTargetSongDetails(profile.targetSong)
+    } else {
+      targetSongDetails.value = null
     }
   } catch (error) {
     console.error('Failed to load profile:', error)
