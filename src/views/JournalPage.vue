@@ -2019,6 +2019,12 @@ h2 {
   transition: opacity 0.2s ease;
 }
 
+/* Light theme: ensure good contrast */
+:root[data-theme="dark-brown-primary"] .post-comment-btn {
+  background: var(--button);
+  color: var(--button-text);
+}
+
 .post-comment-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;

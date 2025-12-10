@@ -445,6 +445,13 @@ onMounted(() => {
   border: 1px solid rgba(34, 197, 94, 0.4);
 }
 
+/* Light theme: darker active text for better visibility */
+:root[data-theme="dark-brown-primary"] .status-badge.active {
+  color: rgb(4, 120, 87);
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
 .status-badge.completed {
   background: rgba(156, 163, 175, 0.2);
   color: var(--text-secondary);

@@ -49,6 +49,9 @@ function applyTheme(themeName: ThemeName) {
   root.style.setProperty('--error-border-light', theme.colors.errorBorderLight)
   root.style.setProperty('--auth-overlay', theme.colors.authOverlay)
   
+  // Set data-theme attribute for CSS selectors
+  root.setAttribute('data-theme', themeName)
+  
   currentTheme.value = themeName
   localStorage.setItem(THEME_STORAGE_KEY, themeName)
 }

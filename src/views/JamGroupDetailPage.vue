@@ -1130,6 +1130,12 @@ button:disabled {
   font-weight: var(--font-weight-medium);
 }
 
+/* Light theme: darker genre text for better visibility */
+:root[data-theme="dark-brown-primary"] .song-genre-tag {
+  color: rgb(45, 35, 30);
+  background: rgba(99, 102, 241, 0.15);
+}
+
 .song-chords {
   display: flex;
   align-items: center;

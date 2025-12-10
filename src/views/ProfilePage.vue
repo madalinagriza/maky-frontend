@@ -667,6 +667,13 @@ label {
   transition: opacity 0.2s ease;
 }
 
+/* Light theme: cream-like color for better visibility */
+:root[data-theme="dark-brown-primary"] .update-btn {
+  color: rgb(250, 245, 235);
+  background: var(--button);
+  border-color: var(--button);
+}
+
 .update-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;

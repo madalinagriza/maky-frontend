@@ -2424,6 +2424,13 @@ h3 {
   transition: opacity 0.2s;
 }
 
+/* Light theme: ensure good contrast */
+:root[data-theme="dark-brown-primary"] .post-comment-btn {
+  background: var(--button);
+  color: var(--button-text);
+  font-weight: var(--font-weight-semibold);
+}
+
 .post-comment-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -2554,6 +2561,19 @@ h3 {
 .decline-btn {
   background: rgba(248, 113, 113, 0.2);
   color: var(--error);
+}
+
+/* Light theme: darker colors for better visibility */
+:root[data-theme="dark-brown-primary"] .accept-btn {
+  color: rgb(4, 120, 87);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+:root[data-theme="dark-brown-primary"] .decline-btn {
+  color: rgb(185, 28, 28);
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.3);
 }
 
 .add-btn {
