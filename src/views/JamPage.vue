@@ -121,11 +121,9 @@ onMounted(() => {
   margin-bottom: 2rem;
 }
 
-<<<<<<< HEAD
 /* Eyebrow styling removed - using standardized h1 only */
 
 /* h1 styling is now standardized in style.css */
-||||||| 29b6909
 h1 {
   font-size: 2.5rem;
   font-weight: var(--font-weight-bold);

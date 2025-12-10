@@ -206,7 +206,6 @@ input[type='text'],
 input[type='email'],
 input[type='password'] {
   border-radius: 0.65rem;
-<<<<<<< HEAD
   border: 1px solid var(--input-border);
   padding: 0.75rem 0.9rem;
   background: var(--input-bg);
