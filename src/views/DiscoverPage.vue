@@ -121,8 +121,8 @@
               <details class="diagram-explainer">
                 <summary>Explain Diagram</summary>
                 <p>
-                  The horizontal lines show the guitar's strings, starting from the thickest at the top to the thinnest at the bottom.
-                  Place your numbered fingers on the strings exactly where the dots appear, and strum the strings that are shown.
+                  The vertical lines show the guitar's string, starting from the lowest (E) on the left to the highest (E) on the right. 
+                  Place the fingerings on the strings exactly where the dots appear corresponding with the number, and play all valid notes shown!
                 </p>
               </details>
             </div>
