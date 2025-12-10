@@ -3,6 +3,7 @@
     <div class="jam-container">
       <header class="jam-header">
         <div>
+          <p class="eyebrow">Collaborate</p>
           <h1>My Jam Groups</h1>
           <p class="jam-lead">
             Jam it up with your friends. See which chords your friends can play and practice songs together.

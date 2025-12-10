@@ -988,7 +988,7 @@ onMounted(() => {
   padding: 0.3rem 0.85rem;
   font-size: var(--font-size-sm);
   background: transparent;
-  color: #f3f4f6;
+  color: var(--text-primary);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
@@ -1251,7 +1251,7 @@ h2 {
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--bg-card);
-  color: #f3f4f6;
+  color: var(--text-primary);
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
@@ -1362,9 +1362,9 @@ h2 {
 
 .remove-btn {
   padding: 0.5rem 1rem;
-  background: rgba(248, 113, 113, 0.2);
-  color: #fecaca;
-  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: var(--error-bg-light);
+  color: var(--error);
+  border: 1px solid var(--error-border-light);
   border-radius: 0.5rem;
   cursor: pointer;
   font-size: var(--font-size-sm);

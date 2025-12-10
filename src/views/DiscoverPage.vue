@@ -3,6 +3,7 @@
     <div class="discover-container">
       <header class="discover-header">
         <div>
+          <p class="eyebrow">Explore</p>
           <h1>Discover</h1>
           <p class="discover-lead">
             Explore new chords and browse through all songs. Stack crisp diagrams, spotlight unexpected
@@ -627,7 +628,7 @@ onMounted(() => {
 }
 
 .chord-status.error {
-  color: #fecaca;
+  color: var(--error);
   border: 1px solid var(--error-border);
 }
 
@@ -720,7 +721,7 @@ onMounted(() => {
   border-radius: 999px;
   padding: 0.35rem 0.9rem;
   background: var(--bg-card);
-  color: #f3f4f6;
+  color: var(--text-primary);
   cursor: pointer;
 }
 
@@ -809,7 +810,7 @@ onMounted(() => {
 }
 
 .song-status.error {
-  color: #fecaca;
+  color: var(--error);
   border: 1px solid var(--error-border);
 }
 
@@ -905,7 +906,7 @@ onMounted(() => {
   border-radius: 0.65rem;
   padding: 0.2rem 0.6rem;
   font-size: var(--font-size-sm);
-  color: #f3f4f6;
+  color: var(--text-primary);
 }
 
 .song-chords-empty {
@@ -925,7 +926,7 @@ onMounted(() => {
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--bg-card);
-  color: #f3f4f6;
+  color: var(--text-primary);
   cursor: pointer;
 }
 
@@ -972,7 +973,7 @@ onMounted(() => {
   padding: 0.3rem 0.85rem;
   font-size: var(--font-size-sm);
   background: transparent;
-  color: #f3f4f6;
+  color: var(--text-primary);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }

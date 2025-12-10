@@ -166,12 +166,19 @@ function togglePasswordVisibility() {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: radial-gradient(
-    circle at top,
-    var(--contrast-top) 0%,
-    var(--contrast-mid) 35%,
-    var(--contrast-bottom) 100%
-  );
+  background: 
+    radial-gradient(
+      circle at top,
+      var(--contrast-top) 0%,
+      var(--contrast-mid) 35%,
+      var(--contrast-bottom) 100%
+    ),
+    linear-gradient(
+      135deg,
+      var(--auth-overlay) 0%,
+      transparent 50%,
+      var(--auth-overlay) 100%
+    );
   padding: 1.5rem;
   color: var(--contrast-mid);
 }

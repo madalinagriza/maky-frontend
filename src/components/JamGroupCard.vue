@@ -111,6 +111,8 @@ function formatDate(dateString: string): string {
   justify-content: space-between;
   align-items: center;
   padding-top: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--border-light);
   font-size: var(--font-size-sm);
 }
 

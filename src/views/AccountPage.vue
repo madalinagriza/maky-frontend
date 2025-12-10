@@ -310,7 +310,7 @@ async function persistPrivateStatus() {
 .session-warning {
   background: var(--error-bg);
   border: 1px solid var(--error-border);
-  color: #fecaca;
+  color: var(--error);
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
 }

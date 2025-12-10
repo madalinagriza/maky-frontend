@@ -1,4 +1,5 @@
 import { apiClient } from './apiClient'
+import { getSessionId } from '@/utils/sessionStorage'
 import type {
   JamSession,
   JamSessionResultEntry,
@@ -18,6 +19,14 @@ import type {
 } from '@/types/jamSession'
 
 const JAM_SESSION_BASE = '/JamSession'
+
+function getAuthSessionId(): string {
+  const sessionId = getSessionId()
+  if (!sessionId) {
+    throw new Error('Not authenticated. Please log in.')
+  }
+  return sessionId
+}
 
 function ensureSuccess<T>(payload: T | ErrorResponse): T {
   if (
@@ -106,7 +115,7 @@ function describePayload(payload: unknown): string {
 
 export async function getJamSessionsForGroup(groupId: string) {
   const payload: GetJamSessionsForGroupPayload = {
-    sessionId: '',
+    sessionId: getAuthSessionId(),
     group: groupId,
   }
   const { data } = await apiClient.post<JamSession[] | JamSessionResultsResponse | ErrorResponse>(
@@ -118,7 +127,7 @@ export async function getJamSessionsForGroup(groupId: string) {
 
 export async function getJamSessionById(sessionId: string) {
   const payload: GetJamSessionByIdPayload = {
-    sessionId: '',
+    sessionId: getAuthSessionId(),
     session: sessionId,
   }
   const { data } = await apiClient.post<JamSession[] | JamSessionResultsResponse | ErrorResponse>(
@@ -131,7 +140,7 @@ export async function getJamSessionById(sessionId: string) {
 
 export async function getActiveSessionForGroup(groupId: string) {
   const payload: GetActiveSessionForGroupPayload = {
-    sessionId: '',
+    sessionId: getAuthSessionId(),
     group: groupId,
   }
   const { data } = await apiClient.post<JamSession[] | JamSessionResultsResponse | ErrorResponse>(
@@ -144,7 +153,7 @@ export async function getActiveSessionForGroup(groupId: string) {
 
 export async function startJamSession(groupId: string) {
   const payload: StartJamSessionPayload = {
-    sessionId: '',
+    sessionId: getAuthSessionId(),
     group: groupId,
   }
   const { data } = await apiClient.post<StartJamSessionResponse | ErrorResponse>(
@@ -156,7 +165,7 @@ export async function startJamSession(groupId: string) {
 
 export async function scheduleJamSession(groupId: string, startTime: string) {
   const payload: ScheduleJamSessionPayload = {
-    sessionId: '',
+    sessionId: getAuthSessionId(),
     group: groupId,
     startTime,
   }
@@ -169,7 +178,7 @@ export async function scheduleJamSession(groupId: string, startTime: string) {
 
 export async function joinSession(sessionId: string) {
   const payload: JoinSessionPayload = {
-    sessionId: '',
+    sessionId: getAuthSessionId(),
     session: sessionId,
   }
   const { data } = await apiClient.post<SuccessResponse | ErrorResponse>(
@@ -181,7 +190,7 @@ export async function joinSession(sessionId: string) {
 
 export async function endJamSession(sessionId: string) {
   const payload: EndJamSessionPayload = {
-    sessionId: '',
+    sessionId: getAuthSessionId(),
     session: sessionId,
   }
   const { data } = await apiClient.post<SuccessResponse | ErrorResponse>(
@@ -193,7 +202,7 @@ export async function endJamSession(sessionId: string) {
 
 export async function shareSongInSession(sessionId: string, songId: string, frequency: number) {
   const payload: ShareSongInSessionPayload = {
-    sessionId: '',
+    sessionId: getAuthSessionId(),
     session: sessionId,
     song: songId,
     frequency,
@@ -211,7 +220,7 @@ export async function updateSongLogFrequency(
   newFrequency: number
 ) {
   const payload: UpdateSongLogFrequencyPayload = {
-    sessionId: '',
+    sessionId: getAuthSessionId(),
     session: sessionId,
     song: songId,
     newFrequency,

@@ -651,9 +651,9 @@ label {
 
 .remove-btn {
   padding: 0.5rem 1rem;
-  background: rgba(248, 113, 113, 0.2);
-  color: #fecaca;
-  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: var(--error-bg-light);
+  color: var(--error);
+  border: 1px solid var(--error-border-light);
   border-radius: 0.25rem;
   cursor: pointer;
   font-size: var(--font-size-sm);
@@ -703,15 +703,15 @@ label {
 }
 
 .feedback.success {
-  background: rgba(16, 185, 129, 0.15);
-  color: #6ee7b7;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-border);
 }
 
 .feedback.error {
-  background: rgba(248, 113, 113, 0.15);
-  color: #fecaca;
-  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-border);
 }
 
 .loading,

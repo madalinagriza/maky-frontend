@@ -2007,7 +2007,7 @@ h3 {
 }
 
 .error-message {
-  color: #fca5a5;
+  color: var(--error);
   margin-top: 0.5rem;
   font-size: var(--font-size-sm);
 }
@@ -2101,7 +2101,8 @@ h3 {
   justify-content: space-between;
   align-items: center;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 1rem;
+  border-top: 1px solid var(--border-light);
 }
 
 .reactions-group {
@@ -2179,7 +2180,7 @@ h3 {
 .comments-section {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-light);
 }
 
 .loading-comments,
@@ -2230,7 +2231,7 @@ h3 {
 .post-icon-btn {
   border: none;
   background: transparent;
-  color: #f3f4f6;
+  color: var(--text-primary);
   padding: 0.1rem;
   display: inline-flex;
   align-items: center;
@@ -2248,7 +2249,7 @@ h3 {
 
 .comment-icon-btn.delete:hover:not(:disabled),
 .post-icon-btn.delete:hover:not(:disabled) {
-  color: #fca5a5;
+  color: var(--error);
 }
 
 .comment-icon-btn:disabled,
@@ -2317,7 +2318,7 @@ h3 {
 }
 
 .post-error {
-  color: #fca5a5;
+  color: var(--error);
   font-size: var(--font-size-sm);
   margin-top: 0.25rem;
 }
@@ -2337,7 +2338,7 @@ h3 {
   font-size: var(--font-size-sm);
   cursor: pointer;
   background: var(--bg-card);
-  color: #f3f4f6;
+  color: var(--text-primary);
 }
 
 .comment-edit-btn:hover,
@@ -2388,7 +2389,7 @@ h3 {
 }
 
 .comment-error {
-  color: #fca5a5;
+  color: var(--error);
   font-size: var(--font-size-sm);
 }
 
@@ -2552,7 +2553,7 @@ h3 {
 
 .decline-btn {
   background: rgba(248, 113, 113, 0.2);
-  color: #fecaca;
+  color: var(--error);
 }
 
 .add-btn {
@@ -2571,7 +2572,7 @@ h3 {
 }
 
 .input-error {
-  color: #fca5a5;
+  color: var(--error);
   font-size: var(--font-size-sm);
   margin-top: 0.5rem;
 }

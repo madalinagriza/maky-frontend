@@ -118,7 +118,7 @@
           <!-- Shared Songs Section -->
           <section class="shared-songs-section">
             <h2>Songs Log</h2>
-            <div v-if="session.songsLog.length === 0" class="empty-small">
+            <div v-if="!session.songsLog || session.songsLog.length === 0" class="empty-small">
               No songs logged yet. Practice a song to get started!
             </div>
             <ul v-else class="shared-songs-list">
@@ -246,6 +246,10 @@ async function loadSession() {
     if (!session.value) {
       error.value = 'Session not found'
       return
+    }
+    // Ensure songsLog is initialized as an array if undefined
+    if (!session.value.songsLog) {
+      session.value.songsLog = []
     }
     await Promise.all([loadCommonChords(), loadPlayableSongs()])
   } catch (err) {
@@ -382,7 +386,7 @@ onMounted(() => {
 }
 
 .error-message {
-  color: #fca5a5;
+  color: var(--error);
   background: var(--error-bg-light);
   border-radius: 0.5rem;
   border: 1px solid var(--error-border-light);
@@ -468,7 +472,7 @@ onMounted(() => {
 .end-session-btn {
   background: var(--error-bg);
   border: 1px solid var(--error-border);
-  color: #fca5a5;
+  color: var(--error);
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: var(--font-weight-semibold);
@@ -684,7 +688,6 @@ h2 {
   font-size: var(--font-size-sm);
 }
 
-<<<<<<< HEAD
 .song-status {
   padding: 0.3rem 0.7rem;
   border-radius: 0.5rem;
@@ -700,39 +703,13 @@ h2 {
 }
 
 .song-status.mastered {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .song-status.need-help {
   background: var(--error-bg);
-  color: #fca5a5;
-}
-
-.status-buttons {
-||||||| 29b6909
-.song-status {
-  padding: 0.3rem 0.7rem;
-  border-radius: 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.song-status.practicing {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fcd34d;
-}
-
-.song-status.mastered {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
-}
-
-.song-status.need-help {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+  color: var(--error);
 }
 
 .status-buttons {

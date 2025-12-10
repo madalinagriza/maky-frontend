@@ -47,6 +47,7 @@ function applyTheme(themeName: ThemeName) {
   root.style.setProperty('--button-border-light', theme.colors.buttonBorderLight)
   root.style.setProperty('--error-bg-light', theme.colors.errorBgLight)
   root.style.setProperty('--error-border-light', theme.colors.errorBorderLight)
+  root.style.setProperty('--auth-overlay', theme.colors.authOverlay)
   
   currentTheme.value = themeName
   localStorage.setItem(THEME_STORAGE_KEY, themeName)

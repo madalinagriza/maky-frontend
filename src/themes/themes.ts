@@ -81,6 +81,9 @@ export interface Theme {
     buttonBorderLight: string
     errorBgLight: string
     errorBorderLight: string
+
+    // Auth page overlay (for login/register backgrounds)
+    authOverlay: string
   }
 }
 
@@ -134,7 +137,9 @@ export const themes: Record<ThemeName, Theme> = {
       buttonBgMedium: 'rgba(245, 128, 48, 0.2)',
       buttonBorderLight: 'rgba(245, 128, 48, 0.25)',
       errorBgLight: 'rgba(239, 68, 68, 0.1)',
-      errorBorderLight: 'rgba(239, 68, 68, 0.3)'
+      errorBorderLight: 'rgba(239, 68, 68, 0.3)',
+      // Auth page overlay - warm orange/peach tint
+      authOverlay: 'rgba(255, 200, 150, 0.12)'
     }
   },
   'dark-brown-primary': {
@@ -170,10 +175,10 @@ export const themes: Record<ThemeName, Theme> = {
       inputText: 'rgb(45, 35, 30)', // Dark brown to match textPrimary
       inputFocus: 'rgb(245, 128, 48)',
       // Status colors - darker versions for light background
-      success: 'rgb(5, 150, 105)', // Darker green for better readability on light bg
+      success: 'rgb(4, 120, 87)', // Much darker green for better readability on light bg
       successBg: 'rgba(16, 185, 129, 0.1)',
       successBorder: 'rgba(16, 185, 129, 0.3)',
-      error: 'rgb(220, 38, 38)', // Darker red for better readability on light bg
+      error: 'rgb(185, 28, 28)', // Much darker red for better readability on light bg
       errorBg: 'rgba(248, 113, 113, 0.1)',
       errorBorder: 'rgba(248, 113, 113, 0.3)',
       // Focus/outline
@@ -186,7 +191,9 @@ export const themes: Record<ThemeName, Theme> = {
       buttonBgMedium: 'rgba(245, 128, 48, 0.2)',
       buttonBorderLight: 'rgba(245, 128, 48, 0.25)',
       errorBgLight: 'rgba(239, 68, 68, 0.1)',
-      errorBorderLight: 'rgba(239, 68, 68, 0.3)'
+      errorBorderLight: 'rgba(239, 68, 68, 0.3)',
+      // Auth page overlay - subtle warm beige/cream tint
+      authOverlay: 'rgba(250, 240, 220, 0.1)'
     }
   },
   'red-primary': {
@@ -240,7 +247,9 @@ export const themes: Record<ThemeName, Theme> = {
       buttonBgMedium: 'rgba(217, 70, 52, 0.2)', // --button with opacity
       buttonBorderLight: 'rgba(217, 70, 52, 0.25)', // --button with opacity
       errorBgLight: 'rgba(239, 68, 68, 0.1)',
-      errorBorderLight: 'rgba(239, 68, 68, 0.3)'
+      errorBorderLight: 'rgba(239, 68, 68, 0.3)',
+      // Auth page overlay - yellowish/amber tint (default theme)
+      authOverlay: 'rgba(255, 240, 200, 0.15)'
     }
   }
 }

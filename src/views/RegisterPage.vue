@@ -131,12 +131,19 @@ async function handleRegister() {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: radial-gradient(
-    circle at top,
-    var(--contrast-top) 0%,
-    var(--contrast-mid) 35%,
-    var(--contrast-bottom) 100%
-  );
+  background: 
+    radial-gradient(
+      circle at top,
+      var(--contrast-top) 0%,
+      var(--contrast-mid) 35%,
+      var(--contrast-bottom) 100%
+    ),
+    linear-gradient(
+      135deg,
+      var(--auth-overlay) 0%,
+      transparent 50%,
+      var(--auth-overlay) 100%
+    );
   padding: 1.5rem;
   color: var(--contrast-mid);
 }
@@ -233,17 +240,17 @@ input:focus {
 }
 
 .helper-collapse {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 0.75rem 0.9rem;
-  background: rgba(255, 255, 255, 0.02);
-  color: #f3f4f6;
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .helper-collapse summary {
   cursor: pointer;
   font-weight: 600;
-  color: #f9fafb;
+  color: var(--text-primary);
   margin-bottom: 0.35rem;
 }
 

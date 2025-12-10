@@ -1271,7 +1271,7 @@ h2 {
 
 .filter-btn.active {
   background: var(--button);
-  color: #fff;
+  color: var(--button-text);
 }
 
 .posts-list {
@@ -1343,7 +1343,7 @@ h2 {
 }
 
 .item-search-tab.active {
-  background: var(--button-bg-medium);
+  background: var(--button);
   color: var(--button-text);
 }
 
@@ -1401,16 +1401,24 @@ h2 {
   flex-wrap: wrap;
 }
 
+.post-visibility-toggle {
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-card);
+}
+
 .post-visibility-toggle label {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 0.5rem;
+  display: block;
 }
 
 .visibility-toggle-group {
   display: inline-flex;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--border-light);
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-secondary);
 }
 
 .visibility-toggle-btn {
@@ -1425,7 +1433,7 @@ h2 {
 
 .visibility-toggle-btn.active {
   background: var(--button);
-  color: #fff;
+  color: var(--button-text);
 }
 
 .visibility-toggle-btn:disabled {
@@ -1435,7 +1443,7 @@ h2 {
 
 .visibility-hint {
   font-size: 0.8rem;
-  color: #fca5a5;
+  color: var(--error);
   margin-top: -0.35rem;
 }
 
@@ -1527,7 +1535,7 @@ h2 {
 }
 
 .error-message {
-  color: #ef4444;
+  color: var(--error);
   margin-top: 1rem;
   font-size: var(--font-size-sm);
 }
@@ -1562,7 +1570,7 @@ h2 {
   display: flex;
   justify-content: flex-start;
   margin-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-light);
   padding-top: 0.75rem;
 }
 
@@ -1626,7 +1634,7 @@ h2 {
 }
 
 .post-error {
-  color: #fca5a5;
+  color: var(--error);
   font-size: var(--font-size-sm);
   margin-top: 0.25rem;
 }
@@ -1657,7 +1665,7 @@ h2 {
 .post-icon-btn {
   border: none;
   background: transparent;
-  color: #f3f4f6;
+  color: var(--text-primary);
   padding: 0.1rem;
   display: inline-flex;
   align-items: center;
@@ -1673,7 +1681,7 @@ h2 {
 }
 
 .post-icon-btn.delete:hover:not(:disabled) {
-  color: #fca5a5;
+  color: var(--error);
 }
 
 .post-icon-btn:disabled {
@@ -1723,7 +1731,7 @@ h2 {
 .post-items {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-light);
 }
 
 .visibility-controls {
@@ -1846,7 +1854,7 @@ h2 {
 .comments-section {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-light);
 }
 
 .loading-comments,
@@ -1895,7 +1903,7 @@ h2 {
 .comment-icon-btn {
   border: none;
   background: transparent;
-  color: #f3f4f6;
+  color: var(--text-primary);
   padding: 0.15rem;
   display: inline-flex;
   align-items: center;
@@ -1911,7 +1919,7 @@ h2 {
 }
 
 .comment-icon-btn.delete:hover:not(:disabled) {
-  color: #fca5a5;
+  color: var(--error);
 }
 
 .comment-icon-btn:disabled {
@@ -1937,7 +1945,7 @@ h2 {
   border: 1px solid var(--border);
   border-radius: 0.4rem;
   padding: 0.4rem 0.6rem;
-  color: #f3f4f6;
+  color: var(--text-primary);
 }
 
 .comment-edit-input:focus {
@@ -1977,7 +1985,7 @@ h2 {
 }
 
 .comment-error {
-  color: #fca5a5;
+  color: var(--error);
   font-size: var(--font-size-sm);
 }
 

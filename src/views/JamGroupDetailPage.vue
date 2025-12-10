@@ -530,7 +530,7 @@ async function createNewSession() {
   }
 }
 
-async function joinActiveSession() {
+function joinActiveSession() {
   if (activeSession.value) {
     router.push(`/jam/${groupId.value}/session/${activeSession.value._id}`)
   }
@@ -808,7 +808,7 @@ h3 {
 .leave-btn {
   background: var(--error-bg-light);
   border: 1px solid var(--error-border-light);
-  color: #fca5a5;
+  color: var(--error);
   padding: 0.4rem 0.8rem;
   border-radius: 0.4rem;
   font-size: var(--font-size-sm);
@@ -866,7 +866,7 @@ h3 {
   width: 100%;
   background: rgba(239, 68, 68, 0.2);
   border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #fca5a5;
+  color: var(--error);
   padding: 0.75rem;
   border-radius: 0.5rem;
   font-weight: 600;
@@ -891,7 +891,7 @@ h3 {
 .disband-btn {
   background: var(--error-bg);
   border: 1px solid var(--error-border);
-  color: #fca5a5;
+  color: var(--error);
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: var(--font-weight-semibold);
@@ -945,7 +945,7 @@ h3 {
 .end-session-btn {
   background: var(--error-bg);
   border: 1px solid var(--error-border);
-  color: #fca5a5;
+  color: var(--error);
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: var(--font-weight-semibold);
@@ -1037,8 +1037,8 @@ h3 {
 }
 
 .session-status.active {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .session-status.completed {
@@ -1067,7 +1067,7 @@ h3 {
 }
 
 .error-small {
-  color: #fca5a5;
+  color: var(--error);
 }
 
 button:disabled {
