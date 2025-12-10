@@ -389,14 +389,14 @@ onMounted(() => {
   text-align: center;
   padding: 3rem;
   color: var(--contrast-mid);
-  font-size: 1.1rem;
+  font-size: var(--font-size-md);
 }
 
 .error-message {
   color: #fca5a5;
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--error-bg-light);
   border-radius: 0.5rem;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--error-border-light);
 }
 
 .session-header {
@@ -407,7 +407,7 @@ onMounted(() => {
   background: none;
   border: none;
   color: var(--contrast-mid);
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   cursor: pointer;
   padding: 0.5rem 0;
   margin-bottom: 1rem;
@@ -428,8 +428,8 @@ onMounted(() => {
 
 .header-info h1 {
   display: inline-block;
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
   margin: 0 1rem 0 0;
   background: linear-gradient(120deg, var(--contrast-top), var(--contrast-mid));
   -webkit-background-clip: text;
@@ -440,8 +440,8 @@ onMounted(() => {
 .status-badge {
   padding: 0.4rem 0.9rem;
   border-radius: 0.75rem;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -454,7 +454,7 @@ onMounted(() => {
 
 .status-badge.completed {
   background: rgba(156, 163, 175, 0.2);
-  color: #d1d5db;
+  color: var(--text-secondary);
   border: 1px solid rgba(156, 163, 175, 0.4);
 }
 
@@ -472,23 +472,23 @@ onMounted(() => {
 
 .participants-count {
   color: var(--contrast-mid);
-  font-weight: 500;
-  font-size: 1.05rem;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-md);
 }
 
 .end-session-btn {
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
   color: #fca5a5;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .end-session-btn:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.3);
+  background: var(--error-bg);
 }
 
 .session-layout {
@@ -500,14 +500,14 @@ onMounted(() => {
 .common-chords-section,
 .recommendations-section,
 .shared-songs-section {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1.5rem;
 }
 
 h2 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
   color: var(--contrast-top);
   margin: 0 0 1rem 0;
 }
@@ -535,14 +535,14 @@ h2 {
   border: none;
   padding: 0.6rem 1.2rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .next-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 .chord-count {
@@ -557,18 +557,18 @@ h2 {
 }
 
 .chord-pill {
-  background: rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  background: var(--button-bg-medium);
+  border: 1px solid var(--button);
   color: var(--contrast-top);
   padding: 0.4rem 0.8rem;
   border-radius: 0.5rem;
-  font-weight: 500;
-  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
 }
 
 .recommendation-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1.5rem;
 }
@@ -582,7 +582,7 @@ h2 {
 }
 
 .rec-header h3 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
   color: var(--contrast-top);
   margin: 0 0 0.25rem 0;
 }
@@ -590,17 +590,17 @@ h2 {
 .rec-artist {
   color: var(--contrast-mid);
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--font-size-md);
 }
 
 .genre-tag {
-  background: linear-gradient(120deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
-  border: 1px solid rgba(99, 102, 241, 0.5);
+  background: linear-gradient(120deg, var(--button-bg-medium), var(--button-bg-light));
+  border: 1px solid var(--button);
   color: var(--contrast-top);
   padding: 0.4rem 0.9rem;
   border-radius: 0.75rem;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -612,7 +612,7 @@ h2 {
 .rec-chords-label {
   display: block;
   color: var(--contrast-bottom);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.75rem;
@@ -625,13 +625,13 @@ h2 {
 }
 
 .rec-chord-pill {
-  background: rgba(99, 102, 241, 0.25);
-  border: 1px solid rgba(99, 102, 241, 0.5);
+  background: var(--button-bg-medium);
+  border: 1px solid var(--button);
   color: var(--contrast-top);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
 }
 
 .practice-btn {
@@ -640,22 +640,22 @@ h2 {
   border: none;
   padding: 0.9rem 1.8rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 1.05rem;
+  font-size: var(--font-size-md);
   width: 100%;
   margin-bottom: 1rem;
 }
 
 .practice-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 .rec-footer {
   color: var(--contrast-bottom);
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   text-align: center;
   margin: 0;
 }
@@ -685,21 +685,21 @@ h2 {
 .shared-song-title {
   display: block;
   color: var(--contrast-top);
-  font-weight: 500;
-  font-size: 1.05rem;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-md);
   margin-bottom: 0.25rem;
 }
 
 .shared-by {
   color: var(--contrast-bottom);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
 }
 
 .song-status {
   padding: 0.3rem 0.7rem;
   border-radius: 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -715,7 +715,7 @@ h2 {
 }
 
 .song-status.need-help {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--error-bg);
   color: #fca5a5;
 }
 
@@ -726,13 +726,13 @@ h2 {
 }
 
 .status-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   color: var(--contrast-mid);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -750,7 +750,7 @@ h2 {
 .loading-small,
 .empty-small {
   color: var(--contrast-bottom);
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   padding: 0.5rem 0;
 }
 
@@ -770,7 +770,7 @@ button:disabled {
   }
 
   .header-info h1 {
-    font-size: 2rem;
+    font-size: var(--font-size-2xl);
   }
 
   .header-actions {

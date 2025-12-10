@@ -17,7 +17,7 @@ import Navigation from './Navigation.vue'
   display: flex;
   flex-direction: column;
   background: var(--app-bg);
-  color: #f9fafb;
+  color: var(--text-primary);
 }
 
 .main-content {

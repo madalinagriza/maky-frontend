@@ -1,7 +1,10 @@
 <template>
   <nav class="navbar">
     <div class="nav-container">
-      <router-link to="/learn" class="logo">ChordConnect</router-link>
+      <router-link to="/learn" class="logo">
+        <img :src="logoImage" alt="Chord Connect" class="logo-img" />
+        <span class="logo-text">ChordConnect</span>
+      </router-link>
       <div class="nav-right">
         <div class="nav-links">
           <router-link to="/learn" class="nav-link">Learn</router-link>
@@ -64,16 +67,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useUserProfile } from '@/composables/useUserProfile'
+import { useTheme } from '@/composables/useTheme'
 
 const router = useRouter()
 const { logout, username, kidOrPrivateStatus, refreshKidOrPrivateStatus } = useAuth()
 const { displayName, avatarUrl, getInitials } = useUserProfile()
+const { currentTheme, getCurrentTheme } = useTheme()
 
 const isHovered = ref(false)
+const logoImage = computed(() => getCurrentTheme().logoImage)
 
 onMounted(() => {
   if (kidOrPrivateStatus.value === null) {
@@ -95,12 +101,17 @@ function handleLogout() {
   logout()
   router.push('/login')
 }
+
+// Watch for theme changes to update logo
+watch(currentTheme, () => {
+  // Logo will update automatically via computed property
+})
 </script>
 
 <style scoped>
 .navbar {
   background: var(--main);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border);
   padding: 1rem 2rem;
   position: sticky;
   top: 0;
@@ -117,17 +128,31 @@ function handleLogout() {
 }
 
 .logo {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #f9fafb;
+  display: flex;
+  align-items: center;
   text-decoration: none;
-  background: linear-gradient(120deg, var(--contrast-bottom), var(--contrast-top));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  height: 50px;
+  transition: opacity 0.2s ease;
+}
+
+.logo:hover {
+  opacity: 0.8;
+}
+
+.logo-img {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+  margin-right: 0.75rem;
+}
+
+.logo-text {
   font-family: var(--logo-font);
   font-weight: var(--logo-font-weight);
-  letter-spacing: 0.02em;
+  font-size: var(--font-size-xl);
+  color: var(--logo-text-color);
+  white-space: nowrap;
+  transition: color 0.2s ease;
 }
 
 .nav-right {
@@ -145,7 +170,7 @@ function handleLogout() {
 .nav-link {
   color: var(--contrast-mid);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   transition: all 0.2s ease;
@@ -176,7 +201,7 @@ function handleLogout() {
 }
 
 .user-menu-trigger:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-card);
 }
 
 .user-avatar {
@@ -184,7 +209,7 @@ function handleLogout() {
   height: 32px;
   border-radius: 50%;
   overflow: hidden;
-  background: rgba(99, 102, 241, 0.3);
+  background: var(--button);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -203,20 +228,20 @@ function handleLogout() {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #a5b4fc;
-  font-weight: 600;
-  font-size: 0.875rem;
+  color: var(--button-text);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
 }
 
 .user-name {
   color: var(--contrast-mid);
-  font-weight: 500;
-  font-size: 0.95rem;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
 }
 
 .dropdown-arrow {
   color: var(--contrast-bottom);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   transition: transform 0.2s ease;
   display: inline-block;
 }
@@ -235,9 +260,9 @@ function handleLogout() {
 
 .user-dropdown {
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px var(--shadow);
   min-width: 150px;
   overflow: hidden;
   animation: fadeIn 0.2s ease;
@@ -260,26 +285,26 @@ function handleLogout() {
   padding: 0.75rem 1rem;
   color: var(--contrast-mid);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-align: left;
   background: transparent;
   border: none;
   cursor: pointer;
   transition: background 0.2s ease;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
 }
 
 .dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-card);
 }
 
 .dropdown-item.logout-item {
-  color: #fecaca;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--error);
+  border-top: 1px solid var(--border);
 }
 
 .dropdown-item.logout-item:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--error-bg);
 }
 </style>
 

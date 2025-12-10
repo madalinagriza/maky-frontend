@@ -95,36 +95,24 @@ onMounted(() => {
 .jam-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
 }
 
 .jam-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
-.eyebrow {
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: var(--contrast-bottom);
-  margin: 0 0 0.5rem 0;
+.jam-header h1 {
+  margin-bottom: 2rem;
 }
 
-h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin: 0;
-  background: linear-gradient(120deg, var(--contrast-top), var(--contrast-mid));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+/* Eyebrow styling removed - using standardized h1 only */
+
+/* h1 styling is now standardized in style.css */
 
 .create-group-btn {
   background: var(--button);
@@ -132,15 +120,15 @@ h1 {
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
 }
 
 .create-group-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 .loading,
@@ -148,14 +136,14 @@ h1 {
   text-align: center;
   padding: 3rem;
   color: var(--contrast-mid);
-  font-size: 1.1rem;
+  font-size: var(--font-size-md);
 }
 
 .error-message {
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  background: var(--error-bg-light);
   border-radius: 0.5rem;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--error-border-light);
 }
 
 .empty-state {
@@ -166,12 +154,12 @@ h1 {
 }
 
 .empty-icon {
-  font-size: 4rem;
+  font-size: var(--font-size-4xl);
   margin-bottom: 1.5rem;
 }
 
 .empty-state h2 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
   color: var(--contrast-top);
   margin-bottom: 0.5rem;
 }
@@ -179,7 +167,7 @@ h1 {
 .empty-state p {
   color: var(--contrast-mid);
   margin-bottom: 2rem;
-  font-size: 1.05rem;
+  font-size: var(--font-size-base);
 }
 
 .create-group-btn-large {
@@ -188,15 +176,15 @@ h1 {
   border: none;
   padding: 1rem 2rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 1.1rem;
+  font-size: var(--font-size-md);
 }
 
 .create-group-btn-large:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 .groups-grid {
@@ -222,7 +210,7 @@ h1 {
   }
 
   h1 {
-    font-size: 2rem;
+    font-size: var(--font-size-2xl);
   }
 
   .groups-grid {

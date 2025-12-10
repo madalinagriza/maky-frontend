@@ -117,7 +117,7 @@ async function handleSubmit() {
 
 .modal-header h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
   color: var(--contrast-top);
 }
 
@@ -125,7 +125,7 @@ async function handleSubmit() {
   background: none;
   border: none;
   color: var(--contrast-mid);
-  font-size: 2rem;
+  font-size: var(--font-size-2xl);
   cursor: pointer;
   padding: 0;
   width: 2rem;
@@ -154,8 +154,8 @@ async function handleSubmit() {
   display: block;
   margin-bottom: 0.5rem;
   color: var(--contrast-mid);
-  font-weight: 500;
-  font-size: 0.95rem;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
 }
 
 .form-input,
@@ -166,7 +166,7 @@ async function handleSubmit() {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   color: var(--contrast-top);
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   font-family: inherit;
   transition: all 0.2s ease;
 }
@@ -184,13 +184,13 @@ async function handleSubmit() {
 }
 
 .error-message {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+  background: var(--error-bg-light);
+  border: 1px solid var(--error-border-light);
+  color: var(--error);
   padding: 0.75rem;
   border-radius: 0.5rem;
   margin-bottom: 1rem;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
 }
 
 .modal-actions {
@@ -204,10 +204,10 @@ async function handleSubmit() {
 .submit-btn {
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   border: none;
 }
 
@@ -227,7 +227,7 @@ async function handleSubmit() {
 
 .submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 .cancel-btn:disabled,

@@ -300,27 +300,16 @@ async function persistPrivateStatus() {
   gap: 1rem;
 }
 
-.eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-size: 0.75rem;
-  color: #9ca3af;
-}
-
-h1 {
-  margin: 0.25rem 0;
-  font-size: 2.25rem;
-  color: var(--contrast-mid);
-}
+/* Eyebrow and h1 styling removed - using standardized styles from style.css */
 
 .lead {
-  color: #d1d5db;
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .session-warning {
-  background: rgba(248, 113, 113, 0.1);
-  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
   color: #fecaca;
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
@@ -334,7 +323,7 @@ h1 {
 
 .settings-card {
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 1rem;
   padding: 1.5rem;
   display: flex;
@@ -344,12 +333,12 @@ h1 {
 
 .card-header h2 {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: var(--font-size-xl);
 }
 
 .card-subtitle {
   margin: 0.25rem 0 0;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .form {
@@ -367,11 +356,11 @@ label {
 
 input {
   border-radius: 0.65rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   padding: 0.75rem 0.9rem;
   background: var(--main-top);
-  color: #f9fafb;
-  font-size: 1rem;
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
 }
 
 button[type='submit'],
@@ -380,9 +369,9 @@ button[type='submit'],
   border-radius: 0.9rem;
   padding: 0.85rem 1.25rem;
   background: var(--button);
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 600;
+  color: var(--button-text);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
@@ -396,19 +385,19 @@ button:disabled {
   margin: 0;
   padding: 0.85rem 1rem;
   border-radius: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .feedback.success {
-  background: rgba(16, 185, 129, 0.15);
-  color: #6ee7b7;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-border);
 }
 
 .feedback.error {
-  background: rgba(248, 113, 113, 0.15);
-  color: #fecaca;
-  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-border);
 }
 
 .toggle-row {
@@ -417,18 +406,18 @@ button:disabled {
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .toggle-label {
   margin: 0;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .toggle-description {
   margin: 0.25rem 0 0;
-  color: #9ca3af;
-  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
 }
 
 .switch {
@@ -451,7 +440,7 @@ button:disabled {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--border);
   transition: 0.2s;
   border-radius: 26px;
 }
@@ -463,7 +452,7 @@ button:disabled {
   width: 20px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
+  background-color: var(--bg-card);
   transition: 0.2s;
   border-radius: 50%;
 }
@@ -478,8 +467,8 @@ input:checked + .slider:before {
 
 .note {
   margin: 0.5rem 0 0;
-  color: #9ca3af;
-  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
 }
 
 @media (max-width: 640px) {

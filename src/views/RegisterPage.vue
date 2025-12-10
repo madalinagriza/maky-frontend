@@ -136,8 +136,8 @@ async function handleRegister() {
   width: min(560px, 100%);
   border-radius: 1.25rem;
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border);
+  box-shadow: 0 25px 65px var(--shadow-strong);
   padding: 2rem;
   display: flex;
   flex-direction: column;
@@ -146,23 +146,23 @@ async function handleRegister() {
 }
 
 .eyebrow {
-  color: #9ca3af;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   margin: 0;
 }
 
 h1 {
   margin: 0.35rem 0 0;
-  font-size: 1.85rem;
+  font-size: var(--font-size-2xl);
   font-family: var(--logo-font);
   font-weight: var(--logo-font-weight);
 }
 
 .lead {
   margin: 0.75rem 0 0;
-  color: #d1d5db;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
@@ -176,23 +176,23 @@ label {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  font-size: 0.95rem;
-  color: #e5e7eb;
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
 }
 
 input[type='text'],
 input[type='email'],
 input[type='password'] {
   border-radius: 0.65rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--input-border);
   padding: 0.75rem 0.9rem;
-  background: var(--main-top);
-  color: #f9fafb;
-  font-size: 1rem;
+  background: var(--input-bg);
+  color: var(--input-text);
+  font-size: var(--font-size-base);
 }
 
 input:focus {
-  outline: 2px solid #818cf8;
+  outline: 2px solid var(--input-focus);
   border-color: transparent;
 }
 
@@ -209,8 +209,8 @@ button[type='submit'] {
   padding: 0.85rem 1.25rem;
   background: var(--button);
   color: var(--btn-text);
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
@@ -224,25 +224,25 @@ button[disabled] {
   margin: 0;
   padding: 0.9rem 1rem;
   border-radius: 0.9rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-align: center;
 }
 
 .feedback.success {
-  background: rgba(16, 185, 129, 0.15);
-  color: #6ee7b7;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-border);
 }
 
 .feedback.error {
-  background: rgba(248, 113, 113, 0.15);
-  color: #fecaca;
-  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-border);
 }
 
 .footnote {
   margin: 0;
-  color: #9ca3af;
+  color: var(--text-muted);
   line-height: 1.5;
   text-align: center;
 }

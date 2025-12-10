@@ -2,48 +2,106 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
 
 :root {
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont,
-    'Helvetica Neue', sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  font-weight: var(--font-weight-normal);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #f9fafb;
-  background-color: #630503ff;
-}
-
-:root {
-  --button: #d94634ff;
-  --accent: #db6a5b;
-  --btn-text: #fdd1cc;
-  --main: rgb(46, 1, 0);
-  --card: rgb(46, 1, 0);
-
-  --contrast-top: rgb(247, 233, 205);
-  --contrast-mid: rgb(251, 225, 172);
-  --contrast-bottom: rgb(250, 211, 134);
-
-  --main-top: rgb(77, 7, 6);
-  --main-mid: var(--main);
-  --main-bottom: rgb(31, 1, 0);
-
+  
+  /* Default theme values (will be overridden by theme system) */
+  --logo-color: rgb(245, 128, 48);
+  --logo-text-color: rgb(245, 128, 48);
+  --bg-primary: rgb(41, 36, 35);
+  --bg-secondary: rgb(59, 46, 37);
+  --bg-card: rgb(75, 62, 53);
+  --bg-gradient-top: rgb(59, 46, 37);
+  --bg-gradient-mid: rgb(41, 36, 35);
+  --bg-gradient-bottom: rgb(30, 25, 24);
+  --text-primary: rgb(238, 232, 219);
+  --text-secondary: rgb(201, 179, 157);
+  --text-muted: rgb(150, 135, 120);
+  --button: rgb(245, 128, 48);
+  --button-hover: rgb(255, 150, 80);
+  --button-text: rgb(255, 255, 255);
+  --accent: rgb(245, 128, 48);
+  --link: rgb(255, 150, 80);
+  --border: rgba(238, 232, 219, 0.2);
+  --border-light: rgba(201, 179, 157, 0.1);
+  --input-bg: rgb(62, 43, 35);
+  --input-border: rgba(238, 232, 219, 0.1);
+  --input-text: rgb(249, 250, 251);
+  --input-focus: rgb(245, 128, 48);
+  --success: rgb(110, 231, 183);
+  --success-bg: rgba(16, 185, 129, 0.15);
+  --success-border: rgba(16, 185, 129, 0.35);
+  --error: rgb(254, 202, 202);
+  --error-bg: rgba(248, 113, 113, 0.15);
+  --error-border: rgba(248, 113, 113, 0.35);
+  --focus-outline: rgb(245, 128, 48);
+  --shadow: rgba(0, 0, 0, 0.3);
+  --shadow-strong: rgba(0, 0, 0, 0.45);
+  --button-bg-light: rgba(245, 128, 48, 0.1);
+  --button-bg-medium: rgba(245, 128, 48, 0.2);
+  --button-border-light: rgba(245, 128, 48, 0.25);
+  --error-bg-light: rgba(239, 68, 68, 0.1);
+  --error-border-light: rgba(239, 68, 68, 0.3);
+  
+  /* Legacy variable mappings for backward compatibility */
+  --btn-text: var(--button-text);
+  --main: var(--bg-primary);
+  --card: var(--bg-card);
+  --contrast-top: var(--text-primary);
+  --contrast-mid: var(--text-secondary);
+  --contrast-bottom: var(--text-secondary);
+  --main-top: var(--bg-gradient-top);
+  --main-mid: var(--bg-gradient-mid);
+  --main-bottom: var(--bg-gradient-bottom);
+  
+  /* Typography System */
+  --font-family-base: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  --font-family-heading: 'Poppins', sans-serif;
+  --font-family-logo: 'Cooper Black', serif;
+  
+  /* Font Sizes - Standardized Scale */
+  --font-size-xs: 0.75rem;      /* 12px - labels, captions */
+  --font-size-sm: 0.875rem;     /* 14px - small text, metadata */
+  --font-size-base: 1rem;       /* 16px - body text */
+  --font-size-md: 1.125rem;     /* 18px - emphasized body */
+  --font-size-lg: 1.25rem;      /* 20px - subheadings */
+  --font-size-xl: 1.5rem;       /* 24px - section headings */
+  --font-size-2xl: 2rem;        /* 32px - page titles */
+  --font-size-3xl: 2.5rem;      /* 40px - hero titles */
+  --font-size-4xl: 4rem;        /* 64px - display text, large icons */
+  
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Line Heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
   
   /* Logo / brand font */
-  /* --logo-font: 'Poppins', Inter, 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif; */
-  --logo-font: 'Cooper Black';
-  --logo-font-weight: 700;
-
-  --main-font: 'Poppins';
-  --main-font-weight: 400;
+  --logo-font: var(--font-family-logo);
+  --logo-font-weight: var(--font-weight-bold);
+  --main-font: var(--font-family-heading);
+  --main-font-weight: var(--font-weight-normal);
 
   --app-bg: radial-gradient(
     circle at top,
-    var(--main-top) 0%,
-    var(--main-mid) 35%,
-    var(--main-bottom) 100%
+    var(--bg-gradient-top) 0%,
+    var(--bg-gradient-mid) 35%,
+    var(--bg-gradient-bottom) 100%
   );
+  
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
 }
 
 *,
@@ -55,9 +113,104 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #030712;
+  background-color: var(--bg-primary);
 }
 
 #app {
   min-height: 100vh;
+}
+
+/* Typography Utilities - Standardized Text Styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-heading);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 2rem 0;
+}
+
+/* Standardized eyebrow/subtitle styling for page headers */
+.eyebrow {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin: 0 0 0.5rem 0;
+  display: block;
+}
+
+h2 {
+  font-size: var(--font-size-xl);
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+}
+
+h4 {
+  font-size: var(--font-size-md);
+}
+
+p {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.text-xs {
+  font-size: var(--font-size-xs);
+}
+
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+
+.text-base {
+  font-size: var(--font-size-base);
+}
+
+.text-md {
+  font-size: var(--font-size-md);
+}
+
+.text-lg {
+  font-size: var(--font-size-lg);
+}
+
+.text-xl {
+  font-size: var(--font-size-xl);
+}
+
+.font-medium {
+  font-weight: var(--font-weight-medium);
+}
+
+.font-semibold {
+  font-weight: var(--font-weight-semibold);
+}
+
+.font-bold {
+  font-weight: var(--font-weight-bold);
 }

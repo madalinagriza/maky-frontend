@@ -1,6 +1,7 @@
 <template>
   <Layout>
     <div class="profile-container">
+      <p class="eyebrow">Settings</p>
       <h1>Profile</h1>
 
       <div class="profile-layout">
@@ -444,11 +445,7 @@ async function loadProfile() {
   margin: 0 auto;
 }
 
-h1 {
-  font-size: 2.5rem;
-  margin-bottom: 2rem;
-  color: var(--contrast-mid);
-}
+/* h1 styling is now standardized in style.css */
 
 .profile-layout {
   display: grid;
@@ -459,19 +456,19 @@ h1 {
 .profile-card,
 .chords-card {
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-light);
   border-radius: 1rem;
   padding: 2rem;
 }
 
 h2 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
   margin: 0 0 1.5rem;
   color: var(--contrast-mid);
 }
 
 h3 {
-  font-size: 1.25rem;
+  font-size: var(--font-size-lg);
   margin: 1.5rem 0 1rem;
   color: var(--contrast-mid);
 }
@@ -490,7 +487,7 @@ h3 {
 
 label {
   color: var(--contrast-mid);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .form-input,
@@ -498,7 +495,7 @@ label {
 .form-select {
   padding: 0.75rem;
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   color: var(--contrast-mid);
   font-family: inherit;
@@ -520,7 +517,7 @@ label {
   gap: 0.5rem;
   padding: 0.5rem;
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   cursor: pointer;
 }
@@ -528,10 +525,10 @@ label {
 .save-btn {
   padding: 0.75rem 1.5rem;
   background: var(--button);
-  color: #fff;
+  color: var(--button-text);
   border: none;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
@@ -554,7 +551,7 @@ label {
   align-items: center;
   padding: 1rem;
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
 }
 
@@ -565,18 +562,18 @@ label {
 }
 
 .chord-name {
-  font-weight: 600;
-  color: #e5e7eb;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
   min-width: 80px;
 }
 
 .mastery-select {
   padding: 0.5rem;
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.25rem;
-  color: #f9fafb;
-  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
 }
 
 .update-btn {
@@ -586,7 +583,7 @@ label {
   border: 1px solid rgba(129, 140, 248, 0.35);
   border-radius: 0.25rem;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   transition: opacity 0.2s ease;
 }
 
@@ -602,7 +599,7 @@ label {
   border: 1px solid rgba(248, 113, 113, 0.3);
   border-radius: 0.25rem;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .add-chord-section {
@@ -620,18 +617,18 @@ label {
   flex: 1;
   padding: 0.75rem;
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  color: #f9fafb;
+  color: var(--text-primary);
 }
 
 .add-btn {
   padding: 0.75rem 1.5rem;
   background: var(--button);
-  color: #fff;
+  color: var(--button-text);
   border: none;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
 
@@ -644,7 +641,7 @@ label {
   margin-top: 1rem;
   padding: 0.9rem 1rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-align: center;
 }
 
@@ -662,7 +659,7 @@ label {
 
 .loading,
 .empty-state {
-  color: #9ca3af;
+  color: var(--text-muted);
   padding: 2rem;
   text-align: center;
 }
@@ -673,7 +670,7 @@ label {
   align-items: center;
   padding: 0.75rem;
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
 }
 
@@ -687,7 +684,7 @@ label {
   left: 0;
   right: 0;
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   max-height: 200px;
   overflow-y: auto;
@@ -704,7 +701,7 @@ label {
 }
 
 .search-result-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-card);
 }
 </style>
 

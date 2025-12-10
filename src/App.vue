@@ -1,7 +1,8 @@
 <template>
   <router-view />
+  <FloatingThemeSwitcher />
 </template>
 
 <script setup lang="ts">
-// App.vue is now a simple router container
+import FloatingThemeSwitcher from '@/components/FloatingThemeSwitcher.vue'
 </script>

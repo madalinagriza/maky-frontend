@@ -181,11 +181,11 @@ async function handleSubmit() {
 }
 
 .questionnaire-card {
-  background: rgba(17, 24, 39, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 1.25rem;
   padding: 2rem;
-  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 25px 65px var(--shadow-strong);
 }
 
 header {
@@ -194,13 +194,13 @@ header {
 }
 
 h1 {
-  font-size: 2rem;
+  font-size: var(--font-size-2xl);
   margin: 0 0 0.5rem;
 }
 
 .subtitle {
-  color: #9ca3af;
-  font-size: 1.1rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-md);
   margin: 0;
 }
 
@@ -217,14 +217,14 @@ h1 {
 }
 
 h2 {
-  font-size: 1.25rem;
+  font-size: var(--font-size-lg);
   margin: 0;
-  color: #e5e7eb;
+  color: var(--text-secondary);
 }
 
 .section-description {
-  color: #9ca3af;
-  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
   margin: 0;
 }
 
@@ -241,8 +241,8 @@ h2 {
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--input-border);
   border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -250,14 +250,14 @@ h2 {
 
 .chord-checkbox:hover,
 .genre-checkbox:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: rgba(99, 102, 241, 0.3);
+  background: var(--bg-secondary);
+  border-color: var(--button);
 }
 
 .chord-checkbox input:checked + span,
 .genre-checkbox input:checked + span {
-  color: #a5b4fc;
-  font-weight: 600;
+  color: var(--button);
+  font-weight: var(--font-weight-semibold);
 }
 
 .chord-checkbox input[type='checkbox'],
@@ -268,16 +268,16 @@ h2 {
 .skill-select,
 .display-name-input {
   padding: 0.75rem 1rem;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 0.65rem;
-  color: #f9fafb;
-  font-size: 1rem;
+  color: var(--input-text);
+  font-size: var(--font-size-base);
 }
 
 .skill-select:focus,
 .display-name-input:focus {
-  outline: 2px solid #818cf8;
+  outline: 2px solid var(--input-focus);
   border-color: transparent;
 }
 
@@ -285,10 +285,10 @@ h2 {
   border: none;
   border-radius: 0.9rem;
   padding: 1rem 2rem;
-  background: linear-gradient(120deg, #6366f1, #8b5cf6);
-  color: #fff;
-  font-size: 1.1rem;
-  font-weight: 600;
+  background: var(--button);
+  color: var(--button-text);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
@@ -302,20 +302,20 @@ h2 {
   margin-top: 1rem;
   padding: 0.9rem 1rem;
   border-radius: 0.9rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-align: center;
 }
 
 .feedback.success {
-  background: rgba(16, 185, 129, 0.15);
-  color: #6ee7b7;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-border);
 }
 
 .feedback.error {
-  background: rgba(248, 113, 113, 0.15);
-  color: #fecaca;
-  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-border);
 }
 </style>
 

@@ -564,14 +564,14 @@ onMounted(() => {
   text-align: center;
   padding: 3rem;
   color: var(--contrast-mid);
-  font-size: 1.1rem;
+  font-size: var(--font-size-md);
 }
 
 .error-message {
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  background: var(--error-bg-light);
   border-radius: 0.5rem;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--error-border-light);
 }
 
 .group-header {
@@ -582,7 +582,7 @@ onMounted(() => {
   background: none;
   border: none;
   color: var(--contrast-mid);
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   cursor: pointer;
   padding: 0.5rem 0;
   margin-bottom: 1rem;
@@ -594,8 +594,8 @@ onMounted(() => {
 }
 
 .group-header h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
   margin: 0;
   background: linear-gradient(120deg, var(--contrast-top), var(--contrast-mid));
   -webkit-background-clip: text;
@@ -618,21 +618,21 @@ onMounted(() => {
 .common-chords-section,
 .playable-songs-section,
 .sessions-section {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
 h2 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
   color: var(--contrast-top);
   margin: 0 0 1rem 0;
 }
 
 h3 {
-  font-size: 1.25rem;
+  font-size: var(--font-size-lg);
   color: var(--contrast-top);
   margin: 0 0 1rem 0;
 }
@@ -644,7 +644,7 @@ h3 {
 .label {
   display: block;
   color: var(--contrast-bottom);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.25rem;
@@ -683,17 +683,17 @@ h3 {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  background: rgba(99, 102, 241, 0.3);
+  background: var(--button-bg-medium);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--contrast-top);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .member-name {
   color: var(--contrast-mid);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .creator-tag {
@@ -701,26 +701,26 @@ h3 {
   color: var(--main);
   padding: 0.2rem 0.6rem;
   border-radius: 0.75rem;
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
 }
 
 .remove-member-btn,
 .leave-btn {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--error-bg-light);
+  border: 1px solid var(--error-border-light);
   color: #fca5a5;
   padding: 0.4rem 0.8rem;
   border-radius: 0.4rem;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .remove-member-btn:hover:not(:disabled),
 .leave-btn:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--error-bg);
 }
 
 .add-friend-controls {
@@ -731,16 +731,16 @@ h3 {
 .friend-select {
   flex: 1;
   padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   color: var(--contrast-top);
-  font-size: 1rem;
+  font-size: var(--font-size-base);
 }
 
 .friend-select option {
   color: #0f172a;
-  background-color: #ffffff;
+  background-color: var(--bg-card);
 }
 
 .add-btn {
@@ -749,19 +749,19 @@ h3 {
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .add-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 .danger-zone {
-  background: rgba(239, 68, 68, 0.05);
-  border-color: rgba(239, 68, 68, 0.2);
+  background: var(--error-bg-light);
+  border-color: var(--error-border-light);
 }
 
 .danger-text {
@@ -770,26 +770,26 @@ h3 {
 }
 
 .disband-btn {
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
   color: #fca5a5;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .disband-btn:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.3);
+  background: var(--error-bg);
 }
 
 .active-banner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(120deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  background: linear-gradient(120deg, var(--button-bg-medium), var(--button-bg-light));
+  border: 1px solid var(--button);
   border-radius: 0.75rem;
   padding: 1.5rem;
 }
@@ -817,25 +817,25 @@ h3 {
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
 }
 
 .end-session-btn {
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
   color: #fca5a5;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .end-session-btn:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.3);
+  background: var(--error-bg);
 }
 
 .create-session-btn {
@@ -846,7 +846,7 @@ h3 {
 .join-session-btn:hover:not(:disabled),
 .create-session-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 .chord-pills {
@@ -856,13 +856,13 @@ h3 {
 }
 
 .chord-pill {
-  background: rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  background: var(--button-bg-medium);
+  border: 1px solid var(--button);
   color: var(--contrast-top);
   padding: 0.4rem 0.8rem;
   border-radius: 0.5rem;
-  font-weight: 500;
-  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
 }
 
 .song-count {
@@ -900,14 +900,14 @@ h3 {
 
 .session-date {
   color: var(--contrast-top);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .session-status {
   padding: 0.25rem 0.6rem;
   border-radius: 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
 }
 
@@ -918,7 +918,7 @@ h3 {
 
 .session-status.completed {
   background: rgba(156, 163, 175, 0.2);
-  color: #d1d5db;
+  color: var(--text-secondary);
 }
 
 .session-status.scheduled {
@@ -930,14 +930,14 @@ h3 {
   display: flex;
   gap: 1rem;
   color: var(--contrast-bottom);
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
 }
 
 .loading-small,
 .empty-small,
 .error-small {
   color: var(--contrast-bottom);
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   padding: 0.5rem 0;
 }
 
@@ -986,14 +986,14 @@ button:disabled {
 }
 
 .song-title {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
   color: var(--contrast-top);
 }
 
 .song-artist {
   color: var(--contrast-bottom);
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
 }
 
 .song-genre-tag {
@@ -1001,8 +1001,8 @@ button:disabled {
   color: #a5b4fc;
   padding: 0.25rem 0.6rem;
   border-radius: 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
 }
 
 .song-chords {
@@ -1014,8 +1014,8 @@ button:disabled {
 
 .song-chords-label {
   color: var(--contrast-bottom);
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .song-chords-list {
@@ -1025,13 +1025,13 @@ button:disabled {
 }
 
 .song-chord-pill {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   color: var(--contrast-mid);
   padding: 0.25rem 0.6rem;
   border-radius: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 @media (max-width: 1024px) {
@@ -1046,7 +1046,7 @@ button:disabled {
   }
 
   .group-header h1 {
-    font-size: 2rem;
+    font-size: var(--font-size-2xl);
   }
 }
 </style>

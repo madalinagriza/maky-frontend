@@ -1,6 +1,7 @@
 <template>
   <Layout>
     <div class="journal-container">
+      <p class="eyebrow">Personal</p>
       <h1>My Journal</h1>
 
       <div class="journal-layout">
@@ -1139,12 +1140,7 @@ onMounted(() => {
   margin: 0 auto;
 }
 
-h1 {
-  font-size: 1.75rem;
-  margin-bottom: 2rem;
-  color: var(--contrast-mid);
-
-}
+/* h1 styling is now standardized in style.css */
 
 .journal-layout {
   display: grid;
@@ -1159,7 +1155,7 @@ h1 {
 }
 
 h2 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
   margin: 0 0 1rem;
   color: var(--contrast-mid);
 }
@@ -1172,7 +1168,7 @@ h2 {
 
 .create-post-card {
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-light);
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
@@ -1182,10 +1178,10 @@ h2 {
   width: 100%;
   min-height: 100px;
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 1rem;
-  color: #e5e7eb;
+  color: var(--text-secondary);
   font-family: inherit;
   resize: vertical;
   margin-bottom: 1rem;
@@ -1216,10 +1212,10 @@ h2 {
 
 .item-search-toggle {
   display: inline-flex;
-  border: 1px solid rgba(217, 70, 52, 0.35);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   overflow: hidden;
-  background: rgba(217, 70, 52, 0.08);
+  background: var(--bg-card);
 }
 
 .item-search-tab {
@@ -1228,13 +1224,13 @@ h2 {
   color: var(--contrast-mid);
   padding: 0.35rem 0.85rem;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   transition: background 0.2s ease, color 0.2s ease;
 }
 
 .item-search-tab.active {
-  background: rgba(217, 70, 52, 0.35);
-  color: var(--btn-text);
+  background: var(--button-bg-medium);
+  color: var(--button-text);
 }
 
 .item-search-input-wrapper {
@@ -1243,11 +1239,11 @@ h2 {
 
 .item-input {
   flex: 1;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(217, 70, 52, 0.35);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 0.5rem 1rem;
-  color: var(--contrast-top);
+  color: var(--text-primary);
   transition: border-color 0.2s ease;
 }
 
@@ -1264,23 +1260,23 @@ h2 {
 }
 
 .post-type-select label {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .post-type-select select {
-  background: var(--main-top);
-  border: 1px solid rgba(217, 70, 52, 0.45);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 0.45rem 0.75rem;
-  color: var(--contrast-top);
-  font-weight: 600;
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .post-type-select select:focus {
   outline: none;
   border-color: var(--button);
-  box-shadow: 0 0 0 2px rgba(217, 70, 52, 0.25);
+  box-shadow: 0 0 0 2px var(--button-bg-medium);
 }
 
 .new-items-list {
@@ -1309,7 +1305,7 @@ h2 {
   left: 0;
   width: 100%;
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   margin-top: 0.25rem;
   max-height: 220px;
@@ -1329,24 +1325,24 @@ h2 {
 }
 
 .dropdown-item:hover:not(.muted) {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border-light);
 }
 
 .dropdown-item.muted {
   cursor: default;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .dropdown-item .item-line-primary {
   display: block;
-  font-weight: 600;
-  color: #f9fafb;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
 
 .dropdown-item .item-line-secondary {
   display: block;
-  font-size: 0.8rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 
 .form-actions {
@@ -1355,12 +1351,12 @@ h2 {
 }
 
 .submit-btn {
-  background: var(--main);
-  color: white;
+  background: var(--button);
+  color: var(--button-text);
   border: none;
   padding: 0.75rem 2rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: opacity 0.2s;
 }
@@ -1373,12 +1369,12 @@ h2 {
 .error-message {
   color: #ef4444;
   margin-top: 1rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .post-card {
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-light);
   border-radius: 1rem;
   padding: 1.5rem;
 }
@@ -1426,10 +1422,10 @@ h2 {
   width: 100%;
   min-height: 120px;
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 0.75rem;
-  color: #e5e7eb;
+  color: var(--text-secondary);
   resize: vertical;
 }
 
@@ -1448,18 +1444,18 @@ h2 {
   border: none;
   border-radius: 0.5rem;
   padding: 0.4rem 0.9rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
 
 .post-edit-save-btn {
   background: var(--main);
-  color: #fff;
+  color: var(--button-text);
 }
 
 .post-edit-cancel-btn {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e5e7eb;
+  background: var(--border-light);
+  color: var(--text-secondary);
 }
 
 .post-edit-save-btn:disabled,
@@ -1470,31 +1466,31 @@ h2 {
 
 .post-error {
   color: #fca5a5;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   margin-top: 0.25rem;
 }
 
 .comment-btn {
   background: transparent;
   border: none;
-  color: #e5e7eb;
+  color: var(--text-secondary);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   padding: 0.25rem 0.5rem;
   border-radius: 0.35rem;
   transition: background 0.2s ease;
 }
 
 .comment-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border-light);
 }
 
 .reaction-count {
-  font-size: 0.85rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 
 .post-icon-btn {
@@ -1505,13 +1501,13 @@ h2 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   cursor: pointer;
   transition: color 0.2s ease, transform 0.1s ease;
 }
 
 .post-icon-btn:hover:not(:disabled) {
-  color: #ffffff;
+  color: var(--button-text);
   transform: translateY(-1px);
 }
 
@@ -1527,19 +1523,19 @@ h2 {
 .post-type {
   display: inline-flex;
   align-items: center;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--contrast-mid);
   border-radius: 999px;
   padding: 0.1rem 0.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
 }
 
 .post-type.progress {
-  background: rgba(217, 70, 52, 0.22);
-  border-color: rgba(217, 70, 52, 0.55);
+  background: var(--button-bg-light);
+  border-color: var(--button);
   color: var(--btn-text);
 }
 
@@ -1550,13 +1546,13 @@ h2 {
 }
 
 .post-date {
-  font-size: 0.875rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 
 .post-content {
   margin: 1rem 0;
-  color: #e5e7eb;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
@@ -1576,8 +1572,8 @@ h2 {
 }
 
 .visibility-label {
-  font-size: 0.9rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
   text-transform: capitalize;
 }
 
@@ -1587,7 +1583,7 @@ h2 {
   border-radius: 0.5rem;
   padding: 0.4rem 0.9rem;
   cursor: pointer;
-  color: #f9fafb;
+  color: var(--text-primary);
 }
 
 .visibility-btn:disabled {
@@ -1596,8 +1592,8 @@ h2 {
 }
 
 .items-label {
-  font-size: 0.875rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
   margin-bottom: 0.5rem;
 }
 
@@ -1609,12 +1605,12 @@ h2 {
 
 .item-badge {
   padding: 0.25rem 0.75rem;
-  background: rgba(217, 70, 52, 0.15);
-  border: 1px solid rgba(217, 70, 52, 0.45);
+  background: var(--button-bg-light);
+  border: 1px solid var(--button-border-light);
   border-radius: 999px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--contrast-top);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .sidebar {
@@ -1625,7 +1621,7 @@ h2 {
 
 .sidebar-section {
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-light);
   border-radius: 1rem;
   padding: 1.5rem;
 }
@@ -1642,7 +1638,7 @@ h2 {
 .item-card {
   padding: 1rem;
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   display: flex;
   justify-content: space-between;
@@ -1655,25 +1651,25 @@ h2 {
 }
 
 .item-name {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--contrast-mid);
 }
 
 .item-subtext {
-  font-size: 0.85rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
   margin-top: 0.2rem;
 }
 
 .item-mastery {
-  font-size: 0.875rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
   text-transform: capitalize;
 }
 
 .loading,
 .empty-state {
-  color: #9ca3af;
+  color: var(--text-muted);
   padding: 2rem;
   text-align: center;
 }
@@ -1686,8 +1682,8 @@ h2 {
 
 .loading-comments,
 .no-comments {
-  color: #9ca3af;
-  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
   padding: 0.5rem 0;
 }
 
@@ -1704,7 +1700,7 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-card);
   padding: 0.6rem 0.75rem;
   border-radius: 0.5rem;
 }
@@ -1722,8 +1718,8 @@ h2 {
 }
 
 .comment-author {
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
   color: var(--contrast-top);
 }
 
@@ -1735,13 +1731,13 @@ h2 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   cursor: pointer;
   transition: color 0.2s ease, transform 0.1s ease;
 }
 
 .comment-icon-btn:hover:not(:disabled) {
-  color: #ffffff;
+  color: var(--button-text);
   transform: translateY(-1px);
 }
 
@@ -1755,8 +1751,8 @@ h2 {
 }
 
 .comment-text {
-  color: #e5e7eb;
-  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
   line-height: 1.4;
 }
 
@@ -1769,7 +1765,7 @@ h2 {
 .comment-edit-input {
   width: 100%;
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.4rem;
   padding: 0.4rem 0.6rem;
   color: #f3f4f6;
@@ -1791,18 +1787,18 @@ h2 {
   border-radius: 0.35rem;
   padding: 0.35rem 0.9rem;
   cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .comment-save-btn {
   background: var(--main);
-  color: #fff;
+  color: var(--button-text);
 }
 
 .comment-cancel-btn {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e5e7eb;
+  background: var(--border-light);
+  color: var(--text-secondary);
 }
 
 .comment-save-btn:disabled,
@@ -1813,7 +1809,7 @@ h2 {
 
 .comment-error {
   color: #fca5a5;
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
 }
 
 .add-comment-box {
@@ -1824,10 +1820,10 @@ h2 {
 .comment-input {
   flex: 1;
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 0.5rem 0.75rem;
-  color: #f9fafb;
+  color: var(--text-primary);
 }
 
 .comment-input:focus {
@@ -1837,11 +1833,11 @@ h2 {
 
 .post-comment-btn {
   background: var(--main);
-  color: #fff;
+  color: var(--button-text);
   border: none;
   border-radius: 0.5rem;
   padding: 0 1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: opacity 0.2s ease;
 }

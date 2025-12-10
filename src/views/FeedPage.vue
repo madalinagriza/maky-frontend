@@ -1,6 +1,8 @@
 <template>
   <Layout>
     <div class="feed-container">
+      <p class="eyebrow">Social</p>
+      <h1>Feed</h1>
       <div class="feed-layout">
         <!-- Left Column: Friends -->
         <aside class="friends-column">
@@ -1706,19 +1708,19 @@ onMounted(() => {
 .friends-panel,
 .notifications-panel {
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 1rem;
   padding: 1.5rem;
 }
 
 h2 {
-  font-size: 1.25rem;
+  font-size: var(--font-size-lg);
   margin: 0 0 1rem;
   color: var(--contrast-mid);
 }
 
 h3 {
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   margin: 1rem 0 0.5rem;
   color: var(--contrast-mid);
 }
@@ -1728,9 +1730,9 @@ h3 {
   width: 100%;
   padding: 0.5rem;
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  color: #f9fafb;
+  color: var(--text-primary);
   margin-bottom: 1rem;
 }
 
@@ -1755,13 +1757,13 @@ h3 {
   left: 0;
   width: 100%;
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   margin-top: 0.25rem;
   max-height: 220px;
   overflow-y: auto;
   z-index: 3;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 24px var(--shadow-strong);
 }
 
 .dropdown-item {
@@ -1775,24 +1777,24 @@ h3 {
 }
 
 .dropdown-item:hover:not(.muted) {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
 }
 
 .dropdown-item.muted {
   cursor: default;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .dropdown-item .item-line-primary {
   display: block;
-  font-weight: 600;
-  color: #f9fafb;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
 
 .dropdown-item .item-line-secondary {
   display: block;
-  font-size: 0.8rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 
 .posts-column {
@@ -1809,8 +1811,8 @@ h3 {
 
 .feed-tab {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #e5e7eb;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
   padding: 0.4rem 1rem;
   border-radius: 999px;
   cursor: pointer;
@@ -1825,7 +1827,7 @@ h3 {
 
 .create-post-card {
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 1rem;
   padding: 1.5rem;
 }
@@ -1833,11 +1835,11 @@ h3 {
 .post-input {
   width: 100%;
   min-height: 100px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 1rem;
-  color: #e5e7eb;
+  color: var(--text-secondary);
   resize: vertical;
   margin-bottom: 1rem;
 }
@@ -1862,10 +1864,10 @@ h3 {
 
 .item-search-toggle {
   display: inline-flex;
-  border: 1px solid rgba(217, 70, 52, 0.35);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   overflow: hidden;
-  background: rgba(217, 70, 52, 0.08);
+  background: var(--bg-card);
 }
 
 .item-search-tab {
@@ -1874,13 +1876,13 @@ h3 {
   color: var(--contrast-mid);
   padding: 0.35rem 0.85rem;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   transition: background 0.2s ease, color 0.2s ease;
 }
 
 .item-search-tab.active {
-  background: rgba(217, 70, 52, 0.35);
-  color: var(--btn-text);
+  background: var(--button-bg-medium);
+  color: var(--button-text);
 }
 
 .item-search-input-wrapper {
@@ -1889,11 +1891,11 @@ h3 {
 
 .item-input {
   flex: 1;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(217, 70, 52, 0.35);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 0.5rem 1rem;
-  color: var(--contrast-top);
+  color: var(--text-primary);
   transition: border-color 0.2s ease;
 }
 
@@ -1904,10 +1906,10 @@ h3 {
 
 .add-item-btn {
   padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
   border: none;
   border-radius: 0.5rem;
-  color: #e5e7eb;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
@@ -1919,23 +1921,23 @@ h3 {
 }
 
 .post-type-select label {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .post-type-select select {
-  background: var(--main-top);
-  border: 1px solid rgba(217, 70, 52, 0.45);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 0.45rem 0.75rem;
-  color: var(--contrast-top);
-  font-weight: 600;
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .post-type-select select:focus {
   outline: none;
   border-color: var(--button);
-  box-shadow: 0 0 0 2px rgba(217, 70, 52, 0.25);
+  box-shadow: 0 0 0 2px var(--button-bg-medium);
 }
 
 .new-items-list {
@@ -1953,8 +1955,8 @@ h3 {
 }
 
 .items-label {
-  font-size: 0.85rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 
 .items-list {
@@ -1964,13 +1966,13 @@ h3 {
 }
 
 .item-badge {
-  background: rgba(217, 70, 52, 0.15);
-  border: 1px solid rgba(217, 70, 52, 0.45);
+  background: var(--button-bg-light);
+  border: 1px solid var(--button-border-light);
   border-radius: 999px;
   padding: 0.2rem 0.85rem;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--contrast-top);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .remove-item-btn {
@@ -1997,7 +1999,7 @@ h3 {
   border: none;
   padding: 0.75rem 2rem;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
 
@@ -2009,7 +2011,7 @@ h3 {
 .error-message {
   color: #fca5a5;
   margin-top: 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
 }
 
 .post-actions {
@@ -2026,7 +2028,7 @@ h3 {
 
 .post-card {
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 1rem;
   padding: 1.5rem;
 }
@@ -2055,32 +2057,32 @@ h3 {
 }
 
 .post-author {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--contrast-top);
 }
 
 .post-date {
-  font-size: 0.85rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
   margin-top: 0.15rem;
 }
 
 .post-type {
   display: inline-flex;
   align-items: center;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--contrast-mid);
   border-radius: 999px;
   padding: 0.1rem 0.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
 }
 
 .post-type.progress {
-  background: rgba(217, 70, 52, 0.22);
-  border-color: rgba(217, 70, 52, 0.55);
+  background: var(--button-bg-light);
+  border-color: var(--button);
   color: var(--btn-text);
 }
 
@@ -2092,7 +2094,7 @@ h3 {
 
 .post-content {
   margin: 1rem 0;
-  color: #e5e7eb;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
@@ -2118,33 +2120,33 @@ h3 {
   padding: 0.4rem 0.6rem;
   border-radius: 0.25rem;
   transition: background 0.2s ease, transform 0.1s ease;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   display: flex;
   align-items: center;
   gap: 0.4rem;
 }
 
 .reaction-icon {
-  font-size: 1.2rem;
+  font-size: var(--font-size-md);
 }
 
 .reaction-count {
-  font-size: 0.9rem;
-  color: #9ca3af;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  font-weight: var(--font-weight-medium);
 }
 
 .reaction-btn:hover,
 .comment-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
 }
 
 .reaction-btn.active {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-card);
 }
 
 .reaction-btn.active .reaction-count {
-  color: #e5e7eb;
+  color: var(--text-secondary);
 }
 
 .visibility-controls {
@@ -2157,18 +2159,18 @@ h3 {
 }
 
 .visibility-label {
-  font-size: 0.9rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
   text-transform: capitalize;
 }
 
 .visibility-btn {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--bg-card);
   border: none;
   border-radius: 0.5rem;
   padding: 0.4rem 0.9rem;
   cursor: pointer;
-  color: #f9fafb;
+  color: var(--text-primary);
 }
 
 .visibility-btn:disabled {
@@ -2184,8 +2186,8 @@ h3 {
 
 .loading-comments,
 .no-comments {
-  color: #9ca3af;
-  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
   padding: 0.5rem 0;
 }
 
@@ -2202,7 +2204,7 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-card);
   padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
 }
@@ -2221,8 +2223,8 @@ h3 {
 }
 
 .comment-author {
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
   color: var(--contrast-top);
 }
 
@@ -2235,14 +2237,14 @@ h3 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   cursor: pointer;
   transition: color 0.2s ease, transform 0.1s ease;
 }
 
 .comment-icon-btn:hover:not(:disabled),
 .post-icon-btn:hover:not(:disabled) {
-  color: #ffffff;
+  color: var(--button-text);
   transform: translateY(-1px);
 }
 
@@ -2273,11 +2275,11 @@ h3 {
 .post-edit-textarea {
   width: 100%;
   min-height: 120px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 0.75rem;
-  color: #e5e7eb;
+  color: var(--text-secondary);
   resize: vertical;
 }
 
@@ -2297,7 +2299,7 @@ h3 {
   border-radius: 0.5rem;
   padding: 0.4rem 0.9rem;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .post-edit-save-btn {
@@ -2306,8 +2308,8 @@ h3 {
 }
 
 .post-edit-cancel-btn {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e5e7eb;
+  background: var(--bg-card);
+  color: var(--text-secondary);
 }
 
 .post-edit-save-btn:disabled,
@@ -2318,13 +2320,13 @@ h3 {
 
 .post-error {
   color: #fca5a5;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   margin-top: 0.25rem;
 }
 
 .comment-text {
-  color: #e5e7eb;
-  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
   line-height: 1.4;
 }
 
@@ -2334,16 +2336,16 @@ h3 {
   border: none;
   border-radius: 0.35rem;
   padding: 0.3rem 0.75rem;
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
   color: #f3f4f6;
 }
 
 .comment-edit-btn:hover,
 .comment-save-btn:hover,
 .comment-cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-card);
 }
 
 .comment-edit-form {
@@ -2355,7 +2357,7 @@ h3 {
 .comment-edit-input {
   width: 100%;
   background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(217, 70, 52, 0.35);
+  border: 1px solid var(--border);
   border-radius: 0.4rem;
   padding: 0.45rem 0.6rem;
   color: var(--contrast-top);
@@ -2377,7 +2379,7 @@ h3 {
 }
 
 .comment-cancel-btn {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
 }
 
 .comment-save-btn:disabled,
@@ -2389,7 +2391,7 @@ h3 {
 
 .comment-error {
   color: #fca5a5;
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
 }
 
 .add-comment-box {
@@ -2400,11 +2402,11 @@ h3 {
 .comment-input {
   flex: 1;
   background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(217, 70, 52, 0.35);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 0.5rem 0.75rem;
   color: var(--contrast-top);
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
 }
 
 .comment-input:focus {
@@ -2418,7 +2420,7 @@ h3 {
   border: none;
   border-radius: 0.5rem;
   padding: 0 1rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: opacity 0.2s;
 }
@@ -2444,7 +2446,7 @@ h3 {
 .notification-item {
   padding: 0.75rem;
   background: var(--main);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
 }
 
@@ -2465,17 +2467,17 @@ h3 {
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  color: #f9fafb;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
 
 .friend-avatar.fallback {
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
 }
 
 .friend-details {
@@ -2484,13 +2486,13 @@ h3 {
 }
 
 .friend-name {
-  font-weight: 600;
-  color: #e5e7eb;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
 }
 
 .friend-handle {
-  font-size: 0.85rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 
 .request-item {
@@ -2511,22 +2513,22 @@ h3 {
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  color: #f9fafb;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
 
 .request-avatar.fallback {
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
 }
 
 .requester-name {
-  font-weight: 600;
-  color: #e5e7eb;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
 }
 
 .request-actions {
@@ -2540,7 +2542,7 @@ h3 {
   padding: 0.25rem 0.75rem;
   border: none;
   border-radius: 0.25rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   color: var(--btn-text);
 }
@@ -2566,19 +2568,19 @@ h3 {
   width: auto;
   margin-top: 0;
   padding: 0.4rem 0.9rem;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   white-space: nowrap;
 }
 
 .input-error {
   color: #fca5a5;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   margin-top: 0.5rem;
 }
 
 .loading,
 .empty-state {
-  color: #9ca3af;
+  color: var(--text-muted);
   padding: 1rem;
   text-align: center;
 }

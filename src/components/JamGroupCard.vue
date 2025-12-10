@@ -52,8 +52,8 @@ function formatDate(dateString: string): string {
 
 <style scoped>
 .jam-group-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1.5rem;
   cursor: pointer;
@@ -61,10 +61,11 @@ function formatDate(dateString: string): string {
 }
 
 .jam-group-card:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-card);
+  opacity: 0.9;
   border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 .card-header {
@@ -76,8 +77,8 @@ function formatDate(dateString: string): string {
 }
 
 .card-header h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
   color: var(--contrast-top);
   margin: 0;
   flex: 1;
@@ -88,8 +89,8 @@ function formatDate(dateString: string): string {
   color: var(--main);
   padding: 0.25rem 0.75rem;
   border-radius: 1rem;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
@@ -110,8 +111,7 @@ function formatDate(dateString: string): string {
   justify-content: space-between;
   align-items: center;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
 }
 
 .member-count {
@@ -119,16 +119,16 @@ function formatDate(dateString: string): string {
   align-items: center;
   gap: 0.5rem;
   color: var(--contrast-mid);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .icon {
-  font-size: 1.1rem;
+  font-size: var(--font-size-md);
 }
 
 .created-date {
   color: var(--contrast-bottom);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
 }
 </style>
 

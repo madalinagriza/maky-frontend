@@ -1,6 +1,7 @@
 <template>
   <Layout>
     <div class="learn-container">
+      <p class="eyebrow">Practice</p>
       <h1>Learn</h1>
 
       <nav class="section-nav">
@@ -891,11 +892,7 @@ onMounted(() => {
   scroll-behavior: smooth;
 }
 
-h1 {
-  font-size: 2.5rem;
-  margin-bottom: 2rem;
-  color: var(--contrast-mid);
-}
+/* h1 styling is now standardized in style.css */
 
 .section-nav {
   display: flex;
@@ -907,9 +904,9 @@ h1 {
 .section-nav a {
   padding: 0.5rem 1rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border);
   color: #e0e7ff;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   text-decoration: none;
   background: var(--accent);
   transition: background 0.2s ease, color 0.2s ease;
@@ -917,7 +914,7 @@ h1 {
 
 .section-nav a:hover {
   background: var(--button);
-  color: #fff;
+  color: var(--button-text);
 }
 
 .search-section {
@@ -929,14 +926,14 @@ h1 {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 0.5rem 0.75rem;
 }
 
 .genre-inline-label {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--contrast-mid);
@@ -950,10 +947,10 @@ h1 {
 }
 
 .genre-inline-pill {
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--border);
   border-radius: 999px;
   padding: 0.3rem 0.85rem;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   background: transparent;
   color: #f3f4f6;
   cursor: pointer;
@@ -963,16 +960,16 @@ h1 {
 .genre-inline-pill--active {
   background: var(--button);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--button-text);
 }
 
 .genre-inline-clear {
   border: none;
-  background: rgba(255, 255, 255, 0.08);
-  color: #f9fafb;
+  background: var(--bg-card);
+  color: var(--text-primary);
   border-radius: 0.5rem;
   padding: 0.3rem 0.75rem;
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
 }
 
@@ -987,7 +984,7 @@ h1 {
   gap: 0.75rem;
   align-items: center;
   margin-bottom: 1.25rem;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   color: #cbd5f5;
 }
 
@@ -996,7 +993,7 @@ h1 {
 }
 
 .filter-label {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--contrast-mid);
 }
 
@@ -1006,8 +1003,8 @@ h1 {
   gap: 0.35rem;
   padding: 0.35rem 0.65rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
   color: var(--button);
 }
 
@@ -1021,7 +1018,7 @@ h1 {
 
 .filter-option small {
   display: block;
-  font-size: 0.7rem;
+  font-size: var(--font-size-xs);
   color: var(--accent);
 }
 
@@ -1033,10 +1030,10 @@ h1 {
   width: 100%;
   padding: 0.75rem 1rem;
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.65rem;
-  color: #f9fafb;
-  font-size: 1rem;
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
 }
 
 .search-input:focus {
@@ -1052,20 +1049,20 @@ h1 {
 
 .learn-section {
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 1rem;
   padding: 1.5rem;
 }
 
 h2 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
   margin: 0 0 1rem;
   color: var(--contrast-mid);
 }
 
 .loading,
 .empty-state {
-  color: #9ca3af;
+  color: var(--text-muted);
   padding: 2rem;
   text-align: center;
 }
@@ -1088,7 +1085,7 @@ h2 {
 .song-item {
   padding: 1rem;
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   display: flex;
   justify-content: space-between;
@@ -1101,24 +1098,24 @@ h2 {
 }
 
 .song-title {
-  font-weight: 600;
-  color: #e5e7eb;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
 }
 
 .song-artist {
-  font-size: 0.875rem;
-  color: #9ca3af;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 
 .song-genre-pill {
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
   color: var(--contrast-mid);
   text-transform: capitalize;
   margin-top: 0.35rem;
   padding: 0.2rem 0.65rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
   align-self: flex-start;
 }
 
@@ -1127,13 +1124,13 @@ h2 {
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-top: 0.25rem;
-  font-size: 0.8rem;
-  color: #d1d5db;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
 
 .song-chords-label {
   color: var(--contrast-mid);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .song-chords-list {
@@ -1141,16 +1138,16 @@ h2 {
   flex-wrap: wrap;
   gap: 0.35rem;
   align-items: center;
-  color: #e5e7eb;
+  color: var(--text-secondary);
 }
 
 .song-chord-pill {
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
   color: #f3f4f6;
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
 }
 
 .song-chord-pill--mastered {
@@ -1168,12 +1165,12 @@ h2 {
 
 .song-chord-pill--unknown {
   background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #d1d5db;
+  border-color: var(--border);
+  color: var(--text-secondary);
 }
 
 .song-chords-unavailable {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .song-pagination {
@@ -1188,10 +1185,10 @@ h2 {
 .song-pagination-page {
   padding: 0.35rem 0.85rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
   color: #f3f4f6;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
 }
@@ -1199,7 +1196,7 @@ h2 {
 .song-pagination-page--active {
   background: var(--button);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--button-text);
 }
 
 .song-pagination-btn:disabled {
@@ -1214,7 +1211,7 @@ h2 {
 
 .chord-card {
   background: var(--card);
-  border: 2px solid rgba(99, 102, 241, 0.3);
+  border: 2px solid var(--button);
   border-radius: 1rem;
   padding: 2rem;
   text-align: center;
@@ -1222,7 +1219,7 @@ h2 {
 }
 
 .chord-card h3 {
-  font-size: 2rem;
+  font-size: var(--font-size-2xl);
   margin: 0 0 1rem;
   color: var(--contrast-top);
 }
@@ -1234,10 +1231,10 @@ h2 {
 .learn-btn {
   padding: 0.5rem 1rem;
   background: var(--button);
-  color: #fff;
+  color: var(--button-text);
   border: none;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
@@ -1255,10 +1252,10 @@ h2 {
 .mastery-select {
   padding: 0.5rem;
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  color: #f9fafb;
-  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
 }
 
 .chord-list {
@@ -1273,7 +1270,7 @@ h2 {
   align-items: center;
   padding: 1rem;
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
 }
 
@@ -1285,8 +1282,8 @@ h2 {
 }
 
 .chord-name {
-  font-weight: 600;
-  color: #e5e7eb;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
   min-width: 60px;
 }
 
@@ -1297,7 +1294,7 @@ h2 {
   border: 1px solid rgba(248, 113, 113, 0.3);
   border-radius: 0.5rem;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
 }
 </style>
 

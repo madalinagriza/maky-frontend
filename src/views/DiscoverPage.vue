@@ -542,21 +542,12 @@ onMounted(() => {
   justify-content: space-between;
   align-items: flex-end;
   gap: 2rem;
+  margin-bottom: 0;
 }
 
-
-.eyebrow {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--contrast-bottom);
-  margin-bottom: 0.35rem;
-}
-
-h1 {
-  font-size: 2.75rem;
-  margin: 0;
-  color: var(--contrast-top);
+.discover-header h1 {
+  margin-bottom: 2rem;
+  font-size: var(--font-size-2xl);
 }
 
 .lead {
@@ -566,7 +557,7 @@ h1 {
 
 .discover-section {
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 1rem;
   padding: 1.75rem;
   display: flex;
@@ -576,7 +567,7 @@ h1 {
 
 .section-heading h2 {
   margin: 0;
-  font-size: 1.65rem;
+  font-size: var(--font-size-2xl);
   color: var(--contrast-top);
 }
 
@@ -593,10 +584,10 @@ h1 {
 .chord-input {
   flex: 1;
   padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.65rem;
-  color: #f9fafb;
+  color: var(--text-primary);
 }
 
 .chord-submit {
@@ -604,8 +595,8 @@ h1 {
   border-radius: 0.65rem;
   border: none;
   background: var(--button);
-  color: #fff;
-  font-weight: 600;
+  color: var(--button-text);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
 
@@ -616,18 +607,18 @@ h1 {
 
 .chord-status {
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-card);
   border-radius: 0.75rem;
-  color: #e5e7eb;
+  color: var(--text-secondary);
 }
 
 .chord-status.error {
   color: #fecaca;
-  border: 1px solid rgba(248, 113, 113, 0.4);
+  border: 1px solid var(--error-border);
 }
 
 .chord-status.muted {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .chord-content {
@@ -640,7 +631,7 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   color: var(--contrast-mid);
 }
 
@@ -660,32 +651,32 @@ h1 {
 }
 
 .filter-field span {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--contrast-mid);
 }
 
 .filter-select {
   padding: 0.55rem 0.75rem;
   border-radius: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
-  color: #f3f4f6;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .filter-select option {
-  color: #111;
-  background: #fff;
+  color: var(--text-primary);
+  background: var(--bg-card);
 }
 
 .filter-checkbox {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-card);
   padding: 0.45rem 0.75rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  font-size: var(--font-size-sm);
   color: var(--contrast-mid);
 }
 
@@ -700,7 +691,7 @@ h1 {
 }
 
 .suggestions-label {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--contrast-mid);
 }
 
@@ -711,10 +702,10 @@ h1 {
 }
 
 .suggestion-pill {
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--border);
   border-radius: 999px;
   padding: 0.35rem 0.9rem;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-card);
   color: #f3f4f6;
   cursor: pointer;
 }
@@ -734,11 +725,11 @@ h1 {
 
 .diagram-header h3 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
 }
 
 .diagram-count {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--contrast-mid);
 }
 
@@ -749,8 +740,8 @@ h1 {
 }
 
 .diagram-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1rem;
   text-align: center;
@@ -770,22 +761,22 @@ h1 {
 .song-input {
   flex: 1 1 260px;
   padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.65rem;
-  color: #f9fafb;
+  color: var(--text-primary);
 }
 
 .song-status {
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-card);
   border-radius: 0.75rem;
-  color: #e5e7eb;
+  color: var(--text-secondary);
 }
 
 .song-status.error {
   color: #fecaca;
-  border: 1px solid rgba(248, 113, 113, 0.4);
+  border: 1px solid var(--error-border);
 }
 
 .song-results {
@@ -804,8 +795,8 @@ h1 {
 }
 
 .song-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.9rem;
   padding: 1.25rem;
 }
@@ -827,8 +818,8 @@ h1 {
   border-radius: 0.65rem;
   padding: 0.5rem 1.1rem;
   background: var(--button);
-  color: #fff;
-  font-weight: 600;
+  color: var(--button-text);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
@@ -849,8 +840,8 @@ h1 {
 
 .song-title {
   margin: 0;
-  font-size: 1.35rem;
-  color: #f9fafb;
+  font-size: var(--font-size-xl);
+  color: var(--text-primary);
 }
 
 .song-genre {
@@ -865,7 +856,7 @@ h1 {
 }
 
 .song-chords-label {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--contrast-mid);
 }
 
@@ -876,15 +867,15 @@ h1 {
 }
 
 .song-chord-pill {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 0.65rem;
   padding: 0.2rem 0.6rem;
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
   color: #f3f4f6;
 }
 
 .song-chords-empty {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .song-pagination {
@@ -898,8 +889,8 @@ h1 {
 .song-pagination-page {
   padding: 0.35rem 0.85rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
   color: #f3f4f6;
   cursor: pointer;
 }
@@ -907,7 +898,7 @@ h1 {
 .song-pagination-page--active {
   background: var(--button);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--button-text);
 }
 
 .song-pagination-btn:disabled {
@@ -921,14 +912,14 @@ h1 {
   gap: 0.75rem;
   flex: 1 1 auto;
   flex-wrap: wrap;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 0.5rem 0.75rem;
 }
 
 .genre-inline-label {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--contrast-mid);
@@ -942,10 +933,10 @@ h1 {
 }
 
 .genre-inline-pill {
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--border);
   border-radius: 999px;
   padding: 0.3rem 0.85rem;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   background: transparent;
   color: #f3f4f6;
   cursor: pointer;
@@ -955,16 +946,16 @@ h1 {
 .genre-inline-pill--active {
   background: var(--button);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--button-text);
 }
 
 .genre-inline-clear {
   border: none;
-  background: rgba(255, 255, 255, 0.08);
-  color: #f9fafb;
+  background: var(--border-light);
+  color: var(--text-primary);
   border-radius: 0.5rem;
   padding: 0.3rem 0.75rem;
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
 }
 

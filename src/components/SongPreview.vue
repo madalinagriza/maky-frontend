@@ -106,11 +106,11 @@ onBeforeUnmount(() => {
   width: 120px;
   height: 120px;
   border-radius: 6px;
-  background: #2d2d2d;
+  background: var(--bg-card);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: var(--font-size-xl);
 }
 
 .preview-btn {
@@ -118,24 +118,24 @@ onBeforeUnmount(() => {
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: #D94634;
-  color: white;
+  background: var(--button);
+  color: var(--button-text);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: var(--font-size-base);
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
 .preview-btn:hover {
-  background: #F8717133;
+  background: var(--button-hover);
   transform: scale(1.1);
 }
 
 .preview-btn.playing {
-  background: #FAD386;
+  background: var(--accent);
 }
 
 .no-preview {
@@ -145,7 +145,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   opacity: 0.8;
-  font-size: 18px;
+  font-size: var(--font-size-md);
   flex-shrink: 0;
 }
 
