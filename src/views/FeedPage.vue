@@ -2081,13 +2081,13 @@ h3 {
 .post-type.progress {
   background: var(--button-bg-light);
   border-color: var(--button);
-  color: var(--btn-text);
+  color: var(--text-primary);
 }
 
 .post-type.general {
   background: rgba(251, 225, 172, 0.18);
   border-color: rgba(251, 225, 172, 0.45);
-  color: var(--contrast-top);
+  color: var(--text-primary);
 }
 
 .post-content {
@@ -2114,7 +2114,7 @@ h3 {
 .comment-btn {
   background: transparent;
   border: none;
-  color: var(--btn-text);
+  color: var(--text-primary);
   cursor: pointer;
   padding: 0.4rem 0.6rem;
   border-radius: 0.25rem;
