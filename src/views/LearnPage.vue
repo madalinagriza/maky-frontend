@@ -33,6 +33,13 @@
             </div>
           </div>
           <div v-else class="empty-state">No chord recommendations available.</div>
+          <details v-if="recommendedChord && recommendedChordDiagram" class="diagram-explainer">
+            <summary>Explain Diagram</summary>
+            <p>
+              The horizontal lines show the guitar's strings, starting from the thickest at the top to the thinnest at the bottom.
+              Place your numbered fingers on the strings exactly where the dots appear, and strum the strings that are shown.
+            </p>
+          </details>
         </section>
 
         <section id="section-master-chords" class="learn-section">
@@ -44,7 +51,9 @@
           <div v-else class="chord-list">
             <div v-for="entry in knownChords" :key="entry.chord" class="chord-item">
               <div class="chord-info">
-                <span class="chord-name">{{ entry.chord }}</span>
+                <ChordTooltip :chord-name="entry.chord">
+                  <span class="chord-name">{{ entry.chord }}</span>
+                </ChordTooltip>
                 <select
                   v-model="chordMasterySelections[entry.chord]"
                   class="mastery-select"
@@ -142,13 +151,15 @@
                   <span class="song-chords-label">Chords:</span>
                   <div class="song-chords-list">
                     <template v-if="entry.song.chords?.length">
-                      <span
+                      <ChordTooltip
                         v-for="chord in entry.song.chords"
                         :key="chord"
-                        :class="['song-chord-pill', getChordMasteryClass(chord)]"
+                        :chord-name="chord"
                       >
-                        {{ chord }}
-                      </span>
+                        <span :class="['song-chord-pill', getChordMasteryClass(chord)]">
+                          {{ chord }}
+                        </span>
+                      </ChordTooltip>
                     </template>
                     <span v-else class="song-chords-unavailable">Unavailable</span>
                   </div>
@@ -240,13 +251,15 @@
                     <span class="song-chords-label">Chords:</span>
                     <div class="song-chords-list">
                       <template v-if="song.chords?.length">
-                        <span
+                        <ChordTooltip
                           v-for="chord in song.chords"
                           :key="song._id + chord"
-                          :class="['song-chord-pill', getChordMasteryClass(chord)]"
+                          :chord-name="chord"
                         >
-                          {{ chord }}
-                        </span>
+                          <span :class="['song-chord-pill', getChordMasteryClass(chord)]">
+                            {{ chord }}
+                          </span>
+                        </ChordTooltip>
                       </template>
                       <span v-else class="song-chords-unavailable">Unavailable</span>
                     </div>
@@ -296,6 +309,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import Layout from '@/components/Layout.vue'
 import ChordDiagram from '@/components/ChordDiagram.vue'
 import SongPreview from '@/components/SongPreview.vue'
+import ChordTooltip from '@/components/ChordTooltip.vue'
 import { getPlayableSongs, getSongCatalog } from '@/services/songService'
 import {
   getSongsInProgress,
@@ -636,7 +650,12 @@ async function loadPracticeSongs(sessionId: string) {
 async function loadPreferredGenres(sessionId: string) {
   try {
     const userId = getUserId()
-    const profile = userId ? await getProfile({ user: userId }) : await getProfile({ sessionId })
+    if (!userId) {
+      console.warn('Unable to load preferred genres: missing user id')
+      preferredGenres.value = []
+      return
+    }
+    const profile = await getProfile({ sessionId, user: userId })
     const genres = Array.isArray(profile?.genrePreferences) ? profile?.genrePreferences : []
     preferredGenres.value = (genres ?? []).filter(isNonEmptyString)
   } catch (error) {
@@ -713,37 +732,54 @@ async function populateChordRecommendation({
   knownChords: string[]
   allSongs: Song[]
 }) {
+  console.log('[LearnPage] populateChordRecommendation called', {
+    knownChordsCount: knownChords.length,
+    allSongsCount: allSongs.length,
+    knownChords
+  })
+  
   try {
+    console.log('[LearnPage] Calling requestChordRecommendation...')
     const recResponse = await requestChordRecommendation({
       knownChords,
       allSongs,
     })
+    console.log('[LearnPage] requestChordRecommendation completed:', recResponse)
+    
     const chordCandidate = recResponse.recommendedChord?.trim()
     recommendedChord.value = chordCandidate || null
     // Store the first diagram voicing if available
     recommendedChordDiagram.value = recResponse.diagram?.[0] ?? null
+    
+    console.log('[LearnPage] Set recommendedChord:', chordCandidate)
   } catch (error) {
-    console.error('Failed to fetch chord recommendation:', error)
+    console.error('[LearnPage] Failed to fetch chord recommendation:', error)
     recommendedChord.value = null
     recommendedChordDiagram.value = null
   }
 
   if (!recommendedChord.value) {
+    console.log('[LearnPage] No recommended chord, skipping unlock recommendation')
     unlockedSongs.value = []
     return
   }
 
   try {
+    console.log('[LearnPage] Calling requestSongUnlockRecommendation for:', recommendedChord.value)
     const unlockResponse = await requestSongUnlockRecommendation({
       knownChords,
       potentialChord: recommendedChord.value,
       allSongs,
     })
+    console.log('[LearnPage] requestSongUnlockRecommendation completed:', unlockResponse)
+    
     unlockedSongs.value = Array.isArray(unlockResponse.unlockedSongs)
       ? unlockResponse.unlockedSongs
       : []
+    
+    console.log('[LearnPage] Set unlockedSongs count:', unlockedSongs.value.length)
   } catch (error) {
-    console.error('Failed to fetch unlock recommendations:', error)
+    console.error('[LearnPage] Failed to fetch unlock recommendations:', error)
     unlockedSongs.value = []
   }
 }
@@ -1054,6 +1090,26 @@ onMounted(() => {
   padding: 1.5rem;
 }
 
+.diagram-explainer {
+  margin: 0 0 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.85rem;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--contrast-mid);
+}
+
+.diagram-explainer summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--contrast-top);
+}
+
+.diagram-explainer p {
+  margin: 0.5rem 0 0;
+  line-height: 1.5;
+}
+
 h2 {
   font-size: var(--font-size-xl);
   margin: 0 0 1rem;
@@ -1146,8 +1202,16 @@ h2 {
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--bg-card);
-  color: #f3f4f6;
+  color: var(--text-primary);
   font-size: var(--font-size-sm);
+  cursor: help;
+  transition: all 0.2s ease;
+}
+
+.song-chord-pill:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+  transform: translateY(-1px);
 }
 
 .song-chord-pill--mastered {
@@ -1285,6 +1349,15 @@ h2 {
   font-weight: var(--font-weight-semibold);
   color: var(--text-secondary);
   min-width: 60px;
+  cursor: help;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.chord-name:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #818cf8;
 }
 
 .remove-btn {

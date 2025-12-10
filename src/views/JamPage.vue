@@ -3,8 +3,10 @@
     <div class="jam-container">
       <header class="jam-header">
         <div>
-          <p class="eyebrow">Collaborate</p>
           <h1>My Jam Groups</h1>
+          <p class="jam-lead">
+            Jam it up with your friends. See which chords your friends can play and practice songs together.
+          </p>
         </div>
         <button @click="showCreateModal = true" class="create-group-btn">
           + Create New Group
@@ -63,6 +65,14 @@ const showCreateModal = ref(false)
 const currentUsername = computed(() => username.value || '')
 const currentUserId = computed(() => userId.value || '')
 
+function groupIncludesUser(group: JamGroup, memberId: string) {
+  if (!memberId || !Array.isArray(group.members)) return false
+  return group.members.some(member => {
+    if (typeof member === 'string') return member === memberId
+    return member.username === memberId
+  })
+}
+
 async function loadJamGroups() {
   loading.value = true
   error.value = null
@@ -72,7 +82,7 @@ async function loadJamGroups() {
     const activeUserId = currentUserId.value
     jamGroups.value = !activeUserId
       ? groups
-      : groups.filter(group => Array.isArray(group.members) && group.members.includes(activeUserId))
+      : groups.filter(group => groupIncludesUser(group, activeUserId))
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load jam groups'
     console.error('Error loading jam groups:', err)
@@ -110,7 +120,22 @@ onMounted(() => {
   margin-bottom: 2rem;
 }
 
+<<<<<<< HEAD
 /* Eyebrow styling removed - using standardized h1 only */
+
+/* h1 styling is now standardized in style.css */
+||||||| 29b6909
+h1 {
+  font-size: 2.5rem;
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+}
+
+.jam-lead {
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+}
 
 /* h1 styling is now standardized in style.css */
 

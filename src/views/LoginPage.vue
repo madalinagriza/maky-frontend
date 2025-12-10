@@ -136,12 +136,12 @@ async function hydrateProfile({
   const safeFallback = fallbackName?.trim() || 'User'
 
   try {
-    if (!sessionId) {
+    if (!sessionId || !userId) {
       setProfile({ displayName: safeFallback, avatarUrl: null })
       return
     }
 
-    const profileData = await getProfile({ sessionId, user: userId || undefined })
+    const profileData = await getProfile({ sessionId, user: userId })
 
     if (profileData) {
       setProfile({

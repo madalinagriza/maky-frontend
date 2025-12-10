@@ -196,7 +196,7 @@
             </form>
           </div>
 
-          <div v-if="feedVisibilityError && activeFeedTab === 'MY_PUBLIC'" class="error-message">
+          <div v-if="feedVisibilityError" class="error-message">
             {{ feedVisibilityError }}
           </div>
 
@@ -469,14 +469,12 @@
                   </button>
                 </div>
               </div>
-              <div
-                v-if="activeFeedTab === 'MY_PUBLIC'"
-                class="visibility-controls"
-              >
+              <div v-if="isOwnPost(post)" class="visibility-controls">
                 <span class="visibility-label">
                   Visibility: {{ (post.visibility || 'PUBLIC').toLowerCase() === 'public' ? 'Public' : 'Private' }}
                 </span>
                 <button
+                  v-if="(post.visibility || 'PUBLIC').toUpperCase() === 'PUBLIC'"
                   class="visibility-btn"
                   :disabled="changingFeedVisibilityFor === post.id"
                   @click="handleFeedVisibilityChange(post, 'PRIVATE')"

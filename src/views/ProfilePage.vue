@@ -204,6 +204,60 @@ const updatingChord = ref<string | null>(null)
 const songSearchQuery = ref('')
 const searchResults = ref<Song[]>([])
 const targetSongDetails = ref<Song | null>(null)
+const TARGET_SONG_CACHE_KEY = 'targetSongCache'
+
+function readTargetSongCache(): Record<string, Song> {
+  try {
+    const raw = localStorage.getItem(TARGET_SONG_CACHE_KEY)
+    if (!raw) {
+      return {}
+    }
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {}
+    }
+    return parsed as Record<string, Song>
+  } catch (error) {
+    console.warn('Failed to read target song cache:', error)
+    return {}
+  }
+}
+
+function writeTargetSongCache(cache: Record<string, Song>) {
+  try {
+    localStorage.setItem(TARGET_SONG_CACHE_KEY, JSON.stringify(cache))
+  } catch (error) {
+    console.warn('Failed to persist target song cache:', error)
+  }
+}
+
+function cacheTargetSongDetails(details: Song) {
+  const cache = readTargetSongCache()
+  cache[details._id] = details
+  writeTargetSongCache(cache)
+}
+
+function getCachedTargetSong(songId: string): Song | null {
+  const cache = readTargetSongCache()
+  return cache[songId] ?? null
+}
+
+function removeCachedTargetSong(songId?: string) {
+  if (!songId) {
+    localStorage.removeItem(TARGET_SONG_CACHE_KEY)
+    return
+  }
+  const cache = readTargetSongCache()
+  if (!cache[songId]) {
+    return
+  }
+  delete cache[songId]
+  if (Object.keys(cache).length === 0) {
+    localStorage.removeItem(TARGET_SONG_CACHE_KEY)
+    return
+  }
+  writeTargetSongCache(cache)
+}
 
 const targetSongDisplay = computed(() => {
   if (targetSongDetails.value) {
@@ -228,13 +282,18 @@ async function searchSongs() {
 async function selectTargetSong(song: Song) {
   profile.targetSong = song._id
   targetSongDetails.value = song
+  cacheTargetSongDetails(song)
   songSearchQuery.value = ''
   searchResults.value = []
 }
 
 async function removeTarget() {
+  const previousTarget = profile.targetSong
   profile.targetSong = ''
   targetSongDetails.value = null
+  if (previousTarget) {
+    removeCachedTargetSong(previousTarget)
+  }
   try {
     const sessionId = getSessionId()
     if (sessionId) {
@@ -408,10 +467,10 @@ async function loadProfile() {
     const userId = getUserId()
     const sessionId = getSessionId()
 
-    if (!sessionId) return
+    if (!sessionId || !userId) return
 
     // Prefer calling the new getter by `user` id when available
-    const existing = await getProfile({ sessionId, user: userId || undefined })
+    const existing = await getProfile({ sessionId, user: userId })
     if (!existing) return
 
     // Defensive mapping: only set fields that exist
@@ -425,13 +484,11 @@ async function loadProfile() {
     profile.skillLevel = (existing.skillLevel as typeof profile.skillLevel) ?? profile.skillLevel
     profile.targetSong = existing.targetSong ?? profile.targetSong
 
-    // If we have a target song ID, try to fetch details to display title
     if (profile.targetSong) {
-      // We don't have getSongById, so we might not be able to show the title immediately
-      // unless we search for it or have a cache. 
-      // For now, we'll just leave it as ID or try to search if it looks like a title.
-      // If it's an ID, searchByTitleOrArtist won't find it unless we support ID search.
-      // Let's assume for now we can't easily get the title if we only have ID on load.
+      const cachedDetails = getCachedTargetSong(profile.targetSong)
+      if (cachedDetails) {
+        targetSongDetails.value = cachedDetails
+      }
     }
   } catch (error) {
     console.error('Failed to load profile:', error)

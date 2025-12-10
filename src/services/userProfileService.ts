@@ -116,21 +116,11 @@ export async function deleteProfile(sessionId: string) {
 
 // Query: _getProfile — returns an array (query-style). We return the first profile object or null.
 export async function getProfile(payload: GetProfilePayload) {
-  if (!payload) {
-    throw new Error('Payload is required to load a profile')
+  if (!payload || !payload.sessionId || !payload.user) {
+    throw new Error('sessionId and user are required to load a profile')
   }
 
-  const body: { sessionId?: string; user?: string } = {}
-  if ('sessionId' in payload && payload.sessionId) {
-    body.sessionId = payload.sessionId
-  }
-  if ('user' in payload && payload.user) {
-    body.user = payload.user
-  }
-
-  if (!body.sessionId && !body.user) {
-    throw new Error('Either sessionId or user must be provided to load a profile')
-  }
+  const body = { sessionId: payload.sessionId, user: payload.user }
 
   const { data } = await apiClient.post<any | ErrorResponse>(
     `${USER_PROFILE_BASE}/_getProfile`,

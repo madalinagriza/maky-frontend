@@ -77,7 +77,35 @@
                     <option value="GENERAL">General</option>
                   </select>
                 </div>
+
+                <div class="post-visibility-toggle">
+                  <label>Visibility:</label>
+                  <div class="visibility-toggle-group" role="group" aria-label="Choose post visibility">
+                    <button
+                      type="button"
+                      class="visibility-toggle-btn"
+                      :class="{ active: newPostVisibility === 'PRIVATE' }"
+                      @click="setNewPostVisibility('PRIVATE')"
+                    >
+                      Private
+                    </button>
+                    <button
+                      type="button"
+                      class="visibility-toggle-btn"
+                      :class="{ active: newPostVisibility === 'PUBLIC' }"
+                      :disabled="!canMakePostsPublic"
+                      @click="setNewPostVisibility('PUBLIC')"
+                      :title="!canMakePostsPublic ? 'Your account type only allows private posts' : 'Share this post publicly'"
+                    >
+                      Public
+                    </button>
+                  </div>
+                </div>
               </div>
+
+              <p v-if="!canMakePostsPublic" class="visibility-hint">
+                Public posts are disabled for your account type.
+              </p>
 
               <div v-if="newPostItems.length > 0" class="new-items-list">
                 <span v-for="(item, index) in newPostItems" :key="index" class="item-badge">
@@ -95,7 +123,29 @@
             </form>
           </div>
 
-          <h2>My Posts</h2>
+          <div class="posts-section-header">
+            <h2>My Posts</h2>
+            <div class="post-filter-toggle" role="group" aria-label="Filter journal posts">
+              <button
+                type="button"
+                class="filter-btn"
+                :class="{ active: postFilterMode === 'ALL' }"
+                :aria-pressed="postFilterMode === 'ALL'"
+                @click="setPostFilterMode('ALL')"
+              >
+                All posts
+              </button>
+              <button
+                type="button"
+                class="filter-btn"
+                :class="{ active: postFilterMode === 'PRIVATE' }"
+                :aria-pressed="postFilterMode === 'PRIVATE'"
+                @click="setPostFilterMode('PRIVATE')"
+              >
+                Private only
+              </button>
+            </div>
+          </div>
           <div v-if="visibilityError" class="error-message">{{ visibilityError }}</div>
           <div v-if="loadingPosts" class="loading">Loading posts...</div>
           <div v-else-if="posts.length === 0" class="empty-state">You haven't posted anything yet.</div>
@@ -335,6 +385,14 @@
                 >
                   {{ changingVisibilityFor === post._id ? 'Updating…' : 'Make Public' }}
                 </button>
+                <button
+                  v-else-if="(post.visibility || 'PRIVATE') === 'PUBLIC'"
+                  class="visibility-btn"
+                  :disabled="changingVisibilityFor === post._id"
+                  @click="handleVisibilityChange(post, 'PRIVATE')"
+                >
+                  {{ changingVisibilityFor === post._id ? 'Updating…' : 'Make Private' }}
+                </button>
               </div>
             </div>
           </div>
@@ -379,13 +437,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import Layout from '@/components/Layout.vue'
 import { getSongsInProgress } from '@/services/songLibraryService'
 import { getKnownChords } from '@/services/chordLibraryService'
 import {
   createPost,
   getPersonalPrivatePosts,
+  getAllPersonalPosts,
   editPostVisibility,
   addCommentToPost,
   getCommentsForPostId,
@@ -451,11 +510,13 @@ const chords = ref<Array<{ chord: string; mastery: string }>>([])
 const loadingPosts = ref(false)
 const loadingSongs = ref(false)
 const loadingChords = ref(false)
+const postFilterMode = ref<'ALL' | 'PRIVATE'>('ALL')
 
 // Create Post State
 const newPostContent = ref('')
 const newPostType = ref<'PROGRESS' | 'GENERAL'>('PROGRESS')
 const newPostItems = ref<string[]>([])
+const newPostVisibility = ref<PostVisibility>('PRIVATE')
 const itemSearchType = ref<ItemSuggestionType>('SONG')
 const itemSearchQuery = ref('')
 const itemSearchResults = ref<ItemSuggestion[]>([])
@@ -474,7 +535,24 @@ const showItemSearchDropdown = computed(() =>
   (isSearchingItems.value || itemSearchResults.value.length > 0)
 )
 
+watch(canMakePostsPublic, allowed => {
+  if (!allowed && newPostVisibility.value === 'PUBLIC') {
+    newPostVisibility.value = 'PRIVATE'
+  }
+})
+
 let itemSearchTimer: ReturnType<typeof setTimeout> | null = null
+
+function setPostFilterMode(mode: 'ALL' | 'PRIVATE') {
+  if (postFilterMode.value === mode) return
+  postFilterMode.value = mode
+  loadPosts()
+}
+
+function setNewPostVisibility(visibility: PostVisibility) {
+  if (visibility === 'PUBLIC' && !canMakePostsPublic.value) return
+  newPostVisibility.value = visibility
+}
 
 function setItemSearchType(type: ItemSuggestionType) {
   if (itemSearchType.value === type) return
@@ -726,13 +804,14 @@ async function handleCreatePost() {
       content: newPostContent.value,
       postType: newPostType.value,
       items: newPostItems.value,
-      visibility: 'PRIVATE'
+      visibility: newPostVisibility.value,
     })
 
     // Reset form
     newPostContent.value = ''
     newPostItems.value = []
     newPostType.value = 'PROGRESS'
+    newPostVisibility.value = 'PRIVATE'
     itemSearchQuery.value = ''
     itemSearchResults.value = []
     
@@ -1048,7 +1127,11 @@ async function loadPosts() {
       return
     }
 
-    const response = await getPersonalPrivatePosts({ sessionId, user: userId })
+    const payload = { sessionId, user: userId }
+    const response =
+      postFilterMode.value === 'PRIVATE'
+        ? await getPersonalPrivatePosts(payload)
+        : await getAllPersonalPosts(payload)
     posts.value = response.map(item => ({
       ...item.post,
       items: Array.isArray(item.post.items) ? item.post.items.filter(Boolean) : [],
@@ -1158,6 +1241,37 @@ h2 {
   font-size: var(--font-size-xl);
   margin: 0 0 1rem;
   color: var(--contrast-mid);
+}
+
+.posts-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.post-filter-toggle {
+  display: inline-flex;
+  background: var(--main);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.filter-btn {
+  padding: 0.35rem 0.9rem;
+  background: transparent;
+  border: none;
+  color: var(--contrast-mid);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.filter-btn.active {
+  background: var(--button);
+  color: #fff;
 }
 
 .posts-list {
@@ -1279,6 +1393,52 @@ h2 {
   box-shadow: 0 0 0 2px var(--button-bg-medium);
 }
 
+.post-visibility-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--contrast-top);
+  flex-wrap: wrap;
+}
+
+.post-visibility-toggle label {
+  font-weight: 600;
+}
+
+.visibility-toggle-group {
+  display: inline-flex;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.visibility-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--contrast-mid);
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.visibility-toggle-btn.active {
+  background: var(--button);
+  color: #fff;
+}
+
+.visibility-toggle-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.visibility-hint {
+  font-size: 0.8rem;
+  color: #fca5a5;
+  margin-top: -0.35rem;
+}
+
 .new-items-list {
   display: flex;
   flex-wrap: wrap;
@@ -1389,6 +1549,7 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  align-items: flex-start;
 }
 
 .post-owner-actions {
@@ -1526,11 +1687,14 @@ h2 {
   font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--contrast-mid);
+  color: var(--text-secondary);
   border-radius: 999px;
   padding: 0.1rem 0.8rem;
   border: 1px solid var(--border);
   background: var(--bg-card);
+  white-space: normal;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .post-type.progress {
@@ -1604,13 +1768,18 @@ h2 {
 }
 
 .item-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.25rem 0.75rem;
   background: var(--button-bg-light);
   border: 1px solid var(--button-border-light);
   border-radius: 999px;
   font-size: var(--font-size-sm);
-  color: var(--contrast-top);
+  color: var(--text-primary);
   font-weight: var(--font-weight-medium);
+  align-self: flex-start;
+  width: fit-content;
 }
 
 .sidebar {

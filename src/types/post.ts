@@ -102,6 +102,11 @@ export interface GetPersonalPublicPostsPayload {
   user: string
 }
 
+export interface GetAllPersonalPostsPayload {
+  sessionId: string
+  user: string
+}
+
 export interface GetPublicPostsOfUsersPayload {
   sessionId: string
   users: string[]
