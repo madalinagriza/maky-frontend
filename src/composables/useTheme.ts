@@ -55,13 +55,13 @@ function applyTheme(themeName: ThemeName) {
 
 // Load theme from storage or default
 export function loadTheme() {
-  const saved = localStorage.getItem(THEME_STORAGE_KEY) as ThemeName
+  const saved = localStorage.getItem(THEME_STORAGE_KEY)
   // Handle migration from removed themes
   if (saved === 'beige-primary' || saved === 'warm-neutral') {
     localStorage.setItem(THEME_STORAGE_KEY, 'red-primary')
     applyTheme('red-primary')
   } else if (saved && saved in themes) {
-    applyTheme(saved)
+    applyTheme(saved as ThemeName)
   } else {
     applyTheme('red-primary')
   }
